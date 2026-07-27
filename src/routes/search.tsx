@@ -40,7 +40,7 @@ function SearchPage() {
 
   const { data, isFetching } = useQuery({
     queryKey: ["search", term, sort],
-    queryFn: () => run({ data: { query: term, sort } }),
+    queryFn: () => run({ data: { q: term, sort } }),
     enabled: term.trim().length > 1,
   });
 
