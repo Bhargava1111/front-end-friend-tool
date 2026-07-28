@@ -1,0 +1,14 @@
+UPDATE public.banners SET image_url = '/images/pooja-essentials.jpg' WHERE image_url LIKE '%1604608672516%';
+UPDATE public.categories SET image_url = '/images/pooja-essentials.jpg' WHERE image_url LIKE '%1604608672516%';
+UPDATE public.products SET image_url = '/images/cotton-wicks.jpg' WHERE name = 'Cotton Wicks (Batti)';
+UPDATE public.products SET image_url = '/images/kumkum.jpg' WHERE name = 'Kumkum Powder';
+UPDATE public.products SET image_url = '/images/brass-thali.jpg' WHERE image_url LIKE '%1609151354448%';
+UPDATE public.products SET image_url = '/images/ghee.jpg' WHERE image_url LIKE '%1610725664285%';
+UPDATE public.products SET image_url = '/images/cashew.jpg' WHERE image_url LIKE '%1536591375715%';
+UPDATE public.products SET image_url = '/images/chana-dal.jpg' WHERE image_url LIKE '%1585996746349%';
+UPDATE public.products SET image_url = '/images/pooja-essentials.jpg' WHERE image_url LIKE '%1604608672516%';
+UPDATE public.product_images SET image_url = '/images/pooja-essentials.jpg' WHERE image_url LIKE '%1604608672516%';
+UPDATE public.product_images SET image_url = '/images/ghee.jpg' WHERE image_url LIKE '%1610725664285%';
+UPDATE public.product_images SET image_url = '/images/brass-thali.jpg' WHERE image_url LIKE '%1609151354448%';
+UPDATE public.product_images SET image_url = '/images/cashew.jpg' WHERE image_url LIKE '%1536591375715%';
+UPDATE public.product_images SET image_url = '/images/chana-dal.jpg' WHERE image_url LIKE '%1585996746349%';
