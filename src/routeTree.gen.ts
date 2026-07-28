@@ -17,7 +17,10 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as ProductSlugRouteImport } from './routes/product.$slug'
 import { Route as CategorySlugRouteImport } from './routes/category.$slug'
 import { Route as AuthenticatedWishlistRouteImport } from './routes/_authenticated/wishlist'
+import { Route as AuthenticatedCheckoutRouteImport } from './routes/_authenticated/checkout'
 import { Route as AuthenticatedCartRouteImport } from './routes/_authenticated/cart'
+import { Route as AuthenticatedOrdersIndexRouteImport } from './routes/_authenticated/orders/index'
+import { Route as AuthenticatedOrdersIdRouteImport } from './routes/_authenticated/orders/$id'
 
 const SearchRoute = SearchRouteImport.update({
   id: '/search',
@@ -58,9 +61,25 @@ const AuthenticatedWishlistRoute = AuthenticatedWishlistRouteImport.update({
   path: '/wishlist',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedCheckoutRoute = AuthenticatedCheckoutRouteImport.update({
+  id: '/checkout',
+  path: '/checkout',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedCartRoute = AuthenticatedCartRouteImport.update({
   id: '/cart',
   path: '/cart',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedOrdersIndexRoute =
+  AuthenticatedOrdersIndexRouteImport.update({
+    id: '/orders/',
+    path: '/orders/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedOrdersIdRoute = AuthenticatedOrdersIdRouteImport.update({
+  id: '/orders/$id',
+  path: '/orders/$id',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 
@@ -70,9 +89,12 @@ export interface FileRoutesByFullPath {
   '/categories': typeof CategoriesRoute
   '/search': typeof SearchRoute
   '/cart': typeof AuthenticatedCartRoute
+  '/checkout': typeof AuthenticatedCheckoutRoute
   '/wishlist': typeof AuthenticatedWishlistRoute
   '/category/$slug': typeof CategorySlugRoute
   '/product/$slug': typeof ProductSlugRoute
+  '/orders/$id': typeof AuthenticatedOrdersIdRoute
+  '/orders/': typeof AuthenticatedOrdersIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -80,9 +102,12 @@ export interface FileRoutesByTo {
   '/categories': typeof CategoriesRoute
   '/search': typeof SearchRoute
   '/cart': typeof AuthenticatedCartRoute
+  '/checkout': typeof AuthenticatedCheckoutRoute
   '/wishlist': typeof AuthenticatedWishlistRoute
   '/category/$slug': typeof CategorySlugRoute
   '/product/$slug': typeof ProductSlugRoute
+  '/orders/$id': typeof AuthenticatedOrdersIdRoute
+  '/orders': typeof AuthenticatedOrdersIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -92,9 +117,12 @@ export interface FileRoutesById {
   '/categories': typeof CategoriesRoute
   '/search': typeof SearchRoute
   '/_authenticated/cart': typeof AuthenticatedCartRoute
+  '/_authenticated/checkout': typeof AuthenticatedCheckoutRoute
   '/_authenticated/wishlist': typeof AuthenticatedWishlistRoute
   '/category/$slug': typeof CategorySlugRoute
   '/product/$slug': typeof ProductSlugRoute
+  '/_authenticated/orders/$id': typeof AuthenticatedOrdersIdRoute
+  '/_authenticated/orders/': typeof AuthenticatedOrdersIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -104,9 +132,12 @@ export interface FileRouteTypes {
     | '/categories'
     | '/search'
     | '/cart'
+    | '/checkout'
     | '/wishlist'
     | '/category/$slug'
     | '/product/$slug'
+    | '/orders/$id'
+    | '/orders/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -114,9 +145,12 @@ export interface FileRouteTypes {
     | '/categories'
     | '/search'
     | '/cart'
+    | '/checkout'
     | '/wishlist'
     | '/category/$slug'
     | '/product/$slug'
+    | '/orders/$id'
+    | '/orders'
   id:
     | '__root__'
     | '/'
@@ -125,9 +159,12 @@ export interface FileRouteTypes {
     | '/categories'
     | '/search'
     | '/_authenticated/cart'
+    | '/_authenticated/checkout'
     | '/_authenticated/wishlist'
     | '/category/$slug'
     | '/product/$slug'
+    | '/_authenticated/orders/$id'
+    | '/_authenticated/orders/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -198,6 +235,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedWishlistRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/checkout': {
+      id: '/_authenticated/checkout'
+      path: '/checkout'
+      fullPath: '/checkout'
+      preLoaderRoute: typeof AuthenticatedCheckoutRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/cart': {
       id: '/_authenticated/cart'
       path: '/cart'
@@ -205,17 +249,37 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCartRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/orders/': {
+      id: '/_authenticated/orders/'
+      path: '/orders'
+      fullPath: '/orders/'
+      preLoaderRoute: typeof AuthenticatedOrdersIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/orders/$id': {
+      id: '/_authenticated/orders/$id'
+      path: '/orders/$id'
+      fullPath: '/orders/$id'
+      preLoaderRoute: typeof AuthenticatedOrdersIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedCartRoute: typeof AuthenticatedCartRoute
+  AuthenticatedCheckoutRoute: typeof AuthenticatedCheckoutRoute
   AuthenticatedWishlistRoute: typeof AuthenticatedWishlistRoute
+  AuthenticatedOrdersIdRoute: typeof AuthenticatedOrdersIdRoute
+  AuthenticatedOrdersIndexRoute: typeof AuthenticatedOrdersIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedCartRoute: AuthenticatedCartRoute,
+  AuthenticatedCheckoutRoute: AuthenticatedCheckoutRoute,
   AuthenticatedWishlistRoute: AuthenticatedWishlistRoute,
+  AuthenticatedOrdersIdRoute: AuthenticatedOrdersIdRoute,
+  AuthenticatedOrdersIndexRoute: AuthenticatedOrdersIndexRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
