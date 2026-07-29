@@ -156,13 +156,7 @@ function Home() {
       <CouponStrip />
 
       <Reveal>
-        <div className="mt-7 flex items-center gap-2 px-4">
-          <TrendingUp className="h-4.5 w-4.5 text-accent" />
-          <h2 className="text-base font-bold text-foreground">Trending now</h2>
-        </div>
-        <div className="no-scrollbar -mt-3">
-          <ProductRail title="" products={trending} />
-        </div>
+        <ProductRail title="Trending now" products={trending} />
       </Reveal>
 
       <Reveal>
