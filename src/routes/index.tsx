@@ -1,10 +1,20 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
-import { Search, Bell, MapPin } from "lucide-react";
+import { Search, Bell, MapPin, Sparkles, TrendingUp } from "lucide-react";
 import { getHomeData } from "@/lib/catalog.functions";
 import { PageShell } from "@/components/page-shell";
 import { BannerSlider } from "@/components/banner-slider";
 import { ProductRail } from "@/components/product-rail";
+import { ThemeToggle } from "@/components/theme-toggle";
+import { FadeIn, Reveal } from "@/components/motion";
+import { HomeSkeleton } from "@/components/skeletons";
+import {
+  BrandRail,
+  CouponStrip,
+  FlashSaleRail,
+  OfferCards,
+  RecentlyViewedRail,
+} from "@/components/home-sections";
 
 const homeQuery = queryOptions({
   queryKey: ["home"],
@@ -31,53 +41,79 @@ export const Route = createFileRoute("/")({
     context.queryClient.ensureQueryData(homeQuery);
   },
   component: Home,
+  pendingComponent: () => (
+    <PageShell>
+      <HomeSkeleton />
+    </PageShell>
+  ),
   errorComponent: ({ error }) => (
-    <div className="p-8 text-center text-sm text-destructive">{error.message}</div>
+    <PageShell>
+      <div className="flex min-h-[70vh] flex-col items-center justify-center px-8 text-center">
+        <h1 className="text-lg font-semibold text-foreground">We couldn't load the store</h1>
+        <p className="mt-2 text-sm text-muted-foreground">{error.message}</p>
+      </div>
+    </PageShell>
   ),
 });
 
 function Home() {
   const { data } = useSuspenseQuery(homeQuery);
+  const allProducts = [...data.newest, ...data.featured, ...data.bestSelling];
+  const trending = data.bestSelling.length ? data.bestSelling : data.newest;
 
   return (
     <PageShell>
-      <header className="rounded-b-3xl bg-primary px-4 pb-6 pt-5 text-primary-foreground">
-        <div className="flex items-start justify-between">
-          <div>
+      <header className="relative overflow-hidden rounded-b-[2rem] bg-gradient-to-br from-primary via-primary to-primary/85 px-4 pb-7 pt-5 text-primary-foreground">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -right-16 -top-20 h-56 w-56 rounded-full bg-accent/25 blur-3xl"
+        />
+        <div className="relative flex items-start justify-between gap-3">
+          <div className="min-w-0">
             <p className="flex items-center gap-1 text-xs text-primary-foreground/70">
-              <MapPin className="h-3.5 w-3.5" /> Deliver to
+              <MapPin className="h-3.5 w-3.5 shrink-0" /> Deliver to
             </p>
-            <p className="mt-0.5 text-sm font-semibold">Bengaluru, Karnataka</p>
+            <p className="mt-0.5 truncate text-sm font-semibold">Bengaluru, Karnataka</p>
           </div>
-          <Link
-            to="/orders"
-            aria-label="Your orders"
-            className="grid h-9 w-9 place-items-center rounded-full bg-primary-foreground/15"
-          >
-            <Bell className="h-4.5 w-4.5" />
-          </Link>
+          <div className="flex shrink-0 items-center gap-2">
+            <ThemeToggle className="border-primary-foreground/25 bg-primary-foreground/15 text-primary-foreground" />
+            <Link
+              to="/orders"
+              aria-label="Your orders and notifications"
+              className="grid h-9 w-9 place-items-center rounded-full border border-primary-foreground/25 bg-primary-foreground/15"
+            >
+              <Bell className="h-4.5 w-4.5" />
+            </Link>
+          </div>
         </div>
 
-        <h1 className="mt-4 text-xl font-bold leading-tight">
-          Groceries &amp; pooja essentials,
-          <br />
-          delivered fresh.
-        </h1>
+        <FadeIn delay={0.05}>
+          <span className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-primary-foreground/15 px-3 py-1 text-[11px] font-medium">
+            <Sparkles className="h-3 w-3 text-accent" /> Delivery in 60 minutes
+          </span>
+          <h1 className="mt-2.5 text-[26px] font-bold leading-[1.15] tracking-tight text-balance-tight">
+            Groceries &amp; pooja essentials,
+            <br />
+            delivered fresh.
+          </h1>
+        </FadeIn>
 
-        <Link
-          to="/search"
-          className="mt-4 flex items-center gap-2 rounded-2xl bg-card px-4 py-3 text-sm text-muted-foreground"
-        >
-          <Search className="h-4 w-4" />
-          Search for rice, ghee, agarbatti…
-        </Link>
+        <FadeIn delay={0.12}>
+          <Link
+            to="/search"
+            className="mt-4 flex items-center gap-2 rounded-2xl border border-border/40 bg-card/90 px-4 py-3 text-sm text-muted-foreground shadow-lg backdrop-blur"
+          >
+            <Search className="h-4 w-4" />
+            Search for rice, ghee, agarbatti…
+          </Link>
+        </FadeIn>
       </header>
 
-      <div className="mt-5">
+      <Reveal className="mt-5">
         <BannerSlider banners={data.banners} />
-      </div>
+      </Reveal>
 
-      <section className="mt-7">
+      <Reveal className="mt-7">
         <div className="flex items-center justify-between px-4">
           <h2 className="text-base font-bold text-foreground">Shop by category</h2>
           <Link to="/categories" className="text-xs font-medium text-primary">
@@ -90,7 +126,7 @@ function Home() {
               key={c.id}
               to="/category/$slug"
               params={{ slug: c.slug }}
-              className="flex w-[76px] shrink-0 flex-col items-center gap-2"
+              className="flex w-[76px] shrink-0 flex-col items-center gap-2 transition-transform active:scale-95"
             >
               <div className="h-[76px] w-[76px] overflow-hidden rounded-2xl border border-border bg-accent-soft">
                 {c.image_url && (
@@ -108,15 +144,45 @@ function Home() {
             </Link>
           ))}
         </div>
-      </section>
+      </Reveal>
 
-      <ProductRail title="Featured picks" products={data.featured} />
-      <ProductRail title="Best sellers" products={data.bestSelling} />
-      <ProductRail title="Newly added" products={data.newest} />
-      <ProductRail title="Recommended for you" products={data.recommended} />
+      <FlashSaleRail products={allProducts} />
+      <OfferCards />
 
-      <div className="mt-8 px-4">
-        <div className="rounded-3xl bg-accent-soft p-5 text-center">
+      <Reveal>
+        <ProductRail title="Today's deals" products={data.featured} />
+      </Reveal>
+
+      <CouponStrip />
+
+      <Reveal>
+        <div className="mt-7 flex items-center gap-2 px-4">
+          <TrendingUp className="h-4.5 w-4.5 text-accent" />
+          <h2 className="text-base font-bold text-foreground">Trending now</h2>
+        </div>
+        <div className="no-scrollbar -mt-3">
+          <ProductRail title="" products={trending} />
+        </div>
+      </Reveal>
+
+      <Reveal>
+        <ProductRail title="Best sellers" products={data.bestSelling} />
+      </Reveal>
+
+      <RecentlyViewedRail />
+
+      <Reveal>
+        <ProductRail title="Recommended for you" products={data.recommended} />
+      </Reveal>
+
+      <BrandRail />
+
+      <Reveal>
+        <ProductRail title="Newly added" products={data.newest} />
+      </Reveal>
+
+      <Reveal className="mt-8 px-4">
+        <div className="rounded-3xl border border-accent/30 bg-gradient-to-br from-accent-soft to-accent-soft/40 p-5 text-center">
           <p className="text-sm font-semibold text-accent-foreground">
             Free delivery on orders above ₹499
           </p>
@@ -124,7 +190,7 @@ function Home() {
             Pay on delivery available across Bengaluru
           </p>
         </div>
-      </div>
+      </Reveal>
     </PageShell>
   );
 }
