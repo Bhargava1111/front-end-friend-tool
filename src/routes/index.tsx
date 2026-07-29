@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
-import { Search, Bell, MapPin, Sparkles, TrendingUp } from "lucide-react";
+import { Search, Bell, MapPin, Sparkles } from "lucide-react";
 import { getHomeData } from "@/lib/catalog.functions";
 import { PageShell } from "@/components/page-shell";
 import { BannerSlider } from "@/components/banner-slider";
