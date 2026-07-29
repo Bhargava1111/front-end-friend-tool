@@ -58,7 +58,11 @@ export const Route = createFileRoute("/")({
 
 function Home() {
   const { data } = useSuspenseQuery(homeQuery);
-  const allProducts = [...data.newest, ...data.featured, ...data.bestSelling];
+  const allProducts = Array.from(
+    new Map(
+      [...data.newest, ...data.featured, ...data.bestSelling].map((p) => [p.id, p]),
+    ).values(),
+  );
   const trending = data.bestSelling.length ? data.bestSelling : data.newest;
 
   return (
