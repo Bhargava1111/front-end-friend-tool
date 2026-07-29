@@ -2,7 +2,7 @@ import { createFileRoute, notFound, useNavigate } from "@tanstack/react-router";
 import { queryOptions, useSuspenseQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Heart, Minus, Plus, ShieldCheck, Truck, PackageSearch } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { getProductBySlug } from "@/lib/catalog.functions";
 import { addToCart, toggleWishlist } from "@/lib/shop.functions";
@@ -10,6 +10,7 @@ import { useSession, useWishlist } from "@/hooks/use-shop";
 import { PageShell, TopBar, EmptyState } from "@/components/page-shell";
 import { ProductRail } from "@/components/product-rail";
 import { formatINR } from "@/lib/format";
+import { useRecentlyViewed } from "@/lib/client-store";
 import { cn } from "@/lib/utils";
 
 const productQuery = (slug: string) =>
@@ -74,6 +75,11 @@ function ProductPage() {
   const toggle = useServerFn(toggleWishlist);
   const { data: wishlist } = useWishlist();
   const [qty, setQty] = useState(1);
+  const trackViewed = useRecentlyViewed((s) => s.add);
+
+  useEffect(() => {
+    trackViewed(product);
+  }, [product, trackViewed]);
 
   const wishlisted = (wishlist ?? []).some((w) => w.product?.id === product.id);
   const discount =
