@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/hooks/use-shop";
 import { getProfile, updateProfile } from "@/lib/shop.functions";
 import { PageShell } from "@/components/page-shell";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -69,8 +70,9 @@ function ProfilePage() {
 
   return (
     <PageShell>
-      <header className="rounded-b-3xl bg-primary px-4 pb-7 pt-7 text-primary-foreground">
-        <div className="flex items-center gap-3">
+      <header className="rounded-b-3xl bg-gradient-to-br from-primary via-primary to-primary/85 px-4 pb-7 pt-7 text-primary-foreground">
+        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
+          <div className="flex min-w-0 items-center gap-3">
           <div className="grid h-14 w-14 place-items-center rounded-full bg-primary-foreground/15 text-xl font-bold">
             {initials}
           </div>
@@ -78,6 +80,8 @@ function ProfilePage() {
             <h1 className="truncate text-lg font-bold">{fullName || "Welcome"}</h1>
             <p className="truncate text-sm text-primary-foreground/75">{user?.email}</p>
           </div>
+          </div>
+          <ThemeToggle className="border-primary-foreground/25 bg-primary-foreground/15 text-primary-foreground" />
         </div>
       </header>
 
