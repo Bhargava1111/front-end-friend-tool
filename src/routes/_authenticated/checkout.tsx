@@ -12,7 +12,14 @@ import { FulfilmentMap } from "@/components/fulfilment-map";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { formatINR } from "@/lib/format";
-import { cartSubtotal, computeTotals, couponError, deliverySlots, PAYMENT_METHODS } from "@/lib/commerce";
+import {
+  cartSubtotal,
+  computeTotals,
+  couponError,
+  deliverySlots,
+  lineUnitPrice,
+  PAYMENT_METHODS,
+} from "@/lib/commerce";
 import { useAppliedCoupon } from "@/lib/client-store";
 import type { Address } from "@/lib/types";
 import { cn } from "@/lib/utils";

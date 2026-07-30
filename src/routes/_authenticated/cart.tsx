@@ -11,7 +11,7 @@ import { PageShell, TopBar, EmptyState } from "@/components/page-shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { formatINR } from "@/lib/format";
-import { cartSubtotal, computeTotals, couponError } from "@/lib/commerce";
+import { cartSubtotal, computeTotals, couponError, lineUnitPrice } from "@/lib/commerce";
 import { useAppliedCoupon, useSaveForLater } from "@/lib/client-store";
 import { useHydrated } from "@/hooks/use-hydrated";
 import { cn } from "@/lib/utils";
