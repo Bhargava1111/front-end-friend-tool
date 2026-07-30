@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { Heart, Plus, Check } from "lucide-react";
-import { useState } from "react";
+import { Heart, Plus, Check, Play, Images } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
@@ -19,11 +19,25 @@ export function ProductCard({ product, className }: { product: Product; classNam
   const { data: wishlist } = useWishlist();
   const [added, setAdded] = useState(false);
 
+  const images = (product.images?.length ? product.images : product.image_url ? [product.image_url] : []).slice(0, 5);
+  const [frame, setFrame] = useState(0);
+  const [cycling, setCycling] = useState(false);
+  const timer = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    if (!cycling || images.length < 2) return;
+    timer.current = setInterval(() => setFrame((f) => (f + 1) % images.length), 1100);
+    return () => {
+      if (timer.current) clearInterval(timer.current);
+    };
+  }, [cycling, images.length]);
+
   const wishlisted = (wishlist ?? []).some((w) => w.product?.id === product.id);
   const discount =
     product.mrp && Number(product.mrp) > Number(product.price)
       ? Math.round(((Number(product.mrp) - Number(product.price)) / Number(product.mrp)) * 100)
       : 0;
+
 
   const addMutation = useMutation({
     mutationFn: () => add({ data: { productId: product.id } }),
