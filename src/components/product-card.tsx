@@ -163,18 +163,26 @@ export function ProductCard({ product, className }: { product: Product; classNam
             {product.name}
           </h3>
         </Link>
-        {product.weight && (
-          <p className="text-xs text-muted-foreground">{product.weight}</p>
-        )}
+        <div className="flex flex-wrap items-center gap-1.5">
+          {(defaultVariant?.label ?? product.weight) && (
+            <p className="text-xs text-muted-foreground">
+              {defaultVariant?.label ?? product.weight}
+            </p>
+          )}
+          {packCount > 1 && (
+            <span className="rounded-full bg-secondary px-2 py-0.5 text-[10px] font-semibold text-foreground">
+              {packCount} sizes
+            </span>
+          )}
+        </div>
         <div className="mt-auto flex items-end justify-between pt-2">
           <div>
-            <p className="text-base font-bold text-foreground">{formatINR(product.price)}</p>
-            {discount > 0 && (
-              <p className="text-xs text-muted-foreground line-through">
-                {formatINR(product.mrp!)}
-              </p>
+            <p className="text-base font-bold text-foreground">{formatINR(price)}</p>
+            {discount > 0 && mrp && (
+              <p className="text-xs text-muted-foreground line-through">{formatINR(mrp)}</p>
             )}
           </div>
+
           <button
             type="button"
             disabled={product.stock === 0 || addMutation.isPending}
