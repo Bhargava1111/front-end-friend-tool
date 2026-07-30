@@ -87,7 +87,9 @@ function AdminLayout() {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <NotificationBell />
             <ThemeToggle />
+
             <Link
               to="/"
               className="rounded-full border border-border px-3 py-1.5 text-xs font-medium text-foreground"
