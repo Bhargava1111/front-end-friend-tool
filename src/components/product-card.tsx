@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { addToCart, toggleWishlist } from "@/lib/shop.functions";
 import { useSession, useWishlist } from "@/hooks/use-shop";
 import { formatINR } from "@/lib/format";
+import { pickDefaultVariant } from "@/components/variant-picker";
 import { cn } from "@/lib/utils";
 import type { Product } from "@/lib/types";
 
@@ -33,14 +34,22 @@ export function ProductCard({ product, className }: { product: Product; classNam
   }, [cycling, images.length]);
 
   const wishlisted = (wishlist ?? []).some((w) => w.product?.id === product.id);
-  const discount =
-    product.mrp && Number(product.mrp) > Number(product.price)
-      ? Math.round(((Number(product.mrp) - Number(product.price)) / Number(product.mrp)) * 100)
-      : 0;
+  const defaultVariant = pickDefaultVariant(product.variants);
+  const packCount = (product.variants ?? []).filter((v) => v.is_active !== false).length;
+  const price = Number(defaultVariant?.price ?? product.price);
+  const mrp = defaultVariant
+    ? defaultVariant.mrp
+      ? Number(defaultVariant.mrp)
+      : null
+    : product.mrp
+      ? Number(product.mrp)
+      : null;
+  const discount = mrp && mrp > price ? Math.round(((mrp - price) / mrp) * 100) : 0;
 
 
   const addMutation = useMutation({
-    mutationFn: () => add({ data: { productId: product.id } }),
+    mutationFn: () =>
+      add({ data: { productId: product.id, variantId: defaultVariant?.id ?? null } }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["cart"] });
       setAdded(true);

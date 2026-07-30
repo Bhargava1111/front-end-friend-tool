@@ -8,7 +8,6 @@ import {
   ShieldCheck,
   Truck,
   PackageSearch,
-  RotateCcw,
   Share2,
   Bookmark,
   ShoppingCart,
@@ -371,8 +370,8 @@ function ProductPage() {
             <span className="text-[11px] font-medium text-foreground">Quality assured</span>
           </div>
           <div className="flex flex-col items-center gap-1.5 rounded-2xl bg-secondary p-3 text-center">
-            <RotateCcw className="h-5 w-5 text-primary" />
-            <span className="text-[11px] font-medium text-foreground">24h easy return</span>
+            <Leaf className="h-5 w-5 text-primary" />
+            <span className="text-[11px] font-medium text-foreground">Naturally sourced</span>
           </div>
         </div>
 
