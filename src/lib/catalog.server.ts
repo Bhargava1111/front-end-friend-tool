@@ -21,4 +21,4 @@ export function getPublicSupabase() {
 }
 
 export const PRODUCT_COLUMNS =
-  "id, name, slug, description, weight, price, mrp, stock, image_url, is_featured, is_best_seller, is_recommended, category_id";
+  "id, name, slug, description, weight, price, mrp, stock, image_url, video_url, is_featured, is_best_seller, is_recommended, category_id";

@@ -48,6 +48,7 @@ type Form = {
   weight: string;
   category_id: string;
   image_url: string;
+  video_url: string;
   description: string;
   is_active: boolean;
   is_featured: boolean;
@@ -63,6 +64,7 @@ const empty: Form = {
   weight: "",
   category_id: "",
   image_url: "",
+  video_url: "",
   description: "",
   is_active: true,
   is_featured: false,
@@ -101,6 +103,7 @@ function AdminProducts() {
           weight: f.weight || null,
           category_id: f.category_id || null,
           image_url: f.image_url || null,
+          video_url: f.video_url || null,
           description: f.description || null,
           is_active: f.is_active,
           is_featured: f.is_featured,
@@ -202,6 +205,7 @@ function AdminProducts() {
                             weight: p.weight ?? "",
                             category_id: p.category_id ?? "",
                             image_url: p.image_url ?? "",
+                            video_url: p.video_url ?? "",
                             description: p.description ?? "",
                             is_active: p.is_active,
                             is_featured: p.is_featured,
@@ -313,6 +317,15 @@ function AdminProducts() {
                   id="p-image"
                   value={form.image_url}
                   onChange={(e) => setForm({ ...form, image_url: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="p-video">Video URL (MP4 or YouTube embed)</Label>
+                <Input
+                  id="p-video"
+                  placeholder="https://…"
+                  value={form.video_url}
+                  onChange={(e) => setForm({ ...form, video_url: e.target.value })}
                 />
               </div>
               <div>
