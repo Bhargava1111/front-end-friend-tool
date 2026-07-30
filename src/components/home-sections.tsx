@@ -63,7 +63,10 @@ export function FlashSaleRail({ products }: { products: Product[] }) {
         <p className="mt-1 px-4 text-xs text-primary-foreground/70">
           Ends at midnight — grab them before they're gone
         </p>
-        <div className="no-scrollbar mt-3 flex gap-3 overflow-x-auto px-4 pb-1">
+        <div
+          ref={dealsScrollRef}
+          className="no-scrollbar mt-3 flex gap-3 overflow-x-auto px-4 pb-1"
+        >
           {deals.map((p) => (
             <ProductCard key={p.id} product={p} className="w-[150px] shrink-0" />
           ))}
@@ -151,10 +154,14 @@ export function OfferCards() {
 }
 
 export function BrandRail() {
+  const brandScrollRef = useAutoScroll<HTMLDivElement>(BRANDS.length > 3);
   return (
     <Reveal className="mt-7">
       <h2 className="px-4 text-base font-bold text-foreground">Featured brands</h2>
-      <div className="no-scrollbar mt-3 flex gap-3 overflow-x-auto px-4 pb-1">
+      <div
+        ref={brandScrollRef}
+        className="no-scrollbar mt-3 flex gap-3 overflow-x-auto px-4 pb-1"
+      >
         {BRANDS.map((b) => (
           <div
             key={b.name}
@@ -175,11 +182,15 @@ export function BrandRail() {
 export function RecentlyViewedRail() {
   const hydrated = useHydrated();
   const items = useRecentlyViewed((s) => s.items);
+  const recentScrollRef = useAutoScroll<HTMLDivElement>(items.length > 3);
   if (!hydrated || items.length === 0) return null;
   return (
     <Reveal className="mt-7">
       <h2 className="px-4 text-base font-bold text-foreground">Recently viewed</h2>
-      <div className="no-scrollbar mt-3 flex gap-3 overflow-x-auto px-4 pb-1">
+      <div
+        ref={recentScrollRef}
+        className="no-scrollbar mt-3 flex gap-3 overflow-x-auto px-4 pb-1"
+      >
         {items.map((p) => (
           <ProductCard key={p.id} product={p} className="w-[150px] shrink-0" />
         ))}
