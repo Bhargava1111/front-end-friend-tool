@@ -24,6 +24,7 @@ import { Route as AdminProductsRouteImport } from './routes/admin/products'
 import { Route as AdminOrdersRouteImport } from './routes/admin/orders'
 import { Route as AdminCustomersRouteImport } from './routes/admin/customers'
 import { Route as AdminCategoriesRouteImport } from './routes/admin/categories'
+import { Route as AdminBannersRouteImport } from './routes/admin/banners'
 import { Route as AuthenticatedWishlistRouteImport } from './routes/_authenticated/wishlist'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated/notifications'
@@ -107,6 +108,11 @@ const AdminCategoriesRoute = AdminCategoriesRouteImport.update({
   path: '/categories',
   getParentRoute: () => AdminRouteRoute,
 } as any)
+const AdminBannersRoute = AdminBannersRouteImport.update({
+  id: '/banners',
+  path: '/banners',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
 const AuthenticatedWishlistRoute = AuthenticatedWishlistRouteImport.update({
   id: '/wishlist',
   path: '/wishlist',
@@ -163,6 +169,7 @@ export interface FileRoutesByFullPath {
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/wishlist': typeof AuthenticatedWishlistRoute
+  '/admin/banners': typeof AdminBannersRoute
   '/admin/categories': typeof AdminCategoriesRoute
   '/admin/customers': typeof AdminCustomersRoute
   '/admin/orders': typeof AdminOrdersRoute
@@ -186,6 +193,7 @@ export interface FileRoutesByTo {
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/wishlist': typeof AuthenticatedWishlistRoute
+  '/admin/banners': typeof AdminBannersRoute
   '/admin/categories': typeof AdminCategoriesRoute
   '/admin/customers': typeof AdminCustomersRoute
   '/admin/orders': typeof AdminOrdersRoute
@@ -212,6 +220,7 @@ export interface FileRoutesById {
   '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/wishlist': typeof AuthenticatedWishlistRoute
+  '/admin/banners': typeof AdminBannersRoute
   '/admin/categories': typeof AdminCategoriesRoute
   '/admin/customers': typeof AdminCustomersRoute
   '/admin/orders': typeof AdminOrdersRoute
@@ -238,6 +247,7 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/profile'
     | '/wishlist'
+    | '/admin/banners'
     | '/admin/categories'
     | '/admin/customers'
     | '/admin/orders'
@@ -261,6 +271,7 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/profile'
     | '/wishlist'
+    | '/admin/banners'
     | '/admin/categories'
     | '/admin/customers'
     | '/admin/orders'
@@ -286,6 +297,7 @@ export interface FileRouteTypes {
     | '/_authenticated/notifications'
     | '/_authenticated/profile'
     | '/_authenticated/wishlist'
+    | '/admin/banners'
     | '/admin/categories'
     | '/admin/customers'
     | '/admin/orders'
@@ -417,6 +429,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminCategoriesRouteImport
       parentRoute: typeof AdminRouteRoute
     }
+    '/admin/banners': {
+      id: '/admin/banners'
+      path: '/banners'
+      fullPath: '/admin/banners'
+      preLoaderRoute: typeof AdminBannersRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
     '/_authenticated/wishlist': {
       id: '/_authenticated/wishlist'
       path: '/wishlist'
@@ -502,6 +521,7 @@ const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
 interface AdminRouteRouteChildren {
+  AdminBannersRoute: typeof AdminBannersRoute
   AdminCategoriesRoute: typeof AdminCategoriesRoute
   AdminCustomersRoute: typeof AdminCustomersRoute
   AdminOrdersRoute: typeof AdminOrdersRoute
@@ -511,6 +531,7 @@ interface AdminRouteRouteChildren {
 }
 
 const AdminRouteRouteChildren: AdminRouteRouteChildren = {
+  AdminBannersRoute: AdminBannersRoute,
   AdminCategoriesRoute: AdminCategoriesRoute,
   AdminCustomersRoute: AdminCustomersRoute,
   AdminOrdersRoute: AdminOrdersRoute,
