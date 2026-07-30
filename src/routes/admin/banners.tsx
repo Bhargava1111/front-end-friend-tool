@@ -1,0 +1,281 @@
+import { useState } from "react";
+import { createFileRoute } from "@tanstack/react-router";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { Plus, Pencil, Trash2 } from "lucide-react";
+import { toast } from "sonner";
+import {
+  getAdminBanners,
+  saveAdminBanner,
+  deleteAdminBanner,
+  toggleAdminBanner,
+  getAdminCategories,
+} from "@/lib/admin.functions";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+export const Route = createFileRoute("/admin/banners")({
+  head: () => ({
+    meta: [
+      { title: "Banner Management — Admin | Sri Mahalakshmi Stores" },
+      { name: "description", content: "Create and schedule homepage promotional banners." },
+      { property: "og:title", content: "Banner Management — Admin" },
+      { property: "og:description", content: "Manage homepage banner slides." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
+  component: AdminBanners,
+});
+
+type Form = {
+  id?: string;
+  title: string;
+  subtitle: string;
+  image_url: string;
+  link_slug: string;
+  sort_order: string;
+  is_active: boolean;
+};
+
+const empty: Form = {
+  title: "",
+  subtitle: "",
+  image_url: "",
+  link_slug: "",
+  sort_order: "0",
+  is_active: true,
+};
+
+function AdminBanners() {
+  const qc = useQueryClient();
+  const fetchBanners = useServerFn(getAdminBanners);
+  const fetchCategories = useServerFn(getAdminCategories);
+  const save = useServerFn(saveAdminBanner);
+  const remove = useServerFn(deleteAdminBanner);
+  const toggle = useServerFn(toggleAdminBanner);
+  const [form, setForm] = useState<Form | null>(null);
+
+  const { data = [], isLoading } = useQuery({
+    queryKey: ["admin-banners"],
+    queryFn: () => fetchBanners(),
+  });
+  const { data: categories = [] } = useQuery({
+    queryKey: ["admin-categories"],
+    queryFn: () => fetchCategories(),
+  });
+
+  const invalidate = () => {
+    qc.invalidateQueries({ queryKey: ["admin-banners"] });
+    qc.invalidateQueries({ queryKey: ["home"] });
+  };
+
+  const saveMutation = useMutation({
+    mutationFn: (f: Form) =>
+      save({
+        data: {
+          id: f.id,
+          title: f.title,
+          subtitle: f.subtitle || null,
+          image_url: f.image_url,
+          link_slug: f.link_slug || null,
+          sort_order: Number(f.sort_order) || 0,
+          is_active: f.is_active,
+        },
+      }),
+    onSuccess: () => {
+      toast.success("Banner saved");
+      setForm(null);
+      invalidate();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => remove({ data: { id } }),
+    onSuccess: () => {
+      toast.success("Banner deleted");
+      invalidate();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const toggleMutation = useMutation({
+    mutationFn: (vars: { id: string; is_active: boolean }) => toggle({ data: vars }),
+    onSuccess: invalidate,
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between gap-2">
+        <h1 className="text-base font-semibold text-foreground">Banners</h1>
+        <Button onClick={() => setForm(empty)} className="gap-2">
+          <Plus className="h-4 w-4" /> New banner
+        </Button>
+      </div>
+
+      {isLoading && <div className="h-56 animate-pulse rounded-2xl bg-card" />}
+
+      {!isLoading && (
+        <div className="grid gap-3 sm:grid-cols-2">
+          {data.map((b) => (
+            <div key={b.id} className="overflow-hidden rounded-2xl border border-border bg-card">
+              <div className="relative aspect-[16/7] bg-secondary">
+                <img
+                  src={b.image_url}
+                  alt={b.title}
+                  loading="lazy"
+                  className="h-full w-full object-cover"
+                />
+              </div>
+              <div className="flex items-start justify-between gap-3 p-3">
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-semibold text-foreground">{b.title}</p>
+                  <p className="truncate text-xs text-muted-foreground">{b.subtitle ?? "—"}</p>
+                  <p className="mt-1 text-[11px] text-muted-foreground">
+                    Order {b.sort_order} · {b.link_slug ? `→ /${b.link_slug}` : "No link"}
+                  </p>
+                </div>
+                <div className="flex shrink-0 items-center gap-2">
+                  <Switch
+                    checked={b.is_active}
+                    onCheckedChange={(v) => toggleMutation.mutate({ id: b.id, is_active: v })}
+                    aria-label={`Toggle ${b.title}`}
+                  />
+                  <button
+                    type="button"
+                    aria-label={`Edit ${b.title}`}
+                    onClick={() =>
+                      setForm({
+                        id: b.id,
+                        title: b.title,
+                        subtitle: b.subtitle ?? "",
+                        image_url: b.image_url,
+                        link_slug: b.link_slug ?? "",
+                        sort_order: String(b.sort_order),
+                        is_active: b.is_active,
+                      })
+                    }
+                    className="grid h-8 w-8 place-items-center rounded-lg bg-secondary text-foreground"
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                  </button>
+                  <button
+                    type="button"
+                    aria-label={`Delete ${b.title}`}
+                    onClick={() => deleteMutation.mutate(b.id)}
+                    className="grid h-8 w-8 place-items-center rounded-lg bg-destructive/10 text-destructive"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <Dialog open={!!form} onOpenChange={(o) => !o && setForm(null)}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{form?.id ? "Edit banner" : "New banner"}</DialogTitle>
+          </DialogHeader>
+          {form && (
+            <form
+              className="space-y-3"
+              onSubmit={(e) => {
+                e.preventDefault();
+                saveMutation.mutate(form);
+              }}
+            >
+              <div>
+                <Label htmlFor="b-title">Title</Label>
+                <Input
+                  id="b-title"
+                  required
+                  value={form.title}
+                  onChange={(e) => setForm({ ...form, title: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="b-sub">Subtitle</Label>
+                <Input
+                  id="b-sub"
+                  value={form.subtitle}
+                  onChange={(e) => setForm({ ...form, subtitle: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="b-image">Image URL</Label>
+                <Input
+                  id="b-image"
+                  required
+                  value={form.image_url}
+                  onChange={(e) => setForm({ ...form, image_url: e.target.value })}
+                />
+              </div>
+              {form.image_url && (
+                <img
+                  src={form.image_url}
+                  alt="Banner preview"
+                  className="aspect-[16/7] w-full rounded-xl object-cover"
+                />
+              )}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label>Links to category</Label>
+                  <Select
+                    value={form.link_slug || "none"}
+                    onValueChange={(v) => setForm({ ...form, link_slug: v === "none" ? "" : v })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="No link" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">No link</SelectItem>
+                      {categories.map((c) => (
+                        <SelectItem key={c.id} value={c.slug}>
+                          {c.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="b-order">Sort order</Label>
+                  <Input
+                    id="b-order"
+                    inputMode="numeric"
+                    value={form.sort_order}
+                    onChange={(e) => setForm({ ...form, sort_order: e.target.value })}
+                  />
+                </div>
+              </div>
+              <label className="flex items-center gap-2 pt-1 text-sm">
+                <Switch
+                  checked={form.is_active}
+                  onCheckedChange={(v) => setForm({ ...form, is_active: v })}
+                />
+                Active
+              </label>
+              <Button type="submit" className="w-full" disabled={saveMutation.isPending}>
+                {saveMutation.isPending ? "Saving…" : "Save banner"}
+              </Button>
+            </form>
+          )}
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
