@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { Heart, Plus, Check } from "lucide-react";
-import { useState } from "react";
+import { Heart, Plus, Check, Play, Images } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
@@ -19,11 +19,25 @@ export function ProductCard({ product, className }: { product: Product; classNam
   const { data: wishlist } = useWishlist();
   const [added, setAdded] = useState(false);
 
+  const images = (product.images?.length ? product.images : product.image_url ? [product.image_url] : []).slice(0, 5);
+  const [frame, setFrame] = useState(0);
+  const [cycling, setCycling] = useState(false);
+  const timer = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    if (!cycling || images.length < 2) return;
+    timer.current = setInterval(() => setFrame((f) => (f + 1) % images.length), 1100);
+    return () => {
+      if (timer.current) clearInterval(timer.current);
+    };
+  }, [cycling, images.length]);
+
   const wishlisted = (wishlist ?? []).some((w) => w.product?.id === product.id);
   const discount =
     product.mrp && Number(product.mrp) > Number(product.price)
       ? Math.round(((Number(product.mrp) - Number(product.price)) / Number(product.mrp)) * 100)
       : 0;
+
 
   const addMutation = useMutation({
     mutationFn: () => add({ data: { productId: product.id } }),
@@ -59,11 +73,16 @@ export function ProductCard({ product, className }: { product: Product; classNam
       <Link
         to="/product/$slug"
         params={{ slug: product.slug }}
+        onMouseEnter={() => setCycling(true)}
+        onMouseLeave={() => {
+          setCycling(false);
+          setFrame(0);
+        }}
         className="relative block aspect-square overflow-hidden bg-secondary"
       >
-        {product.image_url ? (
+        {images.length ? (
           <img
-            src={product.image_url}
+            src={images[Math.min(frame, images.length - 1)]}
             alt={product.name}
             loading="lazy"
             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
@@ -78,12 +97,44 @@ export function ProductCard({ product, className }: { product: Product; classNam
             {discount}% OFF
           </span>
         )}
+        {product.video_url && (
+          <span
+            aria-label="Includes product video"
+            className="absolute bottom-2 left-2 flex items-center gap-1 rounded-full bg-foreground/70 px-2 py-0.5 text-[10px] font-semibold text-background"
+          >
+            <Play className="h-2.5 w-2.5 fill-current" /> Video
+          </span>
+        )}
+        {images.length > 1 && (
+          <>
+            <span
+              aria-label={`${images.length} images`}
+              className="absolute right-2 top-9 flex items-center gap-1 rounded-full bg-foreground/65 px-1.5 py-0.5 text-[10px] font-semibold text-background"
+            >
+              <Images className="h-2.5 w-2.5" /> {images.length}
+            </span>
+            <span className="absolute inset-x-0 bottom-1.5 flex justify-center gap-1">
+              {images.map((src, i) => (
+                <span
+                  key={src + i}
+                  className={cn(
+                    "h-1 rounded-full transition-all",
+                    i === Math.min(frame, images.length - 1)
+                      ? "w-3 bg-primary"
+                      : "w-1 bg-background/80",
+                  )}
+                />
+              ))}
+            </span>
+          </>
+        )}
         {product.stock === 0 && (
           <span className="absolute inset-0 flex items-center justify-center bg-foreground/55 text-xs font-semibold text-background">
             Out of stock
           </span>
         )}
       </Link>
+
 
       <button
         type="button"

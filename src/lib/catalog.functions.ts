@@ -1,5 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
-import { getPublicSupabase, PRODUCT_COLUMNS } from "./catalog.server";
+import { attachGalleries, getPublicSupabase, PRODUCT_COLUMNS } from "./catalog.server";
 
 export const getHomeData = createServerFn({ method: "GET" }).handler(async () => {
   const supabase = getPublicSupabase();
@@ -12,7 +12,7 @@ export const getHomeData = createServerFn({ method: "GET" }).handler(async () =>
     supabase.from("products").select(PRODUCT_COLUMNS).order("created_at", { ascending: false }),
   ]);
 
-  const all = products.data ?? [];
+  const all = await attachGalleries(supabase, products.data ?? []);
   return {
     banners: banners.data ?? [],
     categories: categories.data ?? [],
@@ -20,6 +20,8 @@ export const getHomeData = createServerFn({ method: "GET" }).handler(async () =>
     bestSelling: all.filter((p) => p.is_best_seller).slice(0, 10),
     newest: all.slice(0, 10),
     recommended: all.filter((p) => p.is_recommended).slice(0, 10),
+    budget: all.filter((p) => Number(p.price) <= 99).slice(0, 12),
+    all: all.slice(0, 40),
   };
 });
 
@@ -41,13 +43,24 @@ export const getCategoryWithProducts = createServerFn({ method: "GET" })
       .select("id, name, slug, description, image_url")
       .eq("slug", data.slug)
       .maybeSingle();
-    if (!category) return { category: null, products: [] };
-    const { data: products } = await supabase
-      .from("products")
-      .select(PRODUCT_COLUMNS)
-      .eq("category_id", category.id)
-      .order("name");
-    return { category, products: products ?? [] };
+    if (!category) return { category: null, products: [], categories: [], brands: [] };
+
+    const [{ data: products }, { data: categories }, { data: brands }] = await Promise.all([
+      supabase
+        .from("products")
+        .select(PRODUCT_COLUMNS)
+        .eq("category_id", category.id)
+        .order("name"),
+      supabase.from("categories").select("id, name, slug, image_url").order("sort_order"),
+      supabase.from("brands").select("id, name, slug").eq("is_active", true).order("name"),
+    ]);
+
+    return {
+      category,
+      products: await attachGalleries(supabase, products ?? []),
+      categories: categories ?? [],
+      brands: brands ?? [],
+    };
   });
 
 export const getProductBySlug = createServerFn({ method: "GET" })
@@ -59,7 +72,7 @@ export const getProductBySlug = createServerFn({ method: "GET" })
       .select(PRODUCT_COLUMNS)
       .eq("slug", data.slug)
       .maybeSingle();
-    if (!product) return { product: null, related: [], categoryName: null };
+    if (!product) return { product: null, related: [], categoryName: null, images: [] };
 
     const [{ data: related }, { data: category }, { data: gallery }] = await Promise.all([
       product.category_id
@@ -85,7 +98,12 @@ export const getProductBySlug = createServerFn({ method: "GET" })
       ...(gallery ?? []).map((g) => g.image_url),
     ].filter((v, i, arr) => arr.indexOf(v) === i);
 
-    return { product, related: related ?? [], categoryName: category?.name ?? null, images };
+    return {
+      product: { ...product, images },
+      related: await attachGalleries(supabase, related ?? []),
+      categoryName: category?.name ?? null,
+      images,
+    };
   });
 
 export const searchProducts = createServerFn({ method: "GET" })
@@ -98,5 +116,5 @@ export const searchProducts = createServerFn({ method: "GET" })
     else if (data.sort === "price_desc") query = query.order("price", { ascending: false });
     else query = query.order("name");
     const { data: products } = await query.limit(60);
-    return products ?? [];
+    return attachGalleries(supabase, products ?? []);
   });

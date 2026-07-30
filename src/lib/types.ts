@@ -13,6 +13,9 @@ export type Product = {
   is_best_seller: boolean;
   is_recommended: boolean;
   category_id: string | null;
+  brand_id?: string | null;
+  /** Main image first, then gallery images from product_images. */
+  images?: string[];
 };
 
 export type Category = {

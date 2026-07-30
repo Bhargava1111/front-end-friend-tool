@@ -85,7 +85,7 @@ function CheckoutPage() {
   });
 
   return (
-    <PageShell>
+    <PageShell withCartBar={false}>
       <TopBar title="Checkout" subtitle="Secure & simple" />
 
       <section className="px-4 pt-4">

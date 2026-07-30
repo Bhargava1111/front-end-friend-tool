@@ -121,14 +121,29 @@ export const setOrderStatus = createServerFn({ method: "POST" })
 export const getAdminProducts = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const [products, categories] = await Promise.all([
+    const [products, categories, images] = await Promise.all([
       context.supabase
         .from("products")
         .select(`${PRODUCT_COLUMNS}, is_active`)
         .order("name"),
       context.supabase.from("categories").select("id, name, slug").order("name"),
+      context.supabase
+        .from("product_images")
+        .select("product_id, image_url, sort_order")
+        .order("sort_order"),
     ]);
-    return { products: products.data ?? [], categories: categories.data ?? [] };
+
+    const gallery = new Map<string, string[]>();
+    for (const row of images.data ?? []) {
+      const list = gallery.get(row.product_id) ?? [];
+      list.push(row.image_url);
+      gallery.set(row.product_id, list);
+    }
+
+    return {
+      products: (products.data ?? []).map((p) => ({ ...p, gallery: gallery.get(p.id) ?? [] })),
+      categories: categories.data ?? [],
+    };
   });
 
 export const saveAdminProduct = createServerFn({ method: "POST" })
@@ -149,19 +164,39 @@ export const saveAdminProduct = createServerFn({ method: "POST" })
       is_active: boolean;
       is_featured: boolean;
       is_best_seller: boolean;
+      gallery?: string[];
     }) => data,
   )
   .handler(async ({ data, context }) => {
-    const { id, ...fields } = data;
+    const { id, gallery, ...fields } = data;
+    let productId = id;
     if (id) {
       const { error } = await context.supabase.from("products").update(fields).eq("id", id);
       if (error) throw new Error(error.message);
     } else {
-      const { error } = await context.supabase.from("products").insert(fields);
+      const { data: created, error } = await context.supabase
+        .from("products")
+        .insert(fields)
+        .select("id")
+        .single();
       if (error) throw new Error(error.message);
+      productId = created?.id;
+    }
+
+    if (gallery && productId) {
+      await context.supabase.from("product_images").delete().eq("product_id", productId);
+      const rows = gallery
+        .map((url) => url.trim())
+        .filter(Boolean)
+        .map((image_url, i) => ({ product_id: productId!, image_url, sort_order: i }));
+      if (rows.length) {
+        const { error } = await context.supabase.from("product_images").insert(rows);
+        if (error) throw new Error(error.message);
+      }
     }
     return { ok: true };
   });
+
 
 
 export const deleteAdminProduct = createServerFn({ method: "POST" })

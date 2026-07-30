@@ -13,11 +13,18 @@ import { FadeIn, Reveal } from "@/components/motion";
 import { HomeSkeleton } from "@/components/skeletons";
 import {
   BrandRail,
+  BudgetRail,
   CouponStrip,
+  DealOfTheDay,
+  FestivalPicks,
   FlashSaleRail,
+  OfferBannerCarousel,
   OfferCards,
   RecentlyViewedRail,
+  ServicePromises,
+  ShopByNeed,
 } from "@/components/home-sections";
+
 
 const homeQuery = queryOptions({
   queryKey: ["home"],
@@ -63,11 +70,17 @@ function Home() {
   const { data } = useSuspenseQuery(homeQuery);
   const allProducts = Array.from(
     new Map(
-      [...data.newest, ...data.featured, ...data.bestSelling].map((p) => [p.id, p]),
+      [...(data.all ?? []), ...data.newest, ...data.featured, ...data.bestSelling].map((p) => [
+        p.id,
+        p,
+      ]),
     ).values(),
   );
   const trending = data.bestSelling.length ? data.bestSelling : data.newest;
   const categoryScrollRef = useAutoScroll<HTMLDivElement>(data.categories.length > 3);
+  const heroBanners = data.banners.slice(0, 3);
+  const offerBanners = data.banners.length > 3 ? data.banners.slice(3) : data.banners;
+
 
 
   return (
@@ -115,7 +128,7 @@ function Home() {
       </header>
 
       <Reveal className="mt-5">
-        <BannerSlider banners={data.banners} />
+        <BannerSlider banners={heroBanners} />
       </Reveal>
 
       <Reveal className="mt-7">
@@ -155,7 +168,10 @@ function Home() {
       </Reveal>
 
       <FlashSaleRail products={allProducts} />
+      <OfferBannerCarousel banners={offerBanners} />
       <OfferCards />
+
+      <DealOfTheDay products={allProducts} />
 
       <Reveal>
         <ProductRail title="Today's deals" products={data.featured} />
@@ -163,13 +179,19 @@ function Home() {
 
       <CouponStrip />
 
+      <FestivalPicks categories={data.categories} products={allProducts} title="Pooja & festive store" />
+
       <Reveal>
         <ProductRail title="Trending now" products={trending} />
       </Reveal>
 
+      <BudgetRail products={allProducts} />
+
       <Reveal>
         <ProductRail title="Best sellers" products={data.bestSelling} />
       </Reveal>
+
+      <ShopByNeed categories={data.categories} />
 
       <RecentlyViewedRail />
 
@@ -179,9 +201,12 @@ function Home() {
 
       <BrandRail />
 
+      <ServicePromises />
+
       <Reveal>
         <ProductRail title="Newly added" products={data.newest} />
       </Reveal>
+
 
       <Reveal className="mt-8 px-4">
         <div className="rounded-3xl border border-accent/30 bg-gradient-to-br from-accent-soft to-accent-soft/40 p-5 text-center">

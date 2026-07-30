@@ -49,6 +49,7 @@ type Form = {
   category_id: string;
   image_url: string;
   video_url: string;
+  gallery: string;
   description: string;
   is_active: boolean;
   is_featured: boolean;
@@ -65,6 +66,7 @@ const empty: Form = {
   category_id: "",
   image_url: "",
   video_url: "",
+  gallery: "",
   description: "",
   is_active: true,
   is_featured: false,
@@ -104,6 +106,10 @@ function AdminProducts() {
           category_id: f.category_id || null,
           image_url: f.image_url || null,
           video_url: f.video_url || null,
+          gallery: f.gallery
+            .split("\n")
+            .map((v) => v.trim())
+            .filter(Boolean),
           description: f.description || null,
           is_active: f.is_active,
           is_featured: f.is_featured,
@@ -206,6 +212,7 @@ function AdminProducts() {
                             category_id: p.category_id ?? "",
                             image_url: p.image_url ?? "",
                             video_url: p.video_url ?? "",
+                            gallery: (p.gallery ?? []).join("\n"),
                             description: p.description ?? "",
                             is_active: p.is_active,
                             is_featured: p.is_featured,
@@ -326,6 +333,16 @@ function AdminProducts() {
                   placeholder="https://…"
                   value={form.video_url}
                   onChange={(e) => setForm({ ...form, video_url: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="p-gallery">Extra image URLs (one per line)</Label>
+                <Textarea
+                  id="p-gallery"
+                  rows={3}
+                  placeholder={"https://…/img-2.jpg\nhttps://…/img-3.jpg"}
+                  value={form.gallery}
+                  onChange={(e) => setForm({ ...form, gallery: e.target.value })}
                 />
               </div>
               <div>
