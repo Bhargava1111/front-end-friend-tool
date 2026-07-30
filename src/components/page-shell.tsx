@@ -2,24 +2,34 @@ import type { ReactNode } from "react";
 import { Link, useRouter } from "@tanstack/react-router";
 import { ChevronLeft } from "lucide-react";
 import { BottomNav } from "./bottom-nav";
+import { BackToTop, StickyCartBar } from "./cart-pill";
 import { cn } from "@/lib/utils";
 
 export function PageShell({
   children,
   className,
   withNav = true,
+  withCartBar = true,
 }: {
   children: ReactNode;
   className?: string;
   withNav?: boolean;
+  withCartBar?: boolean;
 }) {
   return (
     <div className="min-h-screen bg-background">
-      <div className={cn("mx-auto w-full max-w-lg", withNav && "pb-24", className)}>{children}</div>
+      <div className={cn("mx-auto w-full max-w-lg", withNav && "pb-36", className)}>{children}</div>
+      {withNav && withCartBar && (
+        <>
+          <StickyCartBar />
+          <BackToTop />
+        </>
+      )}
       {withNav && <BottomNav />}
     </div>
   );
 }
+
 
 export function TopBar({
   title,
