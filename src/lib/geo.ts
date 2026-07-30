@@ -31,10 +31,16 @@ export function formatKm(km: number) {
   return km < 1 ? `${Math.round(km * 1000)} m` : `${km.toFixed(1)} km`;
 }
 
-export function nearestStore<T extends LatLng>(point: LatLng, stores: T[]) {
+export function nearestStore<T extends { latitude: number; longitude: number }>(
+  point: LatLng,
+  stores: T[],
+) {
   if (stores.length === 0) return null;
   return stores
-    .map((store) => ({ store, km: distanceKm(point, store) }))
+    .map((store) => ({
+      store,
+      km: distanceKm(point, { lat: store.latitude, lng: store.longitude }),
+    }))
     .sort((a, b) => a.km - b.km)[0];
 }
 
