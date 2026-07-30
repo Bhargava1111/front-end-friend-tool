@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { useCart } from "@/hooks/use-shop";
 import { getAddresses, placeOrder } from "@/lib/shop.functions";
 import { PageShell, TopBar } from "@/components/page-shell";
+import { FulfilmentMap } from "@/components/fulfilment-map";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { formatINR, DELIVERY_FEE, FREE_DELIVERY_ABOVE } from "@/lib/format";
