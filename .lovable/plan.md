@@ -1,36 +1,37 @@
-## Verified current state
+## Goal
 
-- `/categories` is a plain grid, no filters. `/category/$slug` lists products in a grid with no filter or sort controls at all.
-- `/search` has sort chips only — no filter sheet (price, discount, rating, in-stock, brand).
-- `product_images` table exists and the product detail page already renders a gallery from it, but the admin product form only edits a single `image_url` and one `video_url`; product cards and category/search grids show one static image with no video hint.
-- Home has banner slider, category rail, flash sale, 2 offer cards, coupon strip, brand rail and product rails. No secondary offer-banner carousels, no festival/deal-of-the-day blocks.
+1. Rebuild the product detail page to match the reference screens (sticky header with share + cart badge, framed hero image, stock/discount chips, rating line, price with inline quantity stepper, trust tiles, Description, Benefits, Specifications grid, dual "Go to Cart" / "Add to Cart" bottom bar).
+2. Add real pack-size variants (100 g, 250 g, 500 g, 1 kg, 500 ml, 1 L, custom) that customers pick on the product page and admins manage per product.
 
-## 1. Category browsing: "see all" + filters
+Today the "Pack size" chips on the product page are fake — they link to other products in the same category. Cart and orders only store `product_id`, so variants must be added to the data layer to work for real.
 
-- Add a left category strip on `/category/$slug` (like the reference screenshot): vertical scroll of all categories with thumbnails, current one highlighted, tap to switch.
-- Filter bar above the grid: chips for Brand, Price, Discount, Rating, In stock, plus a sliders icon that opens a full filter sheet (price range slider, brand multi-select, min discount, min rating, in-stock toggle) with Apply/Clear. Result count shown, active filters as removable chips.
-- Sort sheet: Relevance, Price low→high, Price high→low, Discount, Newest.
-- All filter + sort state lives in the URL search params so links are shareable and back works.
-- `/categories` gets a search-within-categories field and a "See all products" tile.
-- Reuse the same filter sheet component on `/search`.
+## Database (one migration)
 
-## 2. Product media: multiple images + video
+New table `product_variants`: `product_id`, `label` (e.g. "500 g"), `unit` (g / kg / ml / l / pcs), `unit_value`, `price`, `mrp`, `stock`, `sku`, `image_url`, `is_default`, `is_active`, `sort_order`, timestamps + update trigger. Public read for active rows, admin write via `has_role`, with GRANTs for anon/authenticated/service_role.
 
-- Extend the product detail gallery so video is a slide inside the gallery (thumbnail with play badge) instead of a separate block below, with swipe between images and video.
-- Product cards get a multi-image hint: image dots when a product has more than one image, plus a small video badge, and hover/tap cycles to the second image.
-- Load gallery images for grid listings so cards can show these hints (one extra query joined into the catalog fetch).
-- Admin product form: manage a list of gallery images (add URL, reorder, remove — writing to `product_images`) and multiple video URLs.
+New optional columns for the richer PDP + specs block: `products.benefits` (text array), `products.brand_name` is already available via `brands`, plus `products.shelf_life`, `products.origin`, `products.rating`, `products.rating_count`.
 
-## 3. Home: offer banners + more sections
+Cart/order linkage: `cart_items.variant_id` (nullable, unique per user+product+variant) and `order_items.variant_id` + `variant_label`, so historical orders keep the chosen pack.
 
-- Second offer-banner carousel mid-page (auto-scrolling, dot indicators) driven by banners marked as promotional.
-- New sections: Deal of the Day (single hero product with countdown), Buy Again (from recently ordered), Under ₹99 store, Festival / Pooja Picks with tabbed sub-filters (like the Rakhi Picks reference), Combo & Bundle offers, Top-rated picks, Category-wise "Shop by need" tiles, and a bank/payment offers strip.
-- Sticky "Unlock free delivery — shop ₹X more" progress bar above the bottom nav when a cart is active, plus a floating cart pill with item count and image.
-- "Back to top" floating pill after scrolling past the first fold.
+## Customer side
+
+- Product page loads variants; the selected variant drives price, MRP, discount %, stock text, gallery image and add-to-cart. First `is_default` (else cheapest active) is preselected. Deep-link support via `?variant=` search param.
+- Pack-size chips become a real segmented selector grouped by unit, showing label + price + strikethrough MRP, disabled when out of stock.
+- Sections in reference order: hero + wishlist heart overlay, chips row, title, weight, rating, price + stepper, trust tiles, Description, Benefits bullet list, Specifications 2-column grid (Brand, Weight, Shelf, Origin), then existing bundle / reviews / FAQ / related rails.
+- Bottom bar: outline "Go to Cart" and filled "Add to Cart", pill quantity stepper, safe-area padding.
+- Cart, checkout and order pages show the variant label under each item name; cart quantity/remove actions key off product + variant.
+- Product cards and rails show the default variant's price and a "N sizes" hint when a product has multiple variants.
+
+## Admin side
+
+- Product editor gains a Variants manager: repeatable rows (label, unit, unit value, price, MRP, stock, SKU, image, active, default) with quick-add presets for 100 g / 250 g / 500 g / 1 kg / 200 ml / 500 ml / 1 L, drag-free sort ordering, and validation (one default, unique labels, price > 0).
+- New Benefits, Shelf life and Origin fields in the same editor, feeding the PDP Specifications and Benefits blocks.
+- Product list shows variant count and price range instead of a single price.
 
 ## Technical notes
 
-- Filters resolve client-side over the category product list where the data set is small; the search route passes filters to the existing `searchProducts` server function with added params.
-- Banner promo grouping uses an added nullable `placement` column on `banners` (migration), defaulting existing rows to `hero`, so the admin can decide which banners appear as offer strips.
-- Deal of the Day / Under ₹99 / Top-rated derive from existing product data and the `reviews` table; Buy Again reads existing orders. Festival Picks tabs use category slugs, no new tables.
-- New shared components: `filter-sheet.tsx`, `sort-sheet.tsx`, `category-side-rail.tsx`, `offer-banner-carousel.tsx`, `free-delivery-bar.tsx`, plus additions to `home-sections.tsx`.
+- Variant CRUD goes through `src/lib/admin.functions.ts` server functions using the authenticated Supabase client (admin role check), mirroring the existing `product_images` sync pattern (delete + reinsert on save).
+- `PRODUCT_COLUMNS` in `catalog.server.ts` extends with the new columns; a new `attachVariants` helper batches variant fetches for lists, same shape as `attachGalleries`.
+- `src/lib/types.ts` gains a `ProductVariant` type and `variants?: ProductVariant[]` on `Product`; `CartLine` gains `variant`.
+- Cart/order server functions in `shop.functions.ts` accept an optional `variantId` and resolve price/stock from the variant when present, falling back to the product for variant-less items so existing data keeps working.
+- All colors stay on existing semantic tokens; no hardcoded color utilities.

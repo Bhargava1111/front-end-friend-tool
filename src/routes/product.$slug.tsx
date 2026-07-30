@@ -8,18 +8,22 @@ import {
   ShieldCheck,
   Truck,
   PackageSearch,
-  RotateCcw,
   Share2,
   Bookmark,
+  ShoppingCart,
+  Star,
+  Leaf,
+  Check,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { getProductBySlug } from "@/lib/catalog.functions";
 import { addToCart, toggleWishlist } from "@/lib/shop.functions";
-import { useSession, useWishlist } from "@/hooks/use-shop";
+import { useCartCount, useSession, useWishlist } from "@/hooks/use-shop";
 import { PageShell, TopBar, EmptyState } from "@/components/page-shell";
 import { ProductRail } from "@/components/product-rail";
 import { ImageGallery } from "@/components/image-gallery";
+import { VariantPicker, pickDefaultVariant } from "@/components/variant-picker";
 import { ProductReviews } from "@/components/product-reviews";
 import { ProductCard } from "@/components/product-card";
 import {
@@ -115,6 +119,23 @@ function ProductPage() {
   const toggle = useServerFn(toggleWishlist);
   const { data: wishlist } = useWishlist();
   const [qty, setQty] = useState(1);
+  const cartCount = useCartCount();
+  const variants = useMemo(
+    () => (product.variants ?? []).filter((v) => v.is_active !== false),
+    [product.variants],
+  );
+  const [variantId, setVariantId] = useState<string | null>(
+    () => pickDefaultVariant(product.variants)?.id ?? null,
+  );
+  useEffect(() => {
+    setVariantId(pickDefaultVariant(product.variants)?.id ?? null);
+    setQty(1);
+  }, [product.id, product.variants]);
+  const variant = variants.find((v) => v.id === variantId) ?? null;
+  const price = Number(variant?.price ?? product.price);
+  const mrp = variant ? (variant.mrp ? Number(variant.mrp) : null) : product.mrp ? Number(product.mrp) : null;
+  const stock = variant ? variant.stock : product.stock;
+  const packLabel = variant?.label ?? product.weight;
   const trackViewed = useRecentlyViewed((s) => s.add);
   const saveLater = useSaveForLater();
 
@@ -124,19 +145,10 @@ function ProductPage() {
 
   const wishlisted = (wishlist ?? []).some((w) => w.product?.id === product.id);
   const saved = saveLater.items.some((p) => p.id === product.id);
-  const discount =
-    product.mrp && Number(product.mrp) > Number(product.price)
-      ? Math.round(((Number(product.mrp) - Number(product.price)) / Number(product.mrp)) * 100)
-      : 0;
-
-  const variants = useMemo(() => {
-    const base = data.related.filter((p) => p.weight && p.weight !== product.weight).slice(0, 3);
-    return [product, ...base];
-  }, [data.related, product]);
+  const discount = mrp && mrp > price ? Math.round(((mrp - price) / mrp) * 100) : 0;
 
   const bundle = data.related.slice(0, 2);
-  const bundleTotal =
-    Number(product.price) + bundle.reduce((s, p) => s + Number(p.price), 0);
+  const bundleTotal = price + bundle.reduce((s, p) => s + Number(p.price), 0);
 
   const requireAuth = () => {
     if (session) return false;
@@ -146,7 +158,8 @@ function ProductPage() {
   };
 
   const addMutation = useMutation({
-    mutationFn: (payload: { productId: string; quantity: number }) => add({ data: payload }),
+    mutationFn: (payload: { productId: string; quantity: number; variantId: string | null }) =>
+      add({ data: payload }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["cart"] });
       toast.success("Added to cart");
@@ -201,6 +214,18 @@ function ProductPage() {
             >
               <Share2 className="h-4 w-4" />
             </button>
+            <Link
+              to="/cart"
+              aria-label={`Cart with ${cartCount} items`}
+              className="relative grid h-9 w-9 place-items-center rounded-full bg-secondary"
+            >
+              <ShoppingCart className="h-4 w-4" />
+              {cartCount > 0 && (
+                <span className="absolute -right-0.5 -top-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-foreground">
+                  {cartCount}
+                </span>
+              )}
+            </Link>
             <button
               type="button"
               aria-label="Toggle wishlist"
@@ -256,50 +281,75 @@ function ProductPage() {
       )}
 
       <div className="px-4 pt-5">
-        <h1 className="text-lg font-bold leading-snug text-foreground">{product.name}</h1>
-        {product.weight && <p className="mt-1 text-sm text-muted-foreground">{product.weight}</p>}
-
-        <div className="mt-3 flex items-baseline gap-2">
-          <span className="text-2xl font-bold text-foreground">{formatINR(product.price)}</span>
+        <div className="flex flex-wrap items-center gap-2">
+          <span
+            className={cn(
+              "rounded-full px-2.5 py-1 text-xs font-semibold",
+              stock > 0 ? "bg-primary-soft text-primary" : "bg-destructive/10 text-destructive",
+            )}
+          >
+            {stock > 0 ? "In stock" : "Out of stock"}
+          </span>
           {discount > 0 && (
-            <span className="text-sm text-muted-foreground line-through">
-              {formatINR(product.mrp!)}
+            <span className="rounded-full bg-accent px-2.5 py-1 text-xs font-bold text-accent-foreground">
+              {discount}% OFF
             </span>
           )}
         </div>
 
-        <p
-          className={cn(
-            "mt-2 text-xs font-semibold",
-            product.stock > 0 ? "text-primary" : "text-destructive",
-          )}
-        >
-          {product.stock > 0 ? `In stock · ${product.stock} available` : "Out of stock"}
-        </p>
+        <h1 className="mt-3 text-2xl font-bold leading-tight text-foreground">{product.name}</h1>
+        {packLabel && <p className="mt-1 text-sm text-muted-foreground">{packLabel}</p>}
 
-        {variants.length > 1 && (
-          <div className="mt-5">
-            <h2 className="text-sm font-semibold text-foreground">Pack size</h2>
-            <div className="no-scrollbar mt-2 flex gap-2 overflow-x-auto pb-1">
-              {variants.map((v) => (
-                <Link
-                  key={v.id}
-                  to="/product/$slug"
-                  params={{ slug: v.slug }}
-                  className={cn(
-                    "shrink-0 rounded-xl border px-3 py-2 text-xs font-medium transition-colors",
-                    v.id === product.id
-                      ? "border-primary bg-primary-soft text-primary"
-                      : "border-border bg-card text-muted-foreground",
-                  )}
-                >
-                  <span className="block">{v.weight ?? "Standard"}</span>
-                  <span className="block text-[11px]">{formatINR(v.price)}</span>
-                </Link>
-              ))}
-            </div>
-          </div>
+        {Number(product.rating ?? 0) > 0 && (
+          <p className="mt-2 flex items-center gap-1.5 text-sm text-muted-foreground">
+            <Star className="h-4 w-4 fill-accent text-accent" />
+            <span className="font-semibold text-foreground">{Number(product.rating).toFixed(1)}</span>
+            <span>· {product.rating_count ?? 0} reviews</span>
+          </p>
         )}
+
+        <div className="mt-4 flex items-center justify-between gap-3">
+          <div>
+            <span className="text-3xl font-bold text-primary">{formatINR(price)}</span>
+            {discount > 0 && mrp && (
+              <span className="ml-2 text-sm text-muted-foreground line-through">
+                {formatINR(mrp)}
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-3 rounded-full border border-border bg-card px-2 py-1.5 card-elevated">
+            <button
+              type="button"
+              aria-label="Decrease quantity"
+              onClick={() => setQty((q) => Math.max(1, q - 1))}
+              className="grid h-8 w-8 place-items-center rounded-full text-foreground"
+            >
+              <Minus className="h-4 w-4" />
+            </button>
+            <span className="w-5 text-center text-sm font-bold">{qty}</span>
+            <button
+              type="button"
+              aria-label="Increase quantity"
+              onClick={() => setQty((q) => Math.min(stock || 99, q + 1))}
+              className="grid h-8 w-8 place-items-center rounded-full bg-primary text-primary-foreground"
+            >
+              <Plus className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+
+        {stock > 0 && stock <= 10 && (
+          <p className="mt-2 text-xs font-semibold text-destructive">Only {stock} left</p>
+        )}
+
+        <VariantPicker
+          variants={variants}
+          selectedId={variantId}
+          onSelect={(v) => {
+            setVariantId(v.id);
+            setQty(1);
+          }}
+        />
 
         {product.description && (
           <div className="mt-5">
@@ -320,9 +370,45 @@ function ProductPage() {
             <span className="text-[11px] font-medium text-foreground">Quality assured</span>
           </div>
           <div className="flex flex-col items-center gap-1.5 rounded-2xl bg-secondary p-3 text-center">
-            <RotateCcw className="h-5 w-5 text-primary" />
-            <span className="text-[11px] font-medium text-foreground">24h easy return</span>
+            <Leaf className="h-5 w-5 text-primary" />
+            <span className="text-[11px] font-medium text-foreground">Naturally sourced</span>
           </div>
+        </div>
+
+        {(product.benefits ?? []).length > 0 && (
+          <div className="mt-6">
+            <h2 className="text-base font-bold text-foreground">Benefits</h2>
+            <ul className="mt-2 space-y-2">
+              {(product.benefits ?? []).map((b) => (
+                <li key={b} className="flex items-start gap-2 text-sm text-muted-foreground">
+                  <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                  <span>{b}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        <div className="mt-6">
+          <h2 className="text-base font-bold text-foreground">Specifications</h2>
+          <dl className="mt-2 grid grid-cols-2 gap-2">
+            {[
+              ["Category", data.categoryName],
+              ["Weight", packLabel],
+              ["Shelf life", product.shelf_life],
+              ["Origin", product.origin],
+              ["SKU", variant?.sku ?? null],
+            ]
+              .filter(([, value]) => !!value)
+              .map(([label, value]) => (
+                <div key={label as string} className="rounded-2xl bg-secondary p-3">
+                  <dt className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                    {label}
+                  </dt>
+                  <dd className="mt-0.5 text-sm font-semibold text-foreground">{value}</dd>
+                </div>
+              ))}
+          </dl>
         </div>
 
         <button
@@ -407,35 +493,22 @@ function ProductPage() {
 
       <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
         <div className="mx-auto flex max-w-lg items-center gap-3">
-          <div className="flex items-center gap-3 rounded-xl border border-border px-3 py-2">
-            <button
-              type="button"
-              aria-label="Decrease quantity"
-              onClick={() => setQty((q) => Math.max(1, q - 1))}
-              className="text-muted-foreground"
-            >
-              <Minus className="h-4 w-4" />
-            </button>
-            <span className="w-4 text-center text-sm font-semibold">{qty}</span>
-            <button
-              type="button"
-              aria-label="Increase quantity"
-              onClick={() => setQty((q) => Math.min(product.stock || 99, q + 1))}
-              className="text-muted-foreground"
-            >
-              <Plus className="h-4 w-4" />
-            </button>
-          </div>
+          <Link
+            to="/cart"
+            className="flex-1 rounded-full border border-border bg-card py-3 text-center text-sm font-semibold text-foreground"
+          >
+            Go to Cart
+          </Link>
           <button
             type="button"
-            disabled={product.stock === 0 || addMutation.isPending}
+            disabled={stock === 0 || addMutation.isPending}
             onClick={() => {
               if (requireAuth()) return;
-              addMutation.mutate({ productId: product.id, quantity: qty });
+              addMutation.mutate({ productId: product.id, quantity: qty, variantId });
             }}
-            className="flex-1 rounded-xl bg-primary py-3 text-sm font-semibold text-primary-foreground transition-opacity active:opacity-80 disabled:opacity-40"
+            className="flex-1 rounded-full bg-primary py-3 text-sm font-semibold text-primary-foreground transition-opacity active:opacity-80 disabled:opacity-40"
           >
-            {product.stock === 0 ? "Out of stock" : "Add to cart"}
+            {stock === 0 ? "Out of stock" : "Add to Cart"}
           </button>
         </div>
       </div>

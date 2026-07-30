@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { PRODUCT_COLUMNS } from "./catalog.server";
+import { PRODUCT_COLUMNS, VARIANT_COLUMNS } from "./catalog.server";
 
 /* ------------------------------- CART ------------------------------- */
 
@@ -9,7 +9,9 @@ export const getCart = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const { data, error } = await context.supabase
       .from("cart_items")
-      .select(`id, quantity, product:products(${PRODUCT_COLUMNS})`)
+      .select(
+        `id, quantity, product:products(${PRODUCT_COLUMNS}), variant:product_variants(${VARIANT_COLUMNS})`,
+      )
       .eq("user_id", context.userId)
       .order("created_at");
     if (error) throw new Error(error.message);
@@ -18,15 +20,16 @@ export const getCart = createServerFn({ method: "GET" })
 
 export const addToCart = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: { productId: string; quantity?: number }) => data)
+  .inputValidator((data: { productId: string; quantity?: number; variantId?: string | null }) => data)
   .handler(async ({ data, context }) => {
     const qty = data.quantity ?? 1;
-    const { data: existing } = await context.supabase
+    let query = context.supabase
       .from("cart_items")
       .select("id, quantity")
       .eq("user_id", context.userId)
-      .eq("product_id", data.productId)
-      .maybeSingle();
+      .eq("product_id", data.productId);
+    query = data.variantId ? query.eq("variant_id", data.variantId) : query.is("variant_id", null);
+    const { data: existing } = await query.maybeSingle();
 
     if (existing) {
       const { error } = await context.supabase
@@ -37,7 +40,12 @@ export const addToCart = createServerFn({ method: "POST" })
     } else {
       const { error } = await context.supabase
         .from("cart_items")
-        .insert({ user_id: context.userId, product_id: data.productId, quantity: qty });
+        .insert({
+          user_id: context.userId,
+          product_id: data.productId,
+          variant_id: data.variantId ?? null,
+          quantity: qty,
+        });
       if (error) throw new Error(error.message);
     }
     return { ok: true };
@@ -241,13 +249,17 @@ export const placeOrder = createServerFn({ method: "POST" })
 
     const { data: cart } = await supabase
       .from("cart_items")
-      .select(`id, quantity, product:products(id, name, weight, price, image_url)`)
+      .select(
+        `id, quantity, product:products(id, name, weight, price, image_url), variant:product_variants(id, label, price, image_url)`,
+      )
       .eq("user_id", userId);
 
     const lines = (cart ?? []).filter((l) => l.product);
     if (lines.length === 0) throw new Error("Your cart is empty");
 
-    const subtotal = lines.reduce((sum, l) => sum + Number(l.product!.price) * l.quantity, 0);
+    const unitPrice = (l: (typeof lines)[number]) =>
+      Number(l.variant?.price ?? l.product!.price);
+    const subtotal = lines.reduce((sum, l) => sum + unitPrice(l) * l.quantity, 0);
 
     // Store-level settings drive fees and tax.
     const { data: settingRows } = await supabase.from("app_settings").select("key, value");
@@ -320,11 +332,13 @@ export const placeOrder = createServerFn({ method: "POST" })
         order_id: order.id,
         product_id: l.product!.id,
         product_name: l.product!.name,
-        product_weight: l.product!.weight,
-        image_url: l.product!.image_url,
-        unit_price: Number(l.product!.price),
+        product_weight: l.variant?.label ?? l.product!.weight,
+        variant_id: l.variant?.id ?? null,
+        variant_label: l.variant?.label ?? null,
+        image_url: l.variant?.image_url ?? l.product!.image_url,
+        unit_price: unitPrice(l),
         quantity: l.quantity,
-        line_total: Number(l.product!.price) * l.quantity,
+        line_total: unitPrice(l) * l.quantity,
       })),
     );
     if (itemsError) throw new Error(itemsError.message);

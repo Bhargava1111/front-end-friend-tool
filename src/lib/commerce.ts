@@ -32,8 +32,13 @@ export const DEFAULT_SETTINGS: StoreSettings = {
   support_email: "care@srimahalakshmistores.in",
 };
 
+/** Effective unit price of a cart line — the chosen pack size wins over the base product. */
+export function lineUnitPrice(line: CartLine) {
+  return Number(line.variant?.price ?? line.product.price);
+}
+
 export function cartSubtotal(lines: CartLine[]) {
-  return lines.reduce((sum, l) => sum + Number(l.product.price) * l.quantity, 0);
+  return lines.reduce((sum, l) => sum + lineUnitPrice(l) * l.quantity, 0);
 }
 
 export function couponError(coupon: CouponRow, subtotal: number): string | null {

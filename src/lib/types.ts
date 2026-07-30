@@ -1,3 +1,19 @@
+export type ProductVariant = {
+  id: string;
+  product_id?: string | null;
+  label: string;
+  unit: string;
+  unit_value: number;
+  price: number;
+  mrp: number | null;
+  stock: number;
+  sku?: string | null;
+  image_url?: string | null;
+  is_default: boolean;
+  is_active?: boolean;
+  sort_order?: number;
+};
+
 export type Product = {
   id: string;
   name: string;
@@ -14,9 +30,17 @@ export type Product = {
   is_recommended: boolean;
   category_id: string | null;
   brand_id?: string | null;
+  benefits?: string[] | null;
+  shelf_life?: string | null;
+  origin?: string | null;
+  rating?: number | null;
+  rating_count?: number | null;
   /** Main image first, then gallery images from product_images. */
   images?: string[];
+  /** Active pack sizes, cheapest-first by sort order. */
+  variants?: ProductVariant[];
 };
+
 
 export type Category = {
   id: string;
@@ -38,7 +62,9 @@ export type CartLine = {
   id: string;
   quantity: number;
   product: Product;
+  variant?: ProductVariant | null;
 };
+
 
 export type Address = {
   id: string;
