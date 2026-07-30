@@ -215,7 +215,7 @@ function CheckoutPage() {
                 {l.product.name} × {l.quantity}
               </span>
               <span className="ml-3 font-medium">
-                {formatINR(Number(l.product.price) * l.quantity)}
+                {formatINR(lineUnitPrice(l) * l.quantity)}
               </span>
             </div>
           ))}

@@ -151,12 +151,14 @@ function CartPage() {
                 </Link>
                 <div className="min-w-0 flex-1">
                   <h3 className="line-clamp-2 text-sm font-semibold">{line.product.name}</h3>
-                  {line.product.weight && (
-                    <p className="text-xs text-muted-foreground">{line.product.weight}</p>
+                  {(line.variant?.label ?? line.product.weight) && (
+                    <p className="text-xs text-muted-foreground">
+                      {line.variant?.label ?? line.product.weight}
+                    </p>
                   )}
                   <div className="mt-2 flex items-center justify-between">
                     <span className="text-sm font-bold text-primary">
-                      {formatINR(Number(line.product.price) * line.quantity)}
+                      {formatINR(lineUnitPrice(line) * line.quantity)}
                     </span>
                     <div className="flex items-center gap-1.5 rounded-full border border-border p-0.5">
                       <button
