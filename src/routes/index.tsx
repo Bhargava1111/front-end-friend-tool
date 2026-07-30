@@ -1,10 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
-import { Search, Bell, MapPin, Sparkles } from "lucide-react";
+import { Search, MapPin, Sparkles } from "lucide-react";
 import { getHomeData } from "@/lib/catalog.functions";
 import { PageShell } from "@/components/page-shell";
 import { BannerSlider } from "@/components/banner-slider";
 import { ProductRail } from "@/components/product-rail";
+import { NotificationBell } from "@/components/notification-bell";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { LocationBar } from "@/components/location-bar";
 import { FadeIn, Reveal } from "@/components/motion";
@@ -84,13 +85,7 @@ function Home() {
               <MapPin className="h-4.5 w-4.5" />
             </Link>
             <ThemeToggle className="border-primary-foreground/25 bg-primary-foreground/15 text-primary-foreground" />
-            <Link
-              to="/orders"
-              aria-label="Your orders and notifications"
-              className="grid h-9 w-9 place-items-center rounded-full border border-primary-foreground/25 bg-primary-foreground/15"
-            >
-              <Bell className="h-4.5 w-4.5" />
-            </Link>
+            <NotificationBell className="border border-primary-foreground/25 bg-primary-foreground/15" />
           </div>
         </div>
 
@@ -127,7 +122,10 @@ function Home() {
             See all
           </Link>
         </div>
-        <div className="no-scrollbar mt-3 flex gap-3 overflow-x-auto px-4 pb-1">
+        <div
+          ref={categoryScrollRef}
+          className="no-scrollbar mt-3 flex gap-3 overflow-x-auto px-4 pb-1"
+        >
           {data.categories.map((c) => (
             <Link
               key={c.id}
