@@ -6,6 +6,7 @@ import { PageShell } from "@/components/page-shell";
 import { BannerSlider } from "@/components/banner-slider";
 import { ProductRail } from "@/components/product-rail";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { LocationBar } from "@/components/location-bar";
 import { FadeIn, Reveal } from "@/components/motion";
 import { HomeSkeleton } from "@/components/skeletons";
 import {
