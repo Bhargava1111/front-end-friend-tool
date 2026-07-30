@@ -73,13 +73,15 @@ function Home() {
           className="pointer-events-none absolute -right-16 -top-20 h-56 w-56 rounded-full bg-accent/25 blur-3xl"
         />
         <div className="relative flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <p className="flex items-center gap-1 text-xs text-primary-foreground/70">
-              <MapPin className="h-3.5 w-3.5 shrink-0" /> Deliver to
-            </p>
-            <p className="mt-0.5 truncate text-sm font-semibold">Bengaluru, Karnataka</p>
-          </div>
+          <LocationBar className="min-w-0 flex-1" />
           <div className="flex shrink-0 items-center gap-2">
+            <Link
+              to="/stores"
+              aria-label="Store locator"
+              className="grid h-9 w-9 place-items-center rounded-full border border-primary-foreground/25 bg-primary-foreground/15"
+            >
+              <MapPin className="h-4.5 w-4.5" />
+            </Link>
             <ThemeToggle className="border-primary-foreground/25 bg-primary-foreground/15 text-primary-foreground" />
             <Link
               to="/orders"
