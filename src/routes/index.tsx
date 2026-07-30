@@ -70,11 +70,17 @@ function Home() {
   const { data } = useSuspenseQuery(homeQuery);
   const allProducts = Array.from(
     new Map(
-      [...data.newest, ...data.featured, ...data.bestSelling].map((p) => [p.id, p]),
+      [...(data.all ?? []), ...data.newest, ...data.featured, ...data.bestSelling].map((p) => [
+        p.id,
+        p,
+      ]),
     ).values(),
   );
   const trending = data.bestSelling.length ? data.bestSelling : data.newest;
   const categoryScrollRef = useAutoScroll<HTMLDivElement>(data.categories.length > 3);
+  const heroBanners = data.banners.slice(0, 3);
+  const offerBanners = data.banners.length > 3 ? data.banners.slice(3) : data.banners;
+
 
 
   return (
