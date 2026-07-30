@@ -90,6 +90,8 @@ function ProfilePage() {
           { to: "/orders", label: "My Orders", icon: ClipboardList },
           { to: "/wishlist", label: "Wishlist", icon: Heart },
           { to: "/addresses", label: "Saved Addresses", icon: MapPin },
+          { to: "/stores", label: "Store Locator & Delivery Areas", icon: Navigation },
+          { to: "/admin", label: "Admin Panel", icon: LayoutDashboard },
         ].map(({ to, label, icon: Icon }) => (
           <Link
             key={to}
