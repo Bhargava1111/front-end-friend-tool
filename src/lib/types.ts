@@ -8,6 +8,7 @@ export type Product = {
   mrp: number | null;
   stock: number;
   image_url: string | null;
+  video_url?: string | null;
   is_featured: boolean;
   is_best_seller: boolean;
   is_recommended: boolean;

@@ -144,6 +144,7 @@ export const saveAdminProduct = createServerFn({ method: "POST" })
       weight: string | null;
       category_id: string | null;
       image_url: string | null;
+      video_url: string | null;
       description: string | null;
       is_active: boolean;
       is_featured: boolean;
@@ -161,6 +162,7 @@ export const saveAdminProduct = createServerFn({ method: "POST" })
     }
     return { ok: true };
   });
+
 
 export const deleteAdminProduct = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -271,4 +273,150 @@ export const toggleAdminBanner = createServerFn({ method: "POST" })
       .eq("id", data.id);
     if (error) throw new Error(error.message);
     return { ok: true };
+  });
+
+/* ----------------------------- CATEGORIES ---------------------------- */
+
+export const getAdminCategories = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data, error } = await context.supabase
+      .from("categories")
+      .select("*")
+      .order("sort_order");
+    if (error) throw new Error(error.message);
+    return data ?? [];
+  });
+
+export const saveAdminCategory = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(
+    (data: {
+      id?: string;
+      name: string;
+      slug: string;
+      description: string | null;
+      image_url: string | null;
+      sort_order: number;
+      is_active: boolean;
+    }) => data,
+  )
+  .handler(async ({ data, context }) => {
+    const { id, ...fields } = data;
+    const res = id
+      ? await context.supabase.from("categories").update(fields).eq("id", id)
+      : await context.supabase.from("categories").insert(fields);
+    if (res.error) throw new Error(res.error.message);
+    return { ok: true };
+  });
+
+export const deleteAdminCategory = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { id: string }) => data)
+  .handler(async ({ data, context }) => {
+    const { error } = await context.supabase.from("categories").delete().eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+/* --------------------------- BANNERS (CRUD) -------------------------- */
+
+export const saveAdminBanner = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(
+    (data: {
+      id?: string;
+      title: string;
+      subtitle: string | null;
+      image_url: string;
+      link_slug: string | null;
+      sort_order: number;
+      is_active: boolean;
+    }) => data,
+  )
+  .handler(async ({ data, context }) => {
+    const { id, ...fields } = data;
+    const res = id
+      ? await context.supabase.from("banners").update(fields).eq("id", id)
+      : await context.supabase.from("banners").insert(fields);
+    if (res.error) throw new Error(res.error.message);
+    return { ok: true };
+  });
+
+export const deleteAdminBanner = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { id: string }) => data)
+  .handler(async ({ data, context }) => {
+    const { error } = await context.supabase.from("banners").delete().eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+/* ------------------------ MANUAL ORDER CREATION ---------------------- */
+
+export const createAdminOrder = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(
+    (data: {
+      user_id: string;
+      recipient_name: string;
+      phone: string;
+      address_text: string;
+      notes: string | null;
+      items: Array<{ product_id: string; quantity: number }>;
+    }) => data,
+  )
+  .handler(async ({ data, context }) => {
+    if (data.items.length === 0) throw new Error("Add at least one product");
+
+    const { data: products, error: productError } = await context.supabase
+      .from("products")
+      .select("id, name, weight, price, image_url")
+      .in(
+        "id",
+        data.items.map((i) => i.product_id),
+      );
+    if (productError) throw new Error(productError.message);
+
+    const lines = data.items.map((item) => {
+      const product = (products ?? []).find((p) => p.id === item.product_id);
+      if (!product) throw new Error("Product not found");
+      const unit = Number(product.price);
+      return {
+        product_id: product.id,
+        product_name: product.name,
+        product_weight: product.weight,
+        image_url: product.image_url,
+        unit_price: unit,
+        quantity: item.quantity,
+        line_total: unit * item.quantity,
+      };
+    });
+
+    const subtotal = lines.reduce((sum, l) => sum + l.line_total, 0);
+    const deliveryFee = subtotal >= 499 ? 0 : 29;
+
+    const { data: order, error: orderError } = await context.supabase
+      .from("orders")
+      .insert({
+        user_id: data.user_id,
+        status: "confirmed",
+        subtotal,
+        delivery_fee: deliveryFee,
+        total: subtotal + deliveryFee,
+        recipient_name: data.recipient_name,
+        phone: data.phone,
+        address_text: data.address_text,
+        notes: data.notes,
+      })
+      .select("id, order_number")
+      .single();
+    if (orderError) throw new Error(orderError.message);
+
+    const { error: itemsError } = await context.supabase
+      .from("order_items")
+      .insert(lines.map((l) => ({ ...l, order_id: order.id })));
+    if (itemsError) throw new Error(itemsError.message);
+
+    return { ok: true, order_number: order.order_number };
   });

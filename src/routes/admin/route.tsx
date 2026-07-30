@@ -9,9 +9,12 @@ import {
   Store as StoreIcon,
   ShieldAlert,
   ArrowLeft,
+  LayoutGrid,
+  Images,
 } from "lucide-react";
 import { getAdminStatus } from "@/lib/admin.functions";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { NotificationBell } from "@/components/notification-bell";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/admin")({
@@ -23,9 +26,12 @@ const links = [
   { to: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { to: "/admin/orders", label: "Orders", icon: ShoppingBag },
   { to: "/admin/products", label: "Products", icon: Package },
+  { to: "/admin/categories", label: "Categories", icon: LayoutGrid },
+  { to: "/admin/banners", label: "Banners", icon: Images },
   { to: "/admin/customers", label: "Customers", icon: Users },
   { to: "/admin/stores", label: "Stores", icon: StoreIcon },
 ] as const;
+
 
 function AdminLayout() {
   const check = useServerFn(getAdminStatus);
@@ -81,7 +87,9 @@ function AdminLayout() {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <NotificationBell />
             <ThemeToggle />
+
             <Link
               to="/"
               className="rounded-full border border-border px-3 py-1.5 text-xs font-medium text-foreground"
