@@ -50,3 +50,29 @@ export const useRecentSearches = create<RecentSearchState>()(
     { name: "sms-recent-searches", storage: createJSONStorage(() => localStorage) },
   ),
 );
+
+export type DeliveryLocation = {
+  label: string;
+  detail: string;
+  lat: number | null;
+  lng: number | null;
+  pincode?: string;
+  source: "gps" | "address" | "manual" | "store";
+};
+
+type DeliveryLocationState = {
+  location: DeliveryLocation | null;
+  setLocation: (location: DeliveryLocation) => void;
+  clear: () => void;
+};
+
+export const useDeliveryLocation = create<DeliveryLocationState>()(
+  persist(
+    (set) => ({
+      location: null,
+      setLocation: (location) => set({ location }),
+      clear: () => set({ location: null }),
+    }),
+    { name: "sms-delivery-location", storage: createJSONStorage(() => localStorage) },
+  ),
+);

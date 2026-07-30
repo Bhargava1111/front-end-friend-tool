@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { useCart } from "@/hooks/use-shop";
 import { getAddresses, placeOrder } from "@/lib/shop.functions";
 import { PageShell, TopBar } from "@/components/page-shell";
+import { FulfilmentMap } from "@/components/fulfilment-map";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { formatINR, DELIVERY_FEE, FREE_DELIVERY_ABOVE } from "@/lib/format";
@@ -65,6 +66,10 @@ function CheckoutPage() {
   return (
     <PageShell>
       <TopBar title="Checkout" subtitle="Cash on delivery" />
+
+      <section className="px-4 pt-4">
+        <FulfilmentMap />
+      </section>
 
       <section className="p-4">
         <div className="mb-2 flex items-center justify-between">

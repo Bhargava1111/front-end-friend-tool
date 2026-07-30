@@ -21,8 +21,11 @@ export type Database = {
           id: string
           is_default: boolean
           label: string
+          landmark: string | null
+          latitude: number | null
           line1: string
           line2: string | null
+          longitude: number | null
           phone: string
           pincode: string
           recipient_name: string
@@ -36,8 +39,11 @@ export type Database = {
           id?: string
           is_default?: boolean
           label?: string
+          landmark?: string | null
+          latitude?: number | null
           line1: string
           line2?: string | null
+          longitude?: number | null
           phone: string
           pincode: string
           recipient_name: string
@@ -51,8 +57,11 @@ export type Database = {
           id?: string
           is_default?: boolean
           label?: string
+          landmark?: string | null
+          latitude?: number | null
           line1?: string
           line2?: string | null
+          longitude?: number | null
           phone?: string
           pincode?: string
           recipient_name?: string
@@ -383,6 +392,78 @@ export type Database = {
         }
         Relationships: []
       }
+      store_locations: {
+        Row: {
+          address_text: string
+          city: string
+          created_at: string
+          delivery_radius_km: number
+          id: string
+          is_active: boolean
+          latitude: number
+          longitude: number
+          name: string
+          opening_hours: string
+          phone: string | null
+          pincode: string
+          state: string
+          updated_at: string
+        }
+        Insert: {
+          address_text: string
+          city: string
+          created_at?: string
+          delivery_radius_km?: number
+          id?: string
+          is_active?: boolean
+          latitude: number
+          longitude: number
+          name: string
+          opening_hours?: string
+          phone?: string | null
+          pincode: string
+          state: string
+          updated_at?: string
+        }
+        Update: {
+          address_text?: string
+          city?: string
+          created_at?: string
+          delivery_radius_km?: number
+          id?: string
+          is_active?: boolean
+          latitude?: number
+          longitude?: number
+          name?: string
+          opening_hours?: string
+          phone?: string | null
+          pincode?: string
+          state?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
       wishlist_items: {
         Row: {
           created_at: string
@@ -417,9 +498,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
+      app_role: "admin" | "customer"
       order_status:
         | "pending"
         | "confirmed"
@@ -553,6 +641,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      app_role: ["admin", "customer"],
       order_status: [
         "pending",
         "confirmed",

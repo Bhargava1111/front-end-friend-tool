@@ -2,7 +2,16 @@ import { useEffect, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { ChevronRight, Heart, LogOut, MapPin, ClipboardList, User } from "lucide-react";
+import {
+  ChevronRight,
+  Heart,
+  LogOut,
+  MapPin,
+  ClipboardList,
+  User,
+  Navigation,
+  LayoutDashboard,
+} from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/hooks/use-shop";
@@ -90,6 +99,8 @@ function ProfilePage() {
           { to: "/orders", label: "My Orders", icon: ClipboardList },
           { to: "/wishlist", label: "Wishlist", icon: Heart },
           { to: "/addresses", label: "Saved Addresses", icon: MapPin },
+          { to: "/stores", label: "Store Locator & Delivery Areas", icon: Navigation },
+          { to: "/admin", label: "Admin Panel", icon: LayoutDashboard },
         ].map(({ to, label, icon: Icon }) => (
           <Link
             key={to}
