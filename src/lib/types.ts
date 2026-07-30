@@ -62,7 +62,9 @@ export type CartLine = {
   id: string;
   quantity: number;
   product: Product;
+  variant?: ProductVariant | null;
 };
+
 
 export type Address = {
   id: string;
