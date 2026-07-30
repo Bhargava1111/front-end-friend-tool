@@ -1,4 +1,5 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
+import { z } from "zod";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { PackageSearch } from "lucide-react";
 import { getCategoryWithProducts } from "@/lib/catalog.functions";
@@ -15,14 +16,18 @@ import {
 
 const SORTS: SortKey[] = ["relevance", "price_asc", "price_desc", "discount", "newest"];
 
-type CategorySearch = {
-  min: number;
-  max: number;
-  brands: string[];
-  discount: number;
-  inStock: boolean;
-  sort: SortKey;
-};
+const searchSchema = z.object({
+  min: z.coerce.number().catch(0).default(0),
+  max: z.coerce.number().catch(0).default(0),
+  brands: z
+    .union([z.array(z.string()), z.string()])
+    .transform((v) => (Array.isArray(v) ? v : v ? v.split(",") : []))
+    .catch([])
+    .default([]),
+  discount: z.coerce.number().catch(0).default(0),
+  inStock: z.coerce.boolean().catch(false).default(false),
+  sort: z.enum(["relevance", "price_asc", "price_desc", "discount", "newest"]).catch("relevance").default("relevance"),
+});
 
 const categoryQuery = (slug: string) =>
   queryOptions({
@@ -31,22 +36,7 @@ const categoryQuery = (slug: string) =>
   });
 
 export const Route = createFileRoute("/category/$slug")({
-  validateSearch: (search: Record<string, unknown>): CategorySearch => {
-    const num = (v: unknown) => (Number.isFinite(Number(v)) ? Number(v) : 0);
-    const sort = String(search.sort ?? "relevance") as SortKey;
-    return {
-      min: num(search.min),
-      max: num(search.max),
-      brands: Array.isArray(search.brands)
-        ? (search.brands as unknown[]).map(String)
-        : typeof search.brands === "string" && search.brands
-          ? search.brands.split(",")
-          : [],
-      discount: num(search.discount),
-      inStock: search.inStock === true || search.inStock === "true",
-      sort: SORTS.includes(sort) ? sort : "relevance",
-    };
-  },
+  validateSearch: searchSchema,
   loader: async ({ context, params }) => {
     const data = await context.queryClient.ensureQueryData(categoryQuery(params.slug));
     if (!data.category) throw notFound();
