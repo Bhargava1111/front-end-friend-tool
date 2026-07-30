@@ -14,8 +14,6 @@ import {
   type SortKey,
 } from "@/lib/product-filters";
 
-const SORTS: SortKey[] = ["relevance", "price_asc", "price_desc", "discount", "newest"];
-
 const searchSchema = z.object({
   min: z.coerce.number().catch(0).default(0),
   max: z.coerce.number().catch(0).default(0),
