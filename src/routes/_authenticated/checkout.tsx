@@ -66,6 +66,10 @@ function CheckoutPage() {
     <PageShell>
       <TopBar title="Checkout" subtitle="Cash on delivery" />
 
+      <section className="px-4 pt-4">
+        <FulfilmentMap />
+      </section>
+
       <section className="p-4">
         <div className="mb-2 flex items-center justify-between">
           <h2 className="flex items-center gap-2 text-sm font-semibold">
