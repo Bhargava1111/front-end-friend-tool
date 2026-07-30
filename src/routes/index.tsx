@@ -13,11 +13,18 @@ import { FadeIn, Reveal } from "@/components/motion";
 import { HomeSkeleton } from "@/components/skeletons";
 import {
   BrandRail,
+  BudgetRail,
   CouponStrip,
+  DealOfTheDay,
+  FestivalPicks,
   FlashSaleRail,
+  OfferBannerCarousel,
   OfferCards,
   RecentlyViewedRail,
+  ServicePromises,
+  ShopByNeed,
 } from "@/components/home-sections";
+
 
 const homeQuery = queryOptions({
   queryKey: ["home"],
