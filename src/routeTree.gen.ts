@@ -18,6 +18,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as ProductSlugRouteImport } from './routes/product.$slug'
+import { Route as DevLoginTestRouteImport } from './routes/dev/login-test'
 import { Route as CategorySlugRouteImport } from './routes/category.$slug'
 import { Route as AdminStoresRouteImport } from './routes/admin/stores'
 import { Route as AdminProductsRouteImport } from './routes/admin/products'
@@ -76,6 +77,11 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
 const ProductSlugRoute = ProductSlugRouteImport.update({
   id: '/product/$slug',
   path: '/product/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DevLoginTestRoute = DevLoginTestRouteImport.update({
+  id: '/dev/login-test',
+  path: '/dev/login-test',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CategorySlugRoute = CategorySlugRouteImport.update({
@@ -176,6 +182,7 @@ export interface FileRoutesByFullPath {
   '/admin/products': typeof AdminProductsRoute
   '/admin/stores': typeof AdminStoresRoute
   '/category/$slug': typeof CategorySlugRoute
+  '/dev/login-test': typeof DevLoginTestRoute
   '/product/$slug': typeof ProductSlugRoute
   '/admin/': typeof AdminIndexRoute
   '/orders/$id': typeof AuthenticatedOrdersIdRoute
@@ -200,6 +207,7 @@ export interface FileRoutesByTo {
   '/admin/products': typeof AdminProductsRoute
   '/admin/stores': typeof AdminStoresRoute
   '/category/$slug': typeof CategorySlugRoute
+  '/dev/login-test': typeof DevLoginTestRoute
   '/product/$slug': typeof ProductSlugRoute
   '/admin': typeof AdminIndexRoute
   '/orders/$id': typeof AuthenticatedOrdersIdRoute
@@ -227,6 +235,7 @@ export interface FileRoutesById {
   '/admin/products': typeof AdminProductsRoute
   '/admin/stores': typeof AdminStoresRoute
   '/category/$slug': typeof CategorySlugRoute
+  '/dev/login-test': typeof DevLoginTestRoute
   '/product/$slug': typeof ProductSlugRoute
   '/admin/': typeof AdminIndexRoute
   '/_authenticated/orders/$id': typeof AuthenticatedOrdersIdRoute
@@ -254,6 +263,7 @@ export interface FileRouteTypes {
     | '/admin/products'
     | '/admin/stores'
     | '/category/$slug'
+    | '/dev/login-test'
     | '/product/$slug'
     | '/admin/'
     | '/orders/$id'
@@ -278,6 +288,7 @@ export interface FileRouteTypes {
     | '/admin/products'
     | '/admin/stores'
     | '/category/$slug'
+    | '/dev/login-test'
     | '/product/$slug'
     | '/admin'
     | '/orders/$id'
@@ -304,6 +315,7 @@ export interface FileRouteTypes {
     | '/admin/products'
     | '/admin/stores'
     | '/category/$slug'
+    | '/dev/login-test'
     | '/product/$slug'
     | '/admin/'
     | '/_authenticated/orders/$id'
@@ -319,6 +331,7 @@ export interface RootRouteChildren {
   SearchRoute: typeof SearchRoute
   StoresRoute: typeof StoresRoute
   CategorySlugRoute: typeof CategorySlugRoute
+  DevLoginTestRoute: typeof DevLoginTestRoute
   ProductSlugRoute: typeof ProductSlugRoute
 }
 
@@ -385,6 +398,13 @@ declare module '@tanstack/react-router' {
       path: '/product/$slug'
       fullPath: '/product/$slug'
       preLoaderRoute: typeof ProductSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dev/login-test': {
+      id: '/dev/login-test'
+      path: '/dev/login-test'
+      fullPath: '/dev/login-test'
+      preLoaderRoute: typeof DevLoginTestRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/category/$slug': {
@@ -553,6 +573,7 @@ const rootRouteChildren: RootRouteChildren = {
   SearchRoute: SearchRoute,
   StoresRoute: StoresRoute,
   CategorySlugRoute: CategorySlugRoute,
+  DevLoginTestRoute: DevLoginTestRoute,
   ProductSlugRoute: ProductSlugRoute,
 }
 export const routeTree = rootRouteImport
