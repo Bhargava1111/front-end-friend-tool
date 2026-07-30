@@ -66,6 +66,8 @@ function Home() {
     ).values(),
   );
   const trending = data.bestSelling.length ? data.bestSelling : data.newest;
+  const categoryScrollRef = useAutoScroll<HTMLDivElement>(data.categories.length > 3);
+
 
   return (
     <PageShell>
