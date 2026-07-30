@@ -4,6 +4,7 @@ import { Zap, Ticket, Check, Copy, ChevronRight, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { ProductCard } from "./product-card";
 import { Reveal } from "./motion";
+import { useAutoScroll } from "@/hooks/use-auto-scroll";
 import { useHydrated } from "@/hooks/use-hydrated";
 import { useRecentlyViewed } from "@/lib/client-store";
 import { BRANDS, COUPONS, OFFER_CARDS, flashSaleEndsAt } from "@/lib/mock-content";
@@ -45,6 +46,7 @@ export function FlashSaleRail({ products }: { products: Product[] }) {
         (Number(a.mrp) - Number(a.price)) / Number(a.mrp),
     )
     .slice(0, 10);
+  const dealsScrollRef = useAutoScroll<HTMLDivElement>(deals.length > 3);
 
   if (deals.length === 0) return null;
 
