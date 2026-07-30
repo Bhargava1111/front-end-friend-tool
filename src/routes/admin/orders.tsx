@@ -69,10 +69,22 @@ function AdminOrders() {
 
   const orders = filter === "all" ? data : data.filter((o) => o.status === filter);
   const pendingCount = data.filter((o) => o.status === "pending").length;
-
-
   return (
     <div className="space-y-4">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <h1 className="text-base font-semibold text-foreground">Orders</h1>
+          <p className="text-xs text-muted-foreground">
+            {pendingCount
+              ? `${pendingCount} order${pendingCount === 1 ? "" : "s"} awaiting approval`
+              : "All orders reviewed"}
+          </p>
+        </div>
+        <Button className="gap-2" onClick={() => setCreating(true)}>
+          <Plus className="h-4 w-4" /> New order
+        </Button>
+      </div>
+
       <div className="no-scrollbar flex gap-2 overflow-x-auto">
         {(["all", ...STATUSES] as const).map((s) => (
           <button
@@ -90,6 +102,7 @@ function AdminOrders() {
           </button>
         ))}
       </div>
+
 
       {isLoading && <div className="h-40 animate-pulse rounded-2xl bg-card" />}
 
