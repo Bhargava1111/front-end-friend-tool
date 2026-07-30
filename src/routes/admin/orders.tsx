@@ -1,9 +1,16 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { getAdminOrders, setOrderStatus } from "@/lib/admin.functions";
+import { Check, Plus, X, Trash2 } from "lucide-react";
+import {
+  getAdminOrders,
+  setOrderStatus,
+  createAdminOrder,
+  getAdminProducts,
+  getAdminCustomers,
+} from "@/lib/admin.functions";
 import { formatINR, formatDate } from "@/lib/format";
 import { STATUS_STYLES } from "@/lib/order-status";
 import type { Order, OrderStatus } from "@/lib/types";
@@ -14,6 +21,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/admin/orders")({
@@ -37,6 +49,7 @@ function AdminOrders() {
   const fetchOrders = useServerFn(getAdminOrders);
   const updateStatus = useServerFn(setOrderStatus);
   const [filter, setFilter] = useState<"all" | OrderStatus>("all");
+  const [creating, setCreating] = useState(false);
 
   const { data = [], isLoading } = useQuery({
     queryKey: ["admin-orders"],
@@ -49,11 +62,14 @@ function AdminOrders() {
       toast.success("Order updated");
       qc.invalidateQueries({ queryKey: ["admin-orders"] });
       qc.invalidateQueries({ queryKey: ["admin-dashboard"] });
+      qc.invalidateQueries({ queryKey: ["notifications"] });
     },
     onError: (e: Error) => toast.error(e.message),
   });
 
   const orders = filter === "all" ? data : data.filter((o) => o.status === filter);
+  const pendingCount = data.filter((o) => o.status === "pending").length;
+
 
   return (
     <div className="space-y-4">
