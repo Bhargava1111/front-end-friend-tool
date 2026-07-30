@@ -2,7 +2,16 @@ import { useEffect, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { ChevronRight, Heart, LogOut, MapPin, ClipboardList, User } from "lucide-react";
+import {
+  ChevronRight,
+  Heart,
+  LogOut,
+  MapPin,
+  ClipboardList,
+  User,
+  Navigation,
+  LayoutDashboard,
+} from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/hooks/use-shop";
