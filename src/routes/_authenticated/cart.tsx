@@ -91,7 +91,7 @@ function CartPage() {
   }
 
   return (
-    <PageShell>
+    <PageShell withCartBar={false}>
       <TopBar title="Your Cart" subtitle={`${items.length} item${items.length === 1 ? "" : "s"}`} />
 
       {isLoading ? (
