@@ -82,6 +82,7 @@ export const useDeliveryLocation = create<DeliveryLocationState>()(
 type SaveForLaterState = {
   items: Product[];
   save: (product: Product) => void;
+  toggle: (product: Product) => void;
   remove: (id: string) => void;
 };
 
@@ -93,11 +94,18 @@ export const useSaveForLater = create<SaveForLaterState>()(
         set((state) => ({
           items: [product, ...state.items.filter((p) => p.id !== product.id)].slice(0, 40),
         })),
+      toggle: (product) =>
+        set((state) =>
+          state.items.some((p) => p.id === product.id)
+            ? { items: state.items.filter((p) => p.id !== product.id) }
+            : { items: [product, ...state.items].slice(0, 40) },
+        ),
       remove: (id) => set((state) => ({ items: state.items.filter((p) => p.id !== id) })),
     }),
     { name: "sms-save-for-later", storage: createJSONStorage(() => localStorage) },
   ),
 );
+
 
 /* ----------------------------- APPLIED COUPON ------------------------- */
 
