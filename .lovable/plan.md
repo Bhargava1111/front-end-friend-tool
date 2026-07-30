@@ -1,60 +1,67 @@
-## Goal
+## Note on stack
 
-A public diagnostics page at `/dev/login-test` that logs in with the dummy admin and customer credentials from the backend spec and shows OTP request/verification status — able to point at either the current Lovable Cloud backend or your Django API.
+This project runs on TanStack Start (Next.js isn't supported here). Everything else you listed — React 19, TypeScript, Tailwind, shadcn/ui, Framer Motion, TanStack Query, Zustand, React Hook Form, Zod — is already in use or gets added. Data stays on the existing Lovable Cloud backend; new surfaces with no tables yet use typed dummy JSON behind the same service layer so swapping to your Django API is a one-file change.
 
-## Verified starting state
+## Verified current state
 
-- The six demo accounts (`admin@mnxstore.in`, `manager@…`, `orders@…`, `ananya@example.com`, `ravi@…`, `meera@…`, password `Demo@12345`) exist only in `docs/BACKEND_DJANGO_API.md`. The live backend currently has **one** real user and no roles assigned.
-- The Django OTP endpoints (`/auth/otp/request`, `/auth/otp/verify`) are specified but not running yet.
-- The built-in backend can't be forced to email the literal code `123456` — it generates random codes. So the fixed demo OTP needs its own dev-only issuing/verifying path.
+Existing routes: home, categories, category detail, product detail, search, stores, auth, cart, wishlist, checkout, orders list/detail, profile, addresses, notifications, and admin (dashboard, orders, products, categories, banners, customers, stores). Everything below is what's missing.
 
-## What gets built
+## 1. Auth completion
 
-### 1. Seed the demo accounts (one-click, on the page)
+- Email OTP and mobile OTP sign-in tabs on `/auth` (6-box code input, resend cooldown, TTL countdown), reusing the existing demo-OTP server functions.
+- Forgot password + `/reset-password` page.
+- Apple sign-in button as a UI placeholder next to the working Google button.
 
-A "Seed demo accounts" button calls a dev-only server function that creates all six users with password `Demo@12345`, marks their emails confirmed, sets their phone numbers and full names, and grants the `admin` role to the three staff accounts. Safe to press repeatedly — existing accounts are updated, not duplicated.
+## 2. Product depth
 
-### 2. Backend switcher
+- Image gallery with pinch/hover zoom and thumbnail strip.
+- Variants and weight selector (250g/500g/1kg) with per-variant pricing.
+- Ratings summary, review list with photos, and a write-review form.
+- Product FAQ accordion, similar products rail, frequently-bought-together bundle with combined add-to-cart.
 
-A segmented control at the top of the page:
+## 3. Search
 
-- **Cloud** — talks to the current backend directly.
-- **Django** — talks to a base URL you type in (persisted in the browser, e.g. `http://localhost:8000/api/v1`), calling `/auth/login`, `/auth/otp/request`, `/auth/otp/verify` exactly as the spec defines. Shows connection errors plainly until your server is up.
+- Live suggestion dropdown as you type, AI-styled result summary header.
+- Filter sheet (price range, category, discount, rating, in-stock) plus sort, both reflected in the URL.
+- Voice and barcode scanner panels wired to real browser APIs where available, graceful placeholder otherwise.
 
-### 3. Credential grid
+## 4. Cart & checkout
 
-One card per demo account (3 admins, 3 customers) showing email, phone, role, and a **Log in** button. Each attempt renders:
+- Coupon/promo input with validation and applied-discount breakdown, tax line, delivery charge rules, estimated-delivery strip.
+- Save-for-later shelf under the cart.
+- Checkout: delivery slot picker (today/tomorrow time windows), payment-method selector UI (UPI, card, netbanking, wallet, COD — COD live, rest as UI), and a dedicated order-confirmation screen with animation.
 
-- pass/fail badge, HTTP status, round-trip time
-- returned user id, email, resolved role, whether the session token was stored
-- the raw error body on failure
+## 5. Orders
 
-Plus a **Log in all** button that runs every account in sequence into a results table, a **Sign out** button, and a live "current session" panel showing who is signed in right now.
+- Live tracking timeline with animated stage progress and courier/ETA panel.
+- Invoice download (client-generated PDF), one-tap reorder, and a return-request flow with reason and item selection.
 
-### 4. OTP panel — request, verify, and the fixed `123456`
+## 6. Profile & content pages
 
-Identifier input (prefilled from whichever demo account you clicked) with an email/phone channel toggle, and two modes:
+- Wallet, reward points, and referral screens (dummy balances/history).
+- Language selection, privacy, terms, help center with searchable FAQ.
+- Favorite categories on the wishlist page.
+- New public pages: About, Contact, Blogs (list + post), Testimonials, Feedback form, FAQ.
+- Chat support drawer, app-update dialog, and a maintenance-mode screen.
 
-- **Demo OTP (default)** — `123456` always works. Request issues a code server-side with a 5-minute TTL, 5-attempt cap, and 30-second resend cooldown, matching the spec's rules; the panel shows a live TTL countdown, attempts remaining, cooldown timer, resend button, and the exact error code on failure (`otp_invalid`, `otp_expired`, `otp_too_many_attempts`). The code `123456` is displayed on the page so you can copy it.
-- **Real OTP** — sends an actual email code through the live backend and verifies whatever you paste in, so you can confirm real delivery end to end.
+## 7. Admin panel additions
 
-In Django mode both modes just proxy to your endpoints and display the raw request/response JSON.
+- Brands, Coupons, Reviews (approve/hide), Notifications composer, Delivery charges, Taxes, and Settings pages.
+- Dashboard extension: customer analytics and product analytics charts alongside existing revenue/sales.
 
-Every call in both panels is logged to a scrollable request log (timestamp, method, endpoint, status, duration, response body), with a copy-to-clipboard button for pasting into bug reports.
+## 8. Cross-cutting polish
 
-### 5. Access
-
-Public route at `/dev/login-test`, no auth gate, `noindex` meta, disallowed in `robots.txt`, and no links to it from the app's navigation — reachable only if you know the URL.
+- Skeletons, empty, error, and success states standardised across every screen via shared components.
+- Route-level page transitions and micro-interactions with Framer Motion.
+- Accessibility pass: labels on icon buttons, focus rings, keyboard traps, contrast, single `<main>`, 44px tap targets.
+- SEO: unique `head()` metadata per new route, JSON-LD for products and blog posts, sitemap.
 
 ## Technical notes
 
-- New route `src/routes/dev/login-test.tsx` (public, SSR-safe; all auth calls client-side).
-- New `src/lib/dev-auth.functions.ts` with three server functions: `seedDemoAccounts` (uses the admin client inside the handler, after checking a dev-mode flag), `requestDemoOtp`, `verifyDemoOtp`.
-- One migration: a `demo_otp_codes` table (identifier, channel, purpose, code hash, expires_at, attempts, consumed_at) with RLS denying all client access — only the server functions touch it — plus the required GRANTs to `service_role`.
-- The seed and demo-OTP functions refuse to run when the app is built for production, so the fixed `123456` can never work on the published site.
-- Django mode uses `fetch` from the browser against your configured base URL; you'll need permissive CORS on the Django side for local testing.
+- Feature-based folders under `src/features/*` (auth, product, cart, orders, admin, content) with shared UI staying in `src/components`.
+- New tables via migration where real persistence matters: `reviews`, `coupons`, `brands`, `product_variants`, `returns`, `app_settings` (tax/delivery/maintenance). Wallet, rewards, referral, blogs, and testimonials use dummy JSON for now.
+- React Hook Form + Zod for every new form; Axios-style typed client wrapper so the Django switch is centralised.
 
-## Caveats
+## Scale
 
-- Seeding creates six real accounts in your current backend. They're clearly labelled demo accounts and can be deleted later; say the word if you'd rather they go into a separate environment.
-- Phone OTP through the live backend needs an SMS provider that isn't configured, so real-mode phone OTP will report "provider not configured" — demo mode covers phone testing.
+This is a large build — I'll work through it in the order above and report progress as each block lands.

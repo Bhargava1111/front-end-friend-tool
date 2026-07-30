@@ -220,7 +220,15 @@ export const getOrder = createServerFn({ method: "GET" })
 
 export const placeOrder = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: { addressId: string; notes?: string }) => data)
+  .inputValidator(
+    (data: {
+      addressId: string;
+      notes?: string;
+      couponCode?: string;
+      deliverySlot?: string;
+      paymentMethod?: string;
+    }) => data,
+  )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
 
@@ -240,7 +248,49 @@ export const placeOrder = createServerFn({ method: "POST" })
     if (lines.length === 0) throw new Error("Your cart is empty");
 
     const subtotal = lines.reduce((sum, l) => sum + Number(l.product!.price) * l.quantity, 0);
-    const deliveryFee = subtotal >= 499 ? 0 : 40;
+
+    // Store-level settings drive fees and tax.
+    const { data: settingRows } = await supabase.from("app_settings").select("key, value");
+    const settings = Object.fromEntries((settingRows ?? []).map((r) => [r.key, r.value])) as Record<
+      string,
+      unknown
+    >;
+    const deliveryBase = Number(settings.delivery_fee ?? 40);
+    const freeAbove = Number(settings.free_delivery_above ?? 499);
+    const taxRate = Number(settings.tax_rate ?? 0);
+
+    let discount = 0;
+    let freeShipping = false;
+    let appliedCode: string | null = null;
+
+    if (data.couponCode) {
+      const { data: coupon } = await supabase
+        .from("coupons")
+        .select("code, discount_type, discount_value, min_order, max_discount, is_active, ends_at")
+        .eq("code", data.couponCode.toUpperCase())
+        .maybeSingle();
+      const valid =
+        coupon &&
+        coupon.is_active &&
+        subtotal >= Number(coupon.min_order) &&
+        (!coupon.ends_at || new Date(coupon.ends_at) > new Date());
+      if (valid) {
+        appliedCode = coupon!.code;
+        if (coupon!.discount_type === "percent") {
+          discount = (subtotal * Number(coupon!.discount_value)) / 100;
+          if (coupon!.max_discount) discount = Math.min(discount, Number(coupon!.max_discount));
+        } else if (coupon!.discount_type === "flat") {
+          discount = Number(coupon!.discount_value);
+        } else if (coupon!.discount_type === "free_shipping") {
+          freeShipping = true;
+        }
+      }
+    }
+    discount = Math.min(Math.round(discount), subtotal);
+
+    const deliveryFee = freeShipping || subtotal >= freeAbove ? 0 : deliveryBase;
+    const tax = Math.round(((subtotal - discount) * taxRate) / 100);
+    const total = subtotal - discount + deliveryFee + tax;
 
     const { data: order, error: orderError } = await supabase
       .from("orders")
@@ -248,7 +298,12 @@ export const placeOrder = createServerFn({ method: "POST" })
         user_id: userId,
         subtotal,
         delivery_fee: deliveryFee,
-        total: subtotal + deliveryFee,
+        discount,
+        tax,
+        coupon_code: appliedCode,
+        delivery_slot: data.deliverySlot ?? null,
+        payment_method: data.paymentMethod ?? "cod",
+        total,
         recipient_name: address.recipient_name,
         phone: address.phone,
         address_text: [address.line1, address.line2, address.city, address.state, address.pincode]
@@ -278,6 +333,7 @@ export const placeOrder = createServerFn({ method: "POST" })
 
     return { id: order.id, orderNumber: order.order_number };
   });
+
 
 export const cancelOrder = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
