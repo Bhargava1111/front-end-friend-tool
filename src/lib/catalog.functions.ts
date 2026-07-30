@@ -61,7 +61,7 @@ export const getProductBySlug = createServerFn({ method: "GET" })
       .maybeSingle();
     if (!product) return { product: null, related: [], categoryName: null };
 
-    const [{ data: related }, { data: category }] = await Promise.all([
+    const [{ data: related }, { data: category }, { data: gallery }] = await Promise.all([
       product.category_id
         ? supabase
             .from("products")
@@ -73,10 +73,19 @@ export const getProductBySlug = createServerFn({ method: "GET" })
       product.category_id
         ? supabase.from("categories").select("name, slug").eq("id", product.category_id).maybeSingle()
         : Promise.resolve({ data: null }),
+      supabase
+        .from("product_images")
+        .select("image_url, sort_order")
+        .eq("product_id", product.id)
+        .order("sort_order"),
     ]);
 
+    const images = [
+      ...(product.image_url ? [product.image_url] : []),
+      ...(gallery ?? []).map((g) => g.image_url),
+    ].filter((v, i, arr) => arr.indexOf(v) === i);
 
-    return { product, related: related ?? [], categoryName: category?.name ?? null };
+    return { product, related: related ?? [], categoryName: category?.name ?? null, images };
   });
 
 export const searchProducts = createServerFn({ method: "GET" })

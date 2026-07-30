@@ -11,6 +11,12 @@ import {
   ArrowLeft,
   LayoutGrid,
   Images,
+  Tag,
+  TicketPercent,
+  Star,
+  PackageX,
+  Bell,
+  Settings,
 } from "lucide-react";
 import { getAdminStatus } from "@/lib/admin.functions";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -27,10 +33,17 @@ const links = [
   { to: "/admin/orders", label: "Orders", icon: ShoppingBag },
   { to: "/admin/products", label: "Products", icon: Package },
   { to: "/admin/categories", label: "Categories", icon: LayoutGrid },
+  { to: "/admin/brands", label: "Brands", icon: Tag },
   { to: "/admin/banners", label: "Banners", icon: Images },
+  { to: "/admin/coupons", label: "Coupons", icon: TicketPercent },
+  { to: "/admin/reviews", label: "Reviews", icon: Star },
+  { to: "/admin/returns", label: "Returns", icon: PackageX },
   { to: "/admin/customers", label: "Customers", icon: Users },
   { to: "/admin/stores", label: "Stores", icon: StoreIcon },
+  { to: "/admin/notifications", label: "Notify", icon: Bell },
+  { to: "/admin/settings", label: "Settings", icon: Settings },
 ] as const;
+
 
 
 function AdminLayout() {

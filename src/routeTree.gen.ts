@@ -9,32 +9,63 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TestimonialsRouteImport } from './routes/testimonials'
+import { Route as TermsRouteImport } from './routes/terms'
 import { Route as StoresRouteImport } from './routes/stores'
 import { Route as SearchRouteImport } from './routes/search'
+import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as MaintenanceRouteImport } from './routes/maintenance'
+import { Route as HelpRouteImport } from './routes/help'
+import { Route as FeedbackRouteImport } from './routes/feedback'
+import { Route as FaqRouteImport } from './routes/faq'
+import { Route as ContactRouteImport } from './routes/contact'
 import { Route as CategoriesRouteImport } from './routes/categories'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AboutRouteImport } from './routes/about'
 import { Route as AdminRouteRouteImport } from './routes/admin/route'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as BlogsIndexRouteImport } from './routes/blogs.index'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as ProductSlugRouteImport } from './routes/product.$slug'
 import { Route as DevLoginTestRouteImport } from './routes/dev/login-test'
 import { Route as CategorySlugRouteImport } from './routes/category.$slug'
+import { Route as BlogsSlugRouteImport } from './routes/blogs.$slug'
 import { Route as AdminStoresRouteImport } from './routes/admin/stores'
+import { Route as AdminSettingsRouteImport } from './routes/admin/settings'
+import { Route as AdminReviewsRouteImport } from './routes/admin/reviews'
+import { Route as AdminReturnsRouteImport } from './routes/admin/returns'
 import { Route as AdminProductsRouteImport } from './routes/admin/products'
 import { Route as AdminOrdersRouteImport } from './routes/admin/orders'
+import { Route as AdminNotificationsRouteImport } from './routes/admin/notifications'
 import { Route as AdminCustomersRouteImport } from './routes/admin/customers'
+import { Route as AdminCouponsRouteImport } from './routes/admin/coupons'
 import { Route as AdminCategoriesRouteImport } from './routes/admin/categories'
+import { Route as AdminBrandsRouteImport } from './routes/admin/brands'
 import { Route as AdminBannersRouteImport } from './routes/admin/banners'
 import { Route as AuthenticatedWishlistRouteImport } from './routes/_authenticated/wishlist'
+import { Route as AuthenticatedWalletRouteImport } from './routes/_authenticated/wallet'
+import { Route as AuthenticatedRewardsRouteImport } from './routes/_authenticated/rewards'
+import { Route as AuthenticatedReferralRouteImport } from './routes/_authenticated/referral'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated/notifications'
+import { Route as AuthenticatedLanguageRouteImport } from './routes/_authenticated/language'
 import { Route as AuthenticatedCheckoutRouteImport } from './routes/_authenticated/checkout'
 import { Route as AuthenticatedCartRouteImport } from './routes/_authenticated/cart'
 import { Route as AuthenticatedAddressesRouteImport } from './routes/_authenticated/addresses'
 import { Route as AuthenticatedOrdersIndexRouteImport } from './routes/_authenticated/orders/index'
 import { Route as AuthenticatedOrdersIdRouteImport } from './routes/_authenticated/orders/$id'
 
+const TestimonialsRoute = TestimonialsRouteImport.update({
+  id: '/testimonials',
+  path: '/testimonials',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const StoresRoute = StoresRouteImport.update({
   id: '/stores',
   path: '/stores',
@@ -45,6 +76,36 @@ const SearchRoute = SearchRouteImport.update({
   path: '/search',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MaintenanceRoute = MaintenanceRouteImport.update({
+  id: '/maintenance',
+  path: '/maintenance',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HelpRoute = HelpRouteImport.update({
+  id: '/help',
+  path: '/help',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FeedbackRoute = FeedbackRouteImport.update({
+  id: '/feedback',
+  path: '/feedback',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FaqRoute = FaqRouteImport.update({
+  id: '/faq',
+  path: '/faq',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ContactRoute = ContactRouteImport.update({
+  id: '/contact',
+  path: '/contact',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CategoriesRoute = CategoriesRouteImport.update({
   id: '/categories',
   path: '/categories',
@@ -53,6 +114,11 @@ const CategoriesRoute = CategoriesRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AboutRoute = AboutRouteImport.update({
+  id: '/about',
+  path: '/about',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminRouteRoute = AdminRouteRouteImport.update({
@@ -67,6 +133,11 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BlogsIndexRoute = BlogsIndexRouteImport.update({
+  id: '/blogs/',
+  path: '/blogs/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
@@ -89,9 +160,29 @@ const CategorySlugRoute = CategorySlugRouteImport.update({
   path: '/category/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BlogsSlugRoute = BlogsSlugRouteImport.update({
+  id: '/blogs/$slug',
+  path: '/blogs/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminStoresRoute = AdminStoresRouteImport.update({
   id: '/stores',
   path: '/stores',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminSettingsRoute = AdminSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminReviewsRoute = AdminReviewsRouteImport.update({
+  id: '/reviews',
+  path: '/reviews',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminReturnsRoute = AdminReturnsRouteImport.update({
+  id: '/returns',
+  path: '/returns',
   getParentRoute: () => AdminRouteRoute,
 } as any)
 const AdminProductsRoute = AdminProductsRouteImport.update({
@@ -104,14 +195,29 @@ const AdminOrdersRoute = AdminOrdersRouteImport.update({
   path: '/orders',
   getParentRoute: () => AdminRouteRoute,
 } as any)
+const AdminNotificationsRoute = AdminNotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
 const AdminCustomersRoute = AdminCustomersRouteImport.update({
   id: '/customers',
   path: '/customers',
   getParentRoute: () => AdminRouteRoute,
 } as any)
+const AdminCouponsRoute = AdminCouponsRouteImport.update({
+  id: '/coupons',
+  path: '/coupons',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
 const AdminCategoriesRoute = AdminCategoriesRouteImport.update({
   id: '/categories',
   path: '/categories',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminBrandsRoute = AdminBrandsRouteImport.update({
+  id: '/brands',
+  path: '/brands',
   getParentRoute: () => AdminRouteRoute,
 } as any)
 const AdminBannersRoute = AdminBannersRouteImport.update({
@@ -122,6 +228,21 @@ const AdminBannersRoute = AdminBannersRouteImport.update({
 const AuthenticatedWishlistRoute = AuthenticatedWishlistRouteImport.update({
   id: '/wishlist',
   path: '/wishlist',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedWalletRoute = AuthenticatedWalletRouteImport.update({
+  id: '/wallet',
+  path: '/wallet',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedRewardsRoute = AuthenticatedRewardsRouteImport.update({
+  id: '/rewards',
+  path: '/rewards',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedReferralRoute = AuthenticatedReferralRouteImport.update({
+  id: '/referral',
+  path: '/referral',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
@@ -135,6 +256,11 @@ const AuthenticatedNotificationsRoute =
     path: '/notifications',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedLanguageRoute = AuthenticatedLanguageRouteImport.update({
+  id: '/language',
+  path: '/language',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedCheckoutRoute = AuthenticatedCheckoutRouteImport.update({
   id: '/checkout',
   path: '/checkout',
@@ -165,51 +291,93 @@ const AuthenticatedOrdersIdRoute = AuthenticatedOrdersIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteRouteWithChildren
+  '/about': typeof AboutRoute
   '/auth': typeof AuthRoute
   '/categories': typeof CategoriesRoute
+  '/contact': typeof ContactRoute
+  '/faq': typeof FaqRoute
+  '/feedback': typeof FeedbackRoute
+  '/help': typeof HelpRoute
+  '/maintenance': typeof MaintenanceRoute
+  '/privacy': typeof PrivacyRoute
   '/search': typeof SearchRoute
   '/stores': typeof StoresRoute
+  '/terms': typeof TermsRoute
+  '/testimonials': typeof TestimonialsRoute
   '/addresses': typeof AuthenticatedAddressesRoute
   '/cart': typeof AuthenticatedCartRoute
   '/checkout': typeof AuthenticatedCheckoutRoute
+  '/language': typeof AuthenticatedLanguageRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/profile': typeof AuthenticatedProfileRoute
+  '/referral': typeof AuthenticatedReferralRoute
+  '/rewards': typeof AuthenticatedRewardsRoute
+  '/wallet': typeof AuthenticatedWalletRoute
   '/wishlist': typeof AuthenticatedWishlistRoute
   '/admin/banners': typeof AdminBannersRoute
+  '/admin/brands': typeof AdminBrandsRoute
   '/admin/categories': typeof AdminCategoriesRoute
+  '/admin/coupons': typeof AdminCouponsRoute
   '/admin/customers': typeof AdminCustomersRoute
+  '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/orders': typeof AdminOrdersRoute
   '/admin/products': typeof AdminProductsRoute
+  '/admin/returns': typeof AdminReturnsRoute
+  '/admin/reviews': typeof AdminReviewsRoute
+  '/admin/settings': typeof AdminSettingsRoute
   '/admin/stores': typeof AdminStoresRoute
+  '/blogs/$slug': typeof BlogsSlugRoute
   '/category/$slug': typeof CategorySlugRoute
   '/dev/login-test': typeof DevLoginTestRoute
   '/product/$slug': typeof ProductSlugRoute
   '/admin/': typeof AdminIndexRoute
+  '/blogs/': typeof BlogsIndexRoute
   '/orders/$id': typeof AuthenticatedOrdersIdRoute
   '/orders/': typeof AuthenticatedOrdersIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
   '/auth': typeof AuthRoute
   '/categories': typeof CategoriesRoute
+  '/contact': typeof ContactRoute
+  '/faq': typeof FaqRoute
+  '/feedback': typeof FeedbackRoute
+  '/help': typeof HelpRoute
+  '/maintenance': typeof MaintenanceRoute
+  '/privacy': typeof PrivacyRoute
   '/search': typeof SearchRoute
   '/stores': typeof StoresRoute
+  '/terms': typeof TermsRoute
+  '/testimonials': typeof TestimonialsRoute
   '/addresses': typeof AuthenticatedAddressesRoute
   '/cart': typeof AuthenticatedCartRoute
   '/checkout': typeof AuthenticatedCheckoutRoute
+  '/language': typeof AuthenticatedLanguageRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/profile': typeof AuthenticatedProfileRoute
+  '/referral': typeof AuthenticatedReferralRoute
+  '/rewards': typeof AuthenticatedRewardsRoute
+  '/wallet': typeof AuthenticatedWalletRoute
   '/wishlist': typeof AuthenticatedWishlistRoute
   '/admin/banners': typeof AdminBannersRoute
+  '/admin/brands': typeof AdminBrandsRoute
   '/admin/categories': typeof AdminCategoriesRoute
+  '/admin/coupons': typeof AdminCouponsRoute
   '/admin/customers': typeof AdminCustomersRoute
+  '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/orders': typeof AdminOrdersRoute
   '/admin/products': typeof AdminProductsRoute
+  '/admin/returns': typeof AdminReturnsRoute
+  '/admin/reviews': typeof AdminReviewsRoute
+  '/admin/settings': typeof AdminSettingsRoute
   '/admin/stores': typeof AdminStoresRoute
+  '/blogs/$slug': typeof BlogsSlugRoute
   '/category/$slug': typeof CategorySlugRoute
   '/dev/login-test': typeof DevLoginTestRoute
   '/product/$slug': typeof ProductSlugRoute
   '/admin': typeof AdminIndexRoute
+  '/blogs': typeof BlogsIndexRoute
   '/orders/$id': typeof AuthenticatedOrdersIdRoute
   '/orders': typeof AuthenticatedOrdersIndexRoute
 }
@@ -218,26 +386,47 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/admin': typeof AdminRouteRouteWithChildren
+  '/about': typeof AboutRoute
   '/auth': typeof AuthRoute
   '/categories': typeof CategoriesRoute
+  '/contact': typeof ContactRoute
+  '/faq': typeof FaqRoute
+  '/feedback': typeof FeedbackRoute
+  '/help': typeof HelpRoute
+  '/maintenance': typeof MaintenanceRoute
+  '/privacy': typeof PrivacyRoute
   '/search': typeof SearchRoute
   '/stores': typeof StoresRoute
+  '/terms': typeof TermsRoute
+  '/testimonials': typeof TestimonialsRoute
   '/_authenticated/addresses': typeof AuthenticatedAddressesRoute
   '/_authenticated/cart': typeof AuthenticatedCartRoute
   '/_authenticated/checkout': typeof AuthenticatedCheckoutRoute
+  '/_authenticated/language': typeof AuthenticatedLanguageRoute
   '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
+  '/_authenticated/referral': typeof AuthenticatedReferralRoute
+  '/_authenticated/rewards': typeof AuthenticatedRewardsRoute
+  '/_authenticated/wallet': typeof AuthenticatedWalletRoute
   '/_authenticated/wishlist': typeof AuthenticatedWishlistRoute
   '/admin/banners': typeof AdminBannersRoute
+  '/admin/brands': typeof AdminBrandsRoute
   '/admin/categories': typeof AdminCategoriesRoute
+  '/admin/coupons': typeof AdminCouponsRoute
   '/admin/customers': typeof AdminCustomersRoute
+  '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/orders': typeof AdminOrdersRoute
   '/admin/products': typeof AdminProductsRoute
+  '/admin/returns': typeof AdminReturnsRoute
+  '/admin/reviews': typeof AdminReviewsRoute
+  '/admin/settings': typeof AdminSettingsRoute
   '/admin/stores': typeof AdminStoresRoute
+  '/blogs/$slug': typeof BlogsSlugRoute
   '/category/$slug': typeof CategorySlugRoute
   '/dev/login-test': typeof DevLoginTestRoute
   '/product/$slug': typeof ProductSlugRoute
   '/admin/': typeof AdminIndexRoute
+  '/blogs/': typeof BlogsIndexRoute
   '/_authenticated/orders/$id': typeof AuthenticatedOrdersIdRoute
   '/_authenticated/orders/': typeof AuthenticatedOrdersIndexRoute
 }
@@ -246,51 +435,93 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/admin'
+    | '/about'
     | '/auth'
     | '/categories'
+    | '/contact'
+    | '/faq'
+    | '/feedback'
+    | '/help'
+    | '/maintenance'
+    | '/privacy'
     | '/search'
     | '/stores'
+    | '/terms'
+    | '/testimonials'
     | '/addresses'
     | '/cart'
     | '/checkout'
+    | '/language'
     | '/notifications'
     | '/profile'
+    | '/referral'
+    | '/rewards'
+    | '/wallet'
     | '/wishlist'
     | '/admin/banners'
+    | '/admin/brands'
     | '/admin/categories'
+    | '/admin/coupons'
     | '/admin/customers'
+    | '/admin/notifications'
     | '/admin/orders'
     | '/admin/products'
+    | '/admin/returns'
+    | '/admin/reviews'
+    | '/admin/settings'
     | '/admin/stores'
+    | '/blogs/$slug'
     | '/category/$slug'
     | '/dev/login-test'
     | '/product/$slug'
     | '/admin/'
+    | '/blogs/'
     | '/orders/$id'
     | '/orders/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/about'
     | '/auth'
     | '/categories'
+    | '/contact'
+    | '/faq'
+    | '/feedback'
+    | '/help'
+    | '/maintenance'
+    | '/privacy'
     | '/search'
     | '/stores'
+    | '/terms'
+    | '/testimonials'
     | '/addresses'
     | '/cart'
     | '/checkout'
+    | '/language'
     | '/notifications'
     | '/profile'
+    | '/referral'
+    | '/rewards'
+    | '/wallet'
     | '/wishlist'
     | '/admin/banners'
+    | '/admin/brands'
     | '/admin/categories'
+    | '/admin/coupons'
     | '/admin/customers'
+    | '/admin/notifications'
     | '/admin/orders'
     | '/admin/products'
+    | '/admin/returns'
+    | '/admin/reviews'
+    | '/admin/settings'
     | '/admin/stores'
+    | '/blogs/$slug'
     | '/category/$slug'
     | '/dev/login-test'
     | '/product/$slug'
     | '/admin'
+    | '/blogs'
     | '/orders/$id'
     | '/orders'
   id:
@@ -298,26 +529,47 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/admin'
+    | '/about'
     | '/auth'
     | '/categories'
+    | '/contact'
+    | '/faq'
+    | '/feedback'
+    | '/help'
+    | '/maintenance'
+    | '/privacy'
     | '/search'
     | '/stores'
+    | '/terms'
+    | '/testimonials'
     | '/_authenticated/addresses'
     | '/_authenticated/cart'
     | '/_authenticated/checkout'
+    | '/_authenticated/language'
     | '/_authenticated/notifications'
     | '/_authenticated/profile'
+    | '/_authenticated/referral'
+    | '/_authenticated/rewards'
+    | '/_authenticated/wallet'
     | '/_authenticated/wishlist'
     | '/admin/banners'
+    | '/admin/brands'
     | '/admin/categories'
+    | '/admin/coupons'
     | '/admin/customers'
+    | '/admin/notifications'
     | '/admin/orders'
     | '/admin/products'
+    | '/admin/returns'
+    | '/admin/reviews'
+    | '/admin/settings'
     | '/admin/stores'
+    | '/blogs/$slug'
     | '/category/$slug'
     | '/dev/login-test'
     | '/product/$slug'
     | '/admin/'
+    | '/blogs/'
     | '/_authenticated/orders/$id'
     | '/_authenticated/orders/'
   fileRoutesById: FileRoutesById
@@ -326,17 +578,42 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AdminRouteRoute: typeof AdminRouteRouteWithChildren
+  AboutRoute: typeof AboutRoute
   AuthRoute: typeof AuthRoute
   CategoriesRoute: typeof CategoriesRoute
+  ContactRoute: typeof ContactRoute
+  FaqRoute: typeof FaqRoute
+  FeedbackRoute: typeof FeedbackRoute
+  HelpRoute: typeof HelpRoute
+  MaintenanceRoute: typeof MaintenanceRoute
+  PrivacyRoute: typeof PrivacyRoute
   SearchRoute: typeof SearchRoute
   StoresRoute: typeof StoresRoute
+  TermsRoute: typeof TermsRoute
+  TestimonialsRoute: typeof TestimonialsRoute
+  BlogsSlugRoute: typeof BlogsSlugRoute
   CategorySlugRoute: typeof CategorySlugRoute
   DevLoginTestRoute: typeof DevLoginTestRoute
   ProductSlugRoute: typeof ProductSlugRoute
+  BlogsIndexRoute: typeof BlogsIndexRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/testimonials': {
+      id: '/testimonials'
+      path: '/testimonials'
+      fullPath: '/testimonials'
+      preLoaderRoute: typeof TestimonialsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/stores': {
       id: '/stores'
       path: '/stores'
@@ -351,6 +628,48 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SearchRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/maintenance': {
+      id: '/maintenance'
+      path: '/maintenance'
+      fullPath: '/maintenance'
+      preLoaderRoute: typeof MaintenanceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/help': {
+      id: '/help'
+      path: '/help'
+      fullPath: '/help'
+      preLoaderRoute: typeof HelpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/feedback': {
+      id: '/feedback'
+      path: '/feedback'
+      fullPath: '/feedback'
+      preLoaderRoute: typeof FeedbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/faq': {
+      id: '/faq'
+      path: '/faq'
+      fullPath: '/faq'
+      preLoaderRoute: typeof FaqRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/contact': {
+      id: '/contact'
+      path: '/contact'
+      fullPath: '/contact'
+      preLoaderRoute: typeof ContactRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/categories': {
       id: '/categories'
       path: '/categories'
@@ -363,6 +682,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/about': {
+      id: '/about'
+      path: '/about'
+      fullPath: '/about'
+      preLoaderRoute: typeof AboutRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin': {
@@ -384,6 +710,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/blogs/': {
+      id: '/blogs/'
+      path: '/blogs'
+      fullPath: '/blogs/'
+      preLoaderRoute: typeof BlogsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/': {
@@ -414,11 +747,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CategorySlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/blogs/$slug': {
+      id: '/blogs/$slug'
+      path: '/blogs/$slug'
+      fullPath: '/blogs/$slug'
+      preLoaderRoute: typeof BlogsSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/stores': {
       id: '/admin/stores'
       path: '/stores'
       fullPath: '/admin/stores'
       preLoaderRoute: typeof AdminStoresRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/settings': {
+      id: '/admin/settings'
+      path: '/settings'
+      fullPath: '/admin/settings'
+      preLoaderRoute: typeof AdminSettingsRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/reviews': {
+      id: '/admin/reviews'
+      path: '/reviews'
+      fullPath: '/admin/reviews'
+      preLoaderRoute: typeof AdminReviewsRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/returns': {
+      id: '/admin/returns'
+      path: '/returns'
+      fullPath: '/admin/returns'
+      preLoaderRoute: typeof AdminReturnsRouteImport
       parentRoute: typeof AdminRouteRoute
     }
     '/admin/products': {
@@ -435,6 +796,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminOrdersRouteImport
       parentRoute: typeof AdminRouteRoute
     }
+    '/admin/notifications': {
+      id: '/admin/notifications'
+      path: '/notifications'
+      fullPath: '/admin/notifications'
+      preLoaderRoute: typeof AdminNotificationsRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
     '/admin/customers': {
       id: '/admin/customers'
       path: '/customers'
@@ -442,11 +810,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminCustomersRouteImport
       parentRoute: typeof AdminRouteRoute
     }
+    '/admin/coupons': {
+      id: '/admin/coupons'
+      path: '/coupons'
+      fullPath: '/admin/coupons'
+      preLoaderRoute: typeof AdminCouponsRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
     '/admin/categories': {
       id: '/admin/categories'
       path: '/categories'
       fullPath: '/admin/categories'
       preLoaderRoute: typeof AdminCategoriesRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/brands': {
+      id: '/admin/brands'
+      path: '/brands'
+      fullPath: '/admin/brands'
+      preLoaderRoute: typeof AdminBrandsRouteImport
       parentRoute: typeof AdminRouteRoute
     }
     '/admin/banners': {
@@ -463,6 +845,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedWishlistRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/wallet': {
+      id: '/_authenticated/wallet'
+      path: '/wallet'
+      fullPath: '/wallet'
+      preLoaderRoute: typeof AuthenticatedWalletRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/rewards': {
+      id: '/_authenticated/rewards'
+      path: '/rewards'
+      fullPath: '/rewards'
+      preLoaderRoute: typeof AuthenticatedRewardsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/referral': {
+      id: '/_authenticated/referral'
+      path: '/referral'
+      fullPath: '/referral'
+      preLoaderRoute: typeof AuthenticatedReferralRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/profile': {
       id: '/_authenticated/profile'
       path: '/profile'
@@ -475,6 +878,13 @@ declare module '@tanstack/react-router' {
       path: '/notifications'
       fullPath: '/notifications'
       preLoaderRoute: typeof AuthenticatedNotificationsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/language': {
+      id: '/_authenticated/language'
+      path: '/language'
+      fullPath: '/language'
+      preLoaderRoute: typeof AuthenticatedLanguageRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/checkout': {
@@ -519,8 +929,12 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAddressesRoute: typeof AuthenticatedAddressesRoute
   AuthenticatedCartRoute: typeof AuthenticatedCartRoute
   AuthenticatedCheckoutRoute: typeof AuthenticatedCheckoutRoute
+  AuthenticatedLanguageRoute: typeof AuthenticatedLanguageRoute
   AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
+  AuthenticatedReferralRoute: typeof AuthenticatedReferralRoute
+  AuthenticatedRewardsRoute: typeof AuthenticatedRewardsRoute
+  AuthenticatedWalletRoute: typeof AuthenticatedWalletRoute
   AuthenticatedWishlistRoute: typeof AuthenticatedWishlistRoute
   AuthenticatedOrdersIdRoute: typeof AuthenticatedOrdersIdRoute
   AuthenticatedOrdersIndexRoute: typeof AuthenticatedOrdersIndexRoute
@@ -530,8 +944,12 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAddressesRoute: AuthenticatedAddressesRoute,
   AuthenticatedCartRoute: AuthenticatedCartRoute,
   AuthenticatedCheckoutRoute: AuthenticatedCheckoutRoute,
+  AuthenticatedLanguageRoute: AuthenticatedLanguageRoute,
   AuthenticatedNotificationsRoute: AuthenticatedNotificationsRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
+  AuthenticatedReferralRoute: AuthenticatedReferralRoute,
+  AuthenticatedRewardsRoute: AuthenticatedRewardsRoute,
+  AuthenticatedWalletRoute: AuthenticatedWalletRoute,
   AuthenticatedWishlistRoute: AuthenticatedWishlistRoute,
   AuthenticatedOrdersIdRoute: AuthenticatedOrdersIdRoute,
   AuthenticatedOrdersIndexRoute: AuthenticatedOrdersIndexRoute,
@@ -542,20 +960,32 @@ const AuthenticatedRouteRouteWithChildren =
 
 interface AdminRouteRouteChildren {
   AdminBannersRoute: typeof AdminBannersRoute
+  AdminBrandsRoute: typeof AdminBrandsRoute
   AdminCategoriesRoute: typeof AdminCategoriesRoute
+  AdminCouponsRoute: typeof AdminCouponsRoute
   AdminCustomersRoute: typeof AdminCustomersRoute
+  AdminNotificationsRoute: typeof AdminNotificationsRoute
   AdminOrdersRoute: typeof AdminOrdersRoute
   AdminProductsRoute: typeof AdminProductsRoute
+  AdminReturnsRoute: typeof AdminReturnsRoute
+  AdminReviewsRoute: typeof AdminReviewsRoute
+  AdminSettingsRoute: typeof AdminSettingsRoute
   AdminStoresRoute: typeof AdminStoresRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
 
 const AdminRouteRouteChildren: AdminRouteRouteChildren = {
   AdminBannersRoute: AdminBannersRoute,
+  AdminBrandsRoute: AdminBrandsRoute,
   AdminCategoriesRoute: AdminCategoriesRoute,
+  AdminCouponsRoute: AdminCouponsRoute,
   AdminCustomersRoute: AdminCustomersRoute,
+  AdminNotificationsRoute: AdminNotificationsRoute,
   AdminOrdersRoute: AdminOrdersRoute,
   AdminProductsRoute: AdminProductsRoute,
+  AdminReturnsRoute: AdminReturnsRoute,
+  AdminReviewsRoute: AdminReviewsRoute,
+  AdminSettingsRoute: AdminSettingsRoute,
   AdminStoresRoute: AdminStoresRoute,
   AdminIndexRoute: AdminIndexRoute,
 }
@@ -568,24 +998,25 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AdminRouteRoute: AdminRouteRouteWithChildren,
+  AboutRoute: AboutRoute,
   AuthRoute: AuthRoute,
   CategoriesRoute: CategoriesRoute,
+  ContactRoute: ContactRoute,
+  FaqRoute: FaqRoute,
+  FeedbackRoute: FeedbackRoute,
+  HelpRoute: HelpRoute,
+  MaintenanceRoute: MaintenanceRoute,
+  PrivacyRoute: PrivacyRoute,
   SearchRoute: SearchRoute,
   StoresRoute: StoresRoute,
+  TermsRoute: TermsRoute,
+  TestimonialsRoute: TestimonialsRoute,
+  BlogsSlugRoute: BlogsSlugRoute,
   CategorySlugRoute: CategorySlugRoute,
   DevLoginTestRoute: DevLoginTestRoute,
   ProductSlugRoute: ProductSlugRoute,
+  BlogsIndexRoute: BlogsIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

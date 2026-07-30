@@ -68,6 +68,11 @@ export type Order = {
   status: OrderStatus;
   subtotal: number;
   delivery_fee: number;
+  discount?: number;
+  tax?: number;
+  coupon_code?: string | null;
+  payment_method?: string | null;
+  delivery_slot?: string | null;
   total: number;
   recipient_name: string;
   phone: string;
@@ -75,6 +80,7 @@ export type Order = {
   created_at: string;
   order_items?: OrderItem[];
 };
+
 
 export type Profile = {
   id: string;

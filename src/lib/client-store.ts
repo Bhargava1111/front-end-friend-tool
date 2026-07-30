@@ -76,3 +76,97 @@ export const useDeliveryLocation = create<DeliveryLocationState>()(
     { name: "sms-delivery-location", storage: createJSONStorage(() => localStorage) },
   ),
 );
+
+/* --------------------------- SAVE FOR LATER --------------------------- */
+
+type SaveForLaterState = {
+  items: Product[];
+  save: (product: Product) => void;
+  toggle: (product: Product) => void;
+  remove: (id: string) => void;
+};
+
+export const useSaveForLater = create<SaveForLaterState>()(
+  persist(
+    (set) => ({
+      items: [],
+      save: (product) =>
+        set((state) => ({
+          items: [product, ...state.items.filter((p) => p.id !== product.id)].slice(0, 40),
+        })),
+      toggle: (product) =>
+        set((state) =>
+          state.items.some((p) => p.id === product.id)
+            ? { items: state.items.filter((p) => p.id !== product.id) }
+            : { items: [product, ...state.items].slice(0, 40) },
+        ),
+      remove: (id) => set((state) => ({ items: state.items.filter((p) => p.id !== id) })),
+    }),
+    { name: "sms-save-for-later", storage: createJSONStorage(() => localStorage) },
+  ),
+);
+
+
+/* ----------------------------- APPLIED COUPON ------------------------- */
+
+type AppliedCouponState = {
+  code: string | null;
+  apply: (code: string) => void;
+  clear: () => void;
+};
+
+export const useAppliedCoupon = create<AppliedCouponState>()(
+  persist(
+    (set) => ({
+      code: null,
+      apply: (code) => set({ code: code.toUpperCase() }),
+      clear: () => set({ code: null }),
+    }),
+    { name: "sms-coupon", storage: createJSONStorage(() => localStorage) },
+  ),
+);
+
+/* -------------------------- FAVOURITE CATEGORIES ---------------------- */
+
+type FavouriteCategoryState = {
+  slugs: string[];
+  toggle: (slug: string) => void;
+};
+
+export const useFavouriteCategories = create<FavouriteCategoryState>()(
+  persist(
+    (set) => ({
+      slugs: [],
+      toggle: (slug) =>
+        set((state) => ({
+          slugs: state.slugs.includes(slug)
+            ? state.slugs.filter((s) => s !== slug)
+            : [...state.slugs, slug],
+        })),
+    }),
+    { name: "sms-favourite-categories", storage: createJSONStorage(() => localStorage) },
+  ),
+);
+
+/* -------------------------------- LANGUAGE ---------------------------- */
+
+type LanguageState = { code: string; setCode: (code: string) => void };
+
+export const useLanguage = create<LanguageState>()(
+  persist(
+    (set) => ({ code: "en", setCode: (code) => set({ code }) }),
+    { name: "sms-language", storage: createJSONStorage(() => localStorage) },
+  ),
+);
+
+/* ------------------------------- APP UPDATE --------------------------- */
+
+type AppUpdateState = { dismissedVersion: string | null; dismiss: (v: string) => void };
+
+export const useAppUpdate = create<AppUpdateState>()(
+  persist(
+    (set) => ({ dismissedVersion: null, dismiss: (v) => set({ dismissedVersion: v }) }),
+    { name: "sms-app-update", storage: createJSONStorage(() => localStorage) },
+  ),
+);
+
