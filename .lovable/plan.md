@@ -1,44 +1,60 @@
 ## Goal
 
-Add order approval + notifications, expand the admin panel (categories, banners, manual orders, product videos), auto-scrolling home sections, and automatic customer location capture with location fixes.
+A public diagnostics page at `/dev/login-test` that logs in with the dummy admin and customer credentials from the backend spec and shows OTP request/verification status — able to point at either the current Lovable Cloud backend or your Django API.
 
-## 1. Orders: approval + notifications
+## Verified starting state
 
-- Admin order card gets explicit **Approve** / **Reject** actions (in addition to the status dropdown): Approve sets `confirmed`, Reject sets `cancelled`, with a confirm dialog.
-- New `notifications` table (user_id, title, body, type, order_id, is_read, created_at) with owner-read/update rules and admin insert.
-- When an order is placed → notification to admins; when an admin changes status → notification to the customer ("Order MNX-104 approved", "packed", "delivered", "cancelled").
-- Customer-facing **Notification Center** at `/notifications`: unread badge on the profile/home bell icon, mark-as-read, live updates via realtime.
-- Admin gets a bell in the admin header showing new/pending orders count.
+- The six demo accounts (`admin@mnxstore.in`, `manager@…`, `orders@…`, `ananya@example.com`, `ravi@…`, `meera@…`, password `Demo@12345`) exist only in `docs/BACKEND_DJANGO_API.md`. The live backend currently has **one** real user and no roles assigned.
+- The Django OTP endpoints (`/auth/otp/request`, `/auth/otp/verify`) are specified but not running yet.
+- The built-in backend can't be forced to email the literal code `123456` — it generates random codes. So the fixed demo OTP needs its own dev-only issuing/verifying path.
 
-## 2. Admin can create categories, banners and orders
+## What gets built
 
-- **Categories page** (`/admin/categories`): create/edit/delete, name + auto slug, image URL, sort order, active toggle.
-- **Banners page** (`/admin/banners`): create new banners (title, subtitle, image, link category, sort order, active), edit and delete — today the admin can only toggle existing ones.
-- **Manual order creation** (`/admin/orders` → "New order"): pick customer, add products with quantities, enter recipient/phone/address, totals computed automatically, order saved as `confirmed`.
+### 1. Seed the demo accounts (one-click, on the page)
 
-## 3. Product videos
+A "Seed demo accounts" button calls a dev-only server function that creates all six users with password `Demo@12345`, marks their emails confirmed, sets their phone numbers and full names, and grants the `admin` role to the three staff accounts. Safe to press repeatedly — existing accounts are updated, not duplicated.
 
-- Add a `video_url` column to products; the admin product dialog gets a video URL field.
-- Product detail page shows the video as the first item in the gallery with a play badge, plus an inline player.
+### 2. Backend switcher
 
-## 4. Home page auto-scroll
+A segmented control at the top of the page:
 
-- Product rails (Flash Sale, Best Sellers, Trending, Recommended, Recently Viewed) auto-scroll horizontally at a slow, smooth pace, pausing on touch/hover and respecting `prefers-reduced-motion`.
-- Banner slider keeps its existing auto-advance; categories strip also auto-scrolls.
+- **Cloud** — talks to the current backend directly.
+- **Django** — talks to a base URL you type in (persisted in the browser, e.g. `http://localhost:8000/api/v1`), calling `/auth/login`, `/auth/otp/request`, `/auth/otp/verify` exactly as the spec defines. Shows connection errors plainly until your server is up.
 
-## 5. Automatic customer location + fixes
+### 3. Credential grid
 
-- On first load and right after login, if no location is stored, request geolocation automatically (once), resolve the nearest store, and save it — no manual tap needed.
-- Fall back in order: signed-in default address → nearest store → "Set your location" prompt.
-- Location fixes:
-  - Geolocation currently fails silently inside the preview iframe; add proper permission handling with clear messaging and a manual fallback instead of a generic error.
-  - Show a real area name via reverse geocoding instead of "Near <store>" only.
-  - Longer timeout + `maximumAge` so detection doesn't time out on mobile.
-  - Persist the chosen location to the user's profile so it follows them across devices, and keep checkout ETA in sync with the selected location.
+One card per demo account (3 admins, 3 customers) showing email, phone, role, and a **Log in** button. Each attempt renders:
+
+- pass/fail badge, HTTP status, round-trip time
+- returned user id, email, resolved role, whether the session token was stored
+- the raw error body on failure
+
+Plus a **Log in all** button that runs every account in sequence into a results table, a **Sign out** button, and a live "current session" panel showing who is signed in right now.
+
+### 4. OTP panel — request, verify, and the fixed `123456`
+
+Identifier input (prefilled from whichever demo account you clicked) with an email/phone channel toggle, and two modes:
+
+- **Demo OTP (default)** — `123456` always works. Request issues a code server-side with a 5-minute TTL, 5-attempt cap, and 30-second resend cooldown, matching the spec's rules; the panel shows a live TTL countdown, attempts remaining, cooldown timer, resend button, and the exact error code on failure (`otp_invalid`, `otp_expired`, `otp_too_many_attempts`). The code `123456` is displayed on the page so you can copy it.
+- **Real OTP** — sends an actual email code through the live backend and verifies whatever you paste in, so you can confirm real delivery end to end.
+
+In Django mode both modes just proxy to your endpoints and display the raw request/response JSON.
+
+Every call in both panels is logged to a scrollable request log (timestamp, method, endpoint, status, duration, response body), with a copy-to-clipboard button for pasting into bug reports.
+
+### 5. Access
+
+Public route at `/dev/login-test`, no auth gate, `noindex` meta, disallowed in `robots.txt`, and no links to it from the app's navigation — reachable only if you know the URL.
 
 ## Technical notes
 
-- DB migration: `notifications` table (RLS + grants), `products.video_url`, plus a trigger/server-side insert for status-change notifications.
-- New server functions in `src/lib/admin.functions.ts` (categories/banners CRUD, manual order create, approve/reject) and a new `src/lib/notifications.functions.ts`.
-- Auto-scroll implemented as a reusable hook used by `product-rail.tsx` and the category strip.
-- Location auto-detect lives in a small hook used by `LocationBar`, backed by the existing `useDeliveryLocation` Zustand store.
+- New route `src/routes/dev/login-test.tsx` (public, SSR-safe; all auth calls client-side).
+- New `src/lib/dev-auth.functions.ts` with three server functions: `seedDemoAccounts` (uses the admin client inside the handler, after checking a dev-mode flag), `requestDemoOtp`, `verifyDemoOtp`.
+- One migration: a `demo_otp_codes` table (identifier, channel, purpose, code hash, expires_at, attempts, consumed_at) with RLS denying all client access — only the server functions touch it — plus the required GRANTs to `service_role`.
+- The seed and demo-OTP functions refuse to run when the app is built for production, so the fixed `123456` can never work on the published site.
+- Django mode uses `fetch` from the browser against your configured base URL; you'll need permissive CORS on the Django side for local testing.
+
+## Caveats
+
+- Seeding creates six real accounts in your current backend. They're clearly labelled demo accounts and can be deleted later; say the word if you'd rather they go into a separate environment.
+- Phone OTP through the live backend needs an SMS provider that isn't configured, so real-mode phone OTP will report "provider not configured" — demo mode covers phone testing.
