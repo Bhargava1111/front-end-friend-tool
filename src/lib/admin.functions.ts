@@ -121,7 +121,7 @@ export const setOrderStatus = createServerFn({ method: "POST" })
 export const getAdminProducts = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const [products, categories, images] = await Promise.all([
+    const [products, categories, images, variants] = await Promise.all([
       context.supabase
         .from("products")
         .select(`${PRODUCT_COLUMNS}, is_active`)
@@ -130,6 +130,12 @@ export const getAdminProducts = createServerFn({ method: "GET" })
       context.supabase
         .from("product_images")
         .select("product_id, image_url, sort_order")
+        .order("sort_order"),
+      context.supabase
+        .from("product_variants")
+        .select(
+          "id, product_id, label, unit, unit_value, price, mrp, stock, sku, image_url, is_default, is_active, sort_order",
+        )
         .order("sort_order"),
     ]);
 
@@ -140,8 +146,19 @@ export const getAdminProducts = createServerFn({ method: "GET" })
       gallery.set(row.product_id, list);
     }
 
+    const packs = new Map<string, NonNullable<typeof variants.data>>();
+    for (const row of variants.data ?? []) {
+      const list = packs.get(row.product_id) ?? [];
+      list.push(row);
+      packs.set(row.product_id, list);
+    }
+
     return {
-      products: (products.data ?? []).map((p) => ({ ...p, gallery: gallery.get(p.id) ?? [] })),
+      products: (products.data ?? []).map((p) => ({
+        ...p,
+        gallery: gallery.get(p.id) ?? [],
+        variants: packs.get(p.id) ?? [],
+      })),
       categories: categories.data ?? [],
     };
   });
@@ -165,10 +182,26 @@ export const saveAdminProduct = createServerFn({ method: "POST" })
       is_featured: boolean;
       is_best_seller: boolean;
       gallery?: string[];
+      benefits?: string[];
+      shelf_life?: string | null;
+      origin?: string | null;
+      variants?: Array<{
+        id?: string;
+        label: string;
+        unit: string;
+        unit_value: number;
+        price: number;
+        mrp: number | null;
+        stock: number;
+        sku: string | null;
+        image_url: string | null;
+        is_default: boolean;
+        is_active: boolean;
+      }>;
     }) => data,
   )
   .handler(async ({ data, context }) => {
-    const { id, gallery, ...fields } = data;
+    const { id, gallery, variants, ...fields } = data;
     let productId = id;
     if (id) {
       const { error } = await context.supabase.from("products").update(fields).eq("id", id);
@@ -191,6 +224,33 @@ export const saveAdminProduct = createServerFn({ method: "POST" })
         .map((image_url, i) => ({ product_id: productId!, image_url, sort_order: i }));
       if (rows.length) {
         const { error } = await context.supabase.from("product_images").insert(rows);
+        if (error) throw new Error(error.message);
+      }
+    }
+
+    if (variants && productId) {
+      const clean = variants.filter((v) => v.label.trim() && v.price > 0);
+      const defaultIndex = Math.max(
+        0,
+        clean.findIndex((v) => v.is_default),
+      );
+      await context.supabase.from("product_variants").delete().eq("product_id", productId);
+      if (clean.length) {
+        const rows = clean.map((v, i) => ({
+          product_id: productId!,
+          label: v.label.trim(),
+          unit: v.unit,
+          unit_value: v.unit_value,
+          price: v.price,
+          mrp: v.mrp,
+          stock: v.stock,
+          sku: v.sku,
+          image_url: v.image_url,
+          is_default: i === defaultIndex,
+          is_active: v.is_active,
+          sort_order: i,
+        }));
+        const { error } = await context.supabase.from("product_variants").insert(rows);
         if (error) throw new Error(error.message);
       }
     }
