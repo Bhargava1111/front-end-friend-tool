@@ -128,7 +128,7 @@ function Home() {
       </header>
 
       <Reveal className="mt-5">
-        <BannerSlider banners={data.banners} />
+        <BannerSlider banners={heroBanners} />
       </Reveal>
 
       <Reveal className="mt-7">
@@ -168,7 +168,10 @@ function Home() {
       </Reveal>
 
       <FlashSaleRail products={allProducts} />
+      <OfferBannerCarousel banners={offerBanners} />
       <OfferCards />
+
+      <DealOfTheDay products={allProducts} />
 
       <Reveal>
         <ProductRail title="Today's deals" products={data.featured} />
@@ -176,13 +179,19 @@ function Home() {
 
       <CouponStrip />
 
+      <FestivalPicks categories={data.categories} products={allProducts} title="Pooja & festive store" />
+
       <Reveal>
         <ProductRail title="Trending now" products={trending} />
       </Reveal>
 
+      <BudgetRail products={allProducts} />
+
       <Reveal>
         <ProductRail title="Best sellers" products={data.bestSelling} />
       </Reveal>
+
+      <ShopByNeed categories={data.categories} />
 
       <RecentlyViewedRail />
 
@@ -192,9 +201,12 @@ function Home() {
 
       <BrandRail />
 
+      <ServicePromises />
+
       <Reveal>
         <ProductRail title="Newly added" products={data.newest} />
       </Reveal>
+
 
       <Reveal className="mt-8 px-4">
         <div className="rounded-3xl border border-accent/30 bg-gradient-to-br from-accent-soft to-accent-soft/40 p-5 text-center">
