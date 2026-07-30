@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Link } from "@tanstack/react-router";
@@ -23,10 +23,67 @@ export function useStores() {
   });
 }
 
+function storeLabel(name: string) {
+  return name.split("—").pop()?.trim() ?? name;
+}
+
+/**
+ * Detects the customer's location automatically on first visit.
+ * Geolocation is often blocked inside embedded previews, so we always
+ * fall back to the first active store instead of leaving the bar empty.
+ */
+function useAutoLocation(stores: StoreLocation[]) {
+  const { location, setLocation } = useDeliveryLocation();
+  const hydrated = useHydrated();
+  const attempted = useRef(false);
+
+  useEffect(() => {
+    if (!hydrated || location || stores.length === 0 || attempted.current) return;
+    attempted.current = true;
+
+    const fallback = () => {
+      const s = stores[0];
+      setLocation({
+        label: storeLabel(s.name),
+        detail: s.address_text,
+        lat: s.latitude,
+        lng: s.longitude,
+        pincode: s.pincode,
+        source: "store",
+      });
+    };
+
+    if (typeof navigator === "undefined" || !navigator.geolocation) {
+      fallback();
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        const closest = nearestStore(coords, stores);
+        setLocation({
+          label: closest ? `Near ${storeLabel(closest.store.name)}` : "Current location",
+          detail: closest
+            ? `${formatKm(closest.km)} from ${closest.store.name}`
+            : `${coords.lat.toFixed(3)}, ${coords.lng.toFixed(3)}`,
+          lat: coords.lat,
+          lng: coords.lng,
+          source: "gps",
+        });
+      },
+      fallback,
+      { enableHighAccuracy: false, timeout: 8000, maximumAge: 300000 },
+    );
+  }, [hydrated, location, stores, setLocation]);
+}
+
 export function LocationBar({ className }: { className?: string }) {
   const hydrated = useHydrated();
   const { location } = useDeliveryLocation();
+  const { data: stores = [] } = useStores();
   const [open, setOpen] = useState(false);
+  useAutoLocation(stores);
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -37,7 +94,7 @@ export function LocationBar({ className }: { className?: string }) {
           </span>
           <span className="mt-0.5 flex items-center gap-1 text-sm font-semibold">
             <span className="truncate">
-              {hydrated && location ? location.label : "Set your location"}
+              {hydrated && location ? location.label : "Detecting location…"}
             </span>
             <ChevronDown className="h-3.5 w-3.5 shrink-0 opacity-80" />
           </span>
@@ -52,6 +109,7 @@ export function LocationBar({ className }: { className?: string }) {
     </Sheet>
   );
 }
+
 
 export function LocationPicker({ onDone }: { onDone?: () => void }) {
   const { data: stores = [] } = useStores();
