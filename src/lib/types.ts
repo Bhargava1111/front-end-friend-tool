@@ -1,6 +1,6 @@
 export type ProductVariant = {
   id: string;
-  product_id?: string;
+  product_id?: string | null;
   label: string;
   unit: string;
   unit_value: number;
