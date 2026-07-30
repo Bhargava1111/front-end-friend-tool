@@ -142,6 +142,34 @@ function ProductPage() {
         )}
       </div>
 
+      {product.video_url && (
+        <div className="px-4 pt-4">
+          <h2 className="mb-2 text-sm font-semibold text-foreground">Product video</h2>
+          <div className="overflow-hidden rounded-2xl bg-black card-elevated">
+            {/\.(mp4|webm|ogg)$/i.test(product.video_url) ? (
+              <video
+                src={product.video_url}
+                controls
+                playsInline
+                preload="metadata"
+                poster={product.image_url ?? undefined}
+                className="aspect-video w-full"
+              />
+            ) : (
+              <iframe
+                src={product.video_url}
+                title={`${product.name} video`}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                loading="lazy"
+                className="aspect-video w-full"
+              />
+            )}
+          </div>
+        </div>
+      )}
+
+
       <div className="px-4 pt-5">
         <h1 className="text-lg font-bold leading-snug text-foreground">{product.name}</h1>
         {product.weight && <p className="mt-1 text-sm text-muted-foreground">{product.weight}</p>}
