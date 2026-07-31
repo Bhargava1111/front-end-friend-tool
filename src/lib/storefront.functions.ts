@@ -72,7 +72,7 @@ export const getBrandDirectory = createServerFn({ method: "GET" }).handler(async
   const [{ data: brands }, { data: products }, { data: banners }] = await Promise.all([
     supabase
       .from("brands")
-      .select("id, name, slug, tagline, logo_url")
+      .select("id, name, slug, tagline, logo_url, banner_url")
       .eq("is_active", true)
       .order("sort_order"),
     supabase
@@ -82,16 +82,19 @@ export const getBrandDirectory = createServerFn({ method: "GET" }).handler(async
       .order("created_at", { ascending: false }),
     supabase
       .from("banners")
-      .select("id, title, subtitle, image_url, link_slug")
+      .select("id, title, subtitle, image_url, link_slug, brand_id")
       .eq("is_active", true)
+      .eq("placement", "brands")
       .order("sort_order"),
   ]);
   const all = await attachGalleries(supabase, products ?? []);
+  const banderList = banners ?? [];
   return {
-    banners: banners ?? [],
-    brands: (brands ?? []).map((b, i) => ({
+    banners: banderList.filter((b) => !b.brand_id),
+    brands: (brands ?? []).map((b) => ({
       ...b,
-      banner_url: (banners ?? [])[i % Math.max(1, (banners ?? []).length)]?.image_url ?? null,
+      banner_url:
+        b.banner_url ?? banderList.find((x) => x.brand_id === b.id)?.image_url ?? null,
       products: all.filter((p) => p.brand_id === b.id).slice(0, 10),
     })),
   };
