@@ -14,6 +14,7 @@ import { Route as TermsRouteImport } from './routes/terms'
 import { Route as StoresRouteImport } from './routes/stores'
 import { Route as SearchRouteImport } from './routes/search'
 import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as OffersRouteImport } from './routes/offers'
 import { Route as MaintenanceRouteImport } from './routes/maintenance'
 import { Route as HelpRouteImport } from './routes/help'
 import { Route as FeedbackRouteImport } from './routes/feedback'
@@ -80,6 +81,11 @@ const SearchRoute = SearchRouteImport.update({
 const PrivacyRoute = PrivacyRouteImport.update({
   id: '/privacy',
   path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OffersRoute = OffersRouteImport.update({
+  id: '/offers',
+  path: '/offers',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MaintenanceRoute = MaintenanceRouteImport.update({
@@ -306,6 +312,7 @@ export interface FileRoutesByFullPath {
   '/feedback': typeof FeedbackRoute
   '/help': typeof HelpRoute
   '/maintenance': typeof MaintenanceRoute
+  '/offers': typeof OffersRoute
   '/privacy': typeof PrivacyRoute
   '/search': typeof SearchRoute
   '/stores': typeof StoresRoute
@@ -353,6 +360,7 @@ export interface FileRoutesByTo {
   '/feedback': typeof FeedbackRoute
   '/help': typeof HelpRoute
   '/maintenance': typeof MaintenanceRoute
+  '/offers': typeof OffersRoute
   '/privacy': typeof PrivacyRoute
   '/search': typeof SearchRoute
   '/stores': typeof StoresRoute
@@ -403,6 +411,7 @@ export interface FileRoutesById {
   '/feedback': typeof FeedbackRoute
   '/help': typeof HelpRoute
   '/maintenance': typeof MaintenanceRoute
+  '/offers': typeof OffersRoute
   '/privacy': typeof PrivacyRoute
   '/search': typeof SearchRoute
   '/stores': typeof StoresRoute
@@ -453,6 +462,7 @@ export interface FileRouteTypes {
     | '/feedback'
     | '/help'
     | '/maintenance'
+    | '/offers'
     | '/privacy'
     | '/search'
     | '/stores'
@@ -500,6 +510,7 @@ export interface FileRouteTypes {
     | '/feedback'
     | '/help'
     | '/maintenance'
+    | '/offers'
     | '/privacy'
     | '/search'
     | '/stores'
@@ -549,6 +560,7 @@ export interface FileRouteTypes {
     | '/feedback'
     | '/help'
     | '/maintenance'
+    | '/offers'
     | '/privacy'
     | '/search'
     | '/stores'
@@ -599,6 +611,7 @@ export interface RootRouteChildren {
   FeedbackRoute: typeof FeedbackRoute
   HelpRoute: typeof HelpRoute
   MaintenanceRoute: typeof MaintenanceRoute
+  OffersRoute: typeof OffersRoute
   PrivacyRoute: typeof PrivacyRoute
   SearchRoute: typeof SearchRoute
   StoresRoute: typeof StoresRoute
@@ -646,6 +659,13 @@ declare module '@tanstack/react-router' {
       path: '/privacy'
       fullPath: '/privacy'
       preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/offers': {
+      id: '/offers'
+      path: '/offers'
+      fullPath: '/offers'
+      preLoaderRoute: typeof OffersRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/maintenance': {
@@ -1027,6 +1047,7 @@ const rootRouteChildren: RootRouteChildren = {
   FeedbackRoute: FeedbackRoute,
   HelpRoute: HelpRoute,
   MaintenanceRoute: MaintenanceRoute,
+  OffersRoute: OffersRoute,
   PrivacyRoute: PrivacyRoute,
   SearchRoute: SearchRoute,
   StoresRoute: StoresRoute,
