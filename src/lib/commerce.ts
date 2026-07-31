@@ -145,3 +145,10 @@ export const PAYMENT_METHODS: PaymentMethod[] = [
   { id: "netbanking", label: "Net banking", hint: "All major banks", available: false },
   { id: "wallet", label: "Store wallet", hint: "Use your balance", available: false },
 ];
+
+/** Short badge text for a coupon, e.g. "15% OFF", "₹100 OFF", "FREE SHIP". */
+export function couponLabel(c: CouponRow): string {
+  if (c.discount_type === "percent") return `${Number(c.discount_value)}% OFF`;
+  if (c.discount_type === "free_shipping") return "FREE SHIP";
+  return `₹${Number(c.discount_value)} OFF`;
+}

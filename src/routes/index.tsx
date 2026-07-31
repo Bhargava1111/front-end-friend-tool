@@ -174,7 +174,7 @@ function Home() {
       <DealOfTheDay products={allProducts} />
 
       <Reveal>
-        <ProductRail title="Today's deals" products={data.featured} />
+        <ProductRail title="Today's deals" products={data.featured} href={{ to: "/deals" }} />
       </Reveal>
 
       <CouponStrip />
@@ -182,13 +182,13 @@ function Home() {
       <FestivalPicks categories={data.categories} products={allProducts} title="Pooja & festive store" />
 
       <Reveal>
-        <ProductRail title="Trending now" products={trending} />
+        <ProductRail title="Trending now" products={trending} href={{ to: "/deals" }} />
       </Reveal>
 
       <BudgetRail products={allProducts} />
 
       <Reveal>
-        <ProductRail title="Best sellers" products={data.bestSelling} />
+        <ProductRail title="Best sellers" products={data.bestSelling} href={{ to: "/search" }} />
       </Reveal>
 
       <ShopByNeed categories={data.categories} />
@@ -196,7 +196,7 @@ function Home() {
       <RecentlyViewedRail />
 
       <Reveal>
-        <ProductRail title="Recommended for you" products={data.recommended} />
+        <ProductRail title="Recommended for you" products={data.recommended} href={{ to: "/search" }} />
       </Reveal>
 
       <BrandRail />
@@ -204,7 +204,7 @@ function Home() {
       <ServicePromises />
 
       <Reveal>
-        <ProductRail title="Newly added" products={data.newest} />
+        <ProductRail title="Newly added" products={data.newest} href={{ to: "/categories" }} />
       </Reveal>
 
 

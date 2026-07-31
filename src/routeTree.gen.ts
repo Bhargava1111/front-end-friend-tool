@@ -14,12 +14,16 @@ import { Route as TermsRouteImport } from './routes/terms'
 import { Route as StoresRouteImport } from './routes/stores'
 import { Route as SearchRouteImport } from './routes/search'
 import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as OffersRouteImport } from './routes/offers'
 import { Route as MaintenanceRouteImport } from './routes/maintenance'
 import { Route as HelpRouteImport } from './routes/help'
 import { Route as FeedbackRouteImport } from './routes/feedback'
 import { Route as FaqRouteImport } from './routes/faq'
+import { Route as DealsRouteImport } from './routes/deals'
+import { Route as CouponsRouteImport } from './routes/coupons'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as CategoriesRouteImport } from './routes/categories'
+import { Route as BrandsRouteImport } from './routes/brands'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as AdminRouteRouteImport } from './routes/admin/route'
@@ -54,6 +58,7 @@ import { Route as AuthenticatedCheckoutRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedCartRouteImport } from './routes/_authenticated/cart'
 import { Route as AuthenticatedAddressesRouteImport } from './routes/_authenticated/addresses'
 import { Route as AuthenticatedOrdersIndexRouteImport } from './routes/_authenticated/orders/index'
+import { Route as AdminCustomerIdRouteImport } from './routes/admin/customer.$id'
 import { Route as AuthenticatedOrdersIdRouteImport } from './routes/_authenticated/orders/$id'
 
 const TestimonialsRoute = TestimonialsRouteImport.update({
@@ -81,6 +86,11 @@ const PrivacyRoute = PrivacyRouteImport.update({
   path: '/privacy',
   getParentRoute: () => rootRouteImport,
 } as any)
+const OffersRoute = OffersRouteImport.update({
+  id: '/offers',
+  path: '/offers',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MaintenanceRoute = MaintenanceRouteImport.update({
   id: '/maintenance',
   path: '/maintenance',
@@ -101,6 +111,16 @@ const FaqRoute = FaqRouteImport.update({
   path: '/faq',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DealsRoute = DealsRouteImport.update({
+  id: '/deals',
+  path: '/deals',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CouponsRoute = CouponsRouteImport.update({
+  id: '/coupons',
+  path: '/coupons',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ContactRoute = ContactRouteImport.update({
   id: '/contact',
   path: '/contact',
@@ -109,6 +129,11 @@ const ContactRoute = ContactRouteImport.update({
 const CategoriesRoute = CategoriesRouteImport.update({
   id: '/categories',
   path: '/categories',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BrandsRoute = BrandsRouteImport.update({
+  id: '/brands',
+  path: '/brands',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -282,6 +307,11 @@ const AuthenticatedOrdersIndexRoute =
     path: '/orders/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AdminCustomerIdRoute = AdminCustomerIdRouteImport.update({
+  id: '/customer/$id',
+  path: '/customer/$id',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
 const AuthenticatedOrdersIdRoute = AuthenticatedOrdersIdRouteImport.update({
   id: '/orders/$id',
   path: '/orders/$id',
@@ -293,12 +323,16 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRouteRouteWithChildren
   '/about': typeof AboutRoute
   '/auth': typeof AuthRoute
+  '/brands': typeof BrandsRoute
   '/categories': typeof CategoriesRoute
   '/contact': typeof ContactRoute
+  '/coupons': typeof CouponsRoute
+  '/deals': typeof DealsRoute
   '/faq': typeof FaqRoute
   '/feedback': typeof FeedbackRoute
   '/help': typeof HelpRoute
   '/maintenance': typeof MaintenanceRoute
+  '/offers': typeof OffersRoute
   '/privacy': typeof PrivacyRoute
   '/search': typeof SearchRoute
   '/stores': typeof StoresRoute
@@ -333,18 +367,23 @@ export interface FileRoutesByFullPath {
   '/admin/': typeof AdminIndexRoute
   '/blogs/': typeof BlogsIndexRoute
   '/orders/$id': typeof AuthenticatedOrdersIdRoute
+  '/admin/customer/$id': typeof AdminCustomerIdRoute
   '/orders/': typeof AuthenticatedOrdersIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/auth': typeof AuthRoute
+  '/brands': typeof BrandsRoute
   '/categories': typeof CategoriesRoute
   '/contact': typeof ContactRoute
+  '/coupons': typeof CouponsRoute
+  '/deals': typeof DealsRoute
   '/faq': typeof FaqRoute
   '/feedback': typeof FeedbackRoute
   '/help': typeof HelpRoute
   '/maintenance': typeof MaintenanceRoute
+  '/offers': typeof OffersRoute
   '/privacy': typeof PrivacyRoute
   '/search': typeof SearchRoute
   '/stores': typeof StoresRoute
@@ -379,6 +418,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminIndexRoute
   '/blogs': typeof BlogsIndexRoute
   '/orders/$id': typeof AuthenticatedOrdersIdRoute
+  '/admin/customer/$id': typeof AdminCustomerIdRoute
   '/orders': typeof AuthenticatedOrdersIndexRoute
 }
 export interface FileRoutesById {
@@ -388,12 +428,16 @@ export interface FileRoutesById {
   '/admin': typeof AdminRouteRouteWithChildren
   '/about': typeof AboutRoute
   '/auth': typeof AuthRoute
+  '/brands': typeof BrandsRoute
   '/categories': typeof CategoriesRoute
   '/contact': typeof ContactRoute
+  '/coupons': typeof CouponsRoute
+  '/deals': typeof DealsRoute
   '/faq': typeof FaqRoute
   '/feedback': typeof FeedbackRoute
   '/help': typeof HelpRoute
   '/maintenance': typeof MaintenanceRoute
+  '/offers': typeof OffersRoute
   '/privacy': typeof PrivacyRoute
   '/search': typeof SearchRoute
   '/stores': typeof StoresRoute
@@ -428,6 +472,7 @@ export interface FileRoutesById {
   '/admin/': typeof AdminIndexRoute
   '/blogs/': typeof BlogsIndexRoute
   '/_authenticated/orders/$id': typeof AuthenticatedOrdersIdRoute
+  '/admin/customer/$id': typeof AdminCustomerIdRoute
   '/_authenticated/orders/': typeof AuthenticatedOrdersIndexRoute
 }
 export interface FileRouteTypes {
@@ -437,12 +482,16 @@ export interface FileRouteTypes {
     | '/admin'
     | '/about'
     | '/auth'
+    | '/brands'
     | '/categories'
     | '/contact'
+    | '/coupons'
+    | '/deals'
     | '/faq'
     | '/feedback'
     | '/help'
     | '/maintenance'
+    | '/offers'
     | '/privacy'
     | '/search'
     | '/stores'
@@ -477,18 +526,23 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/blogs/'
     | '/orders/$id'
+    | '/admin/customer/$id'
     | '/orders/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/about'
     | '/auth'
+    | '/brands'
     | '/categories'
     | '/contact'
+    | '/coupons'
+    | '/deals'
     | '/faq'
     | '/feedback'
     | '/help'
     | '/maintenance'
+    | '/offers'
     | '/privacy'
     | '/search'
     | '/stores'
@@ -523,6 +577,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/blogs'
     | '/orders/$id'
+    | '/admin/customer/$id'
     | '/orders'
   id:
     | '__root__'
@@ -531,12 +586,16 @@ export interface FileRouteTypes {
     | '/admin'
     | '/about'
     | '/auth'
+    | '/brands'
     | '/categories'
     | '/contact'
+    | '/coupons'
+    | '/deals'
     | '/faq'
     | '/feedback'
     | '/help'
     | '/maintenance'
+    | '/offers'
     | '/privacy'
     | '/search'
     | '/stores'
@@ -571,6 +630,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/blogs/'
     | '/_authenticated/orders/$id'
+    | '/admin/customer/$id'
     | '/_authenticated/orders/'
   fileRoutesById: FileRoutesById
 }
@@ -580,12 +640,16 @@ export interface RootRouteChildren {
   AdminRouteRoute: typeof AdminRouteRouteWithChildren
   AboutRoute: typeof AboutRoute
   AuthRoute: typeof AuthRoute
+  BrandsRoute: typeof BrandsRoute
   CategoriesRoute: typeof CategoriesRoute
   ContactRoute: typeof ContactRoute
+  CouponsRoute: typeof CouponsRoute
+  DealsRoute: typeof DealsRoute
   FaqRoute: typeof FaqRoute
   FeedbackRoute: typeof FeedbackRoute
   HelpRoute: typeof HelpRoute
   MaintenanceRoute: typeof MaintenanceRoute
+  OffersRoute: typeof OffersRoute
   PrivacyRoute: typeof PrivacyRoute
   SearchRoute: typeof SearchRoute
   StoresRoute: typeof StoresRoute
@@ -635,6 +699,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PrivacyRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/offers': {
+      id: '/offers'
+      path: '/offers'
+      fullPath: '/offers'
+      preLoaderRoute: typeof OffersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/maintenance': {
       id: '/maintenance'
       path: '/maintenance'
@@ -663,6 +734,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FaqRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/deals': {
+      id: '/deals'
+      path: '/deals'
+      fullPath: '/deals'
+      preLoaderRoute: typeof DealsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/coupons': {
+      id: '/coupons'
+      path: '/coupons'
+      fullPath: '/coupons'
+      preLoaderRoute: typeof CouponsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/contact': {
       id: '/contact'
       path: '/contact'
@@ -675,6 +760,13 @@ declare module '@tanstack/react-router' {
       path: '/categories'
       fullPath: '/categories'
       preLoaderRoute: typeof CategoriesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/brands': {
+      id: '/brands'
+      path: '/brands'
+      fullPath: '/brands'
+      preLoaderRoute: typeof BrandsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -915,6 +1007,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOrdersIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/admin/customer/$id': {
+      id: '/admin/customer/$id'
+      path: '/customer/$id'
+      fullPath: '/admin/customer/$id'
+      preLoaderRoute: typeof AdminCustomerIdRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
     '/_authenticated/orders/$id': {
       id: '/_authenticated/orders/$id'
       path: '/orders/$id'
@@ -972,6 +1071,7 @@ interface AdminRouteRouteChildren {
   AdminSettingsRoute: typeof AdminSettingsRoute
   AdminStoresRoute: typeof AdminStoresRoute
   AdminIndexRoute: typeof AdminIndexRoute
+  AdminCustomerIdRoute: typeof AdminCustomerIdRoute
 }
 
 const AdminRouteRouteChildren: AdminRouteRouteChildren = {
@@ -988,6 +1088,7 @@ const AdminRouteRouteChildren: AdminRouteRouteChildren = {
   AdminSettingsRoute: AdminSettingsRoute,
   AdminStoresRoute: AdminStoresRoute,
   AdminIndexRoute: AdminIndexRoute,
+  AdminCustomerIdRoute: AdminCustomerIdRoute,
 }
 
 const AdminRouteRouteWithChildren = AdminRouteRoute._addFileChildren(
@@ -1000,12 +1101,16 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRouteRoute: AdminRouteRouteWithChildren,
   AboutRoute: AboutRoute,
   AuthRoute: AuthRoute,
+  BrandsRoute: BrandsRoute,
   CategoriesRoute: CategoriesRoute,
   ContactRoute: ContactRoute,
+  CouponsRoute: CouponsRoute,
+  DealsRoute: DealsRoute,
   FaqRoute: FaqRoute,
   FeedbackRoute: FeedbackRoute,
   HelpRoute: HelpRoute,
   MaintenanceRoute: MaintenanceRoute,
+  OffersRoute: OffersRoute,
   PrivacyRoute: PrivacyRoute,
   SearchRoute: SearchRoute,
   StoresRoute: StoresRoute,
@@ -1020,13 +1125,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

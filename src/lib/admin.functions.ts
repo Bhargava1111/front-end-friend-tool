@@ -515,3 +515,67 @@ export const createAdminOrder = createServerFn({ method: "POST" })
 
     return { ok: true, order_number: order.order_number };
   });
+
+/* --------------------------- CUSTOMER DETAIL -------------------------- */
+
+export const getAdminCustomerDetail = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { id: string }) => data)
+  .handler(async ({ context, data }) => {
+    const [{ data: profile }, { data: orders }, { data: reviews }] = await Promise.all([
+      context.supabase
+        .from("profiles")
+        .select("id, full_name, phone, avatar_url, created_at")
+        .eq("id", data.id)
+        .maybeSingle(),
+      context.supabase
+        .from("orders")
+        .select(
+          "id, order_number, status, total, subtotal, discount, delivery_fee, payment_method, recipient_name, phone, address_text, delivery_slot, created_at",
+        )
+        .eq("user_id", data.id)
+        .order("created_at", { ascending: false }),
+      context.supabase
+        .from("reviews")
+        .select("id, rating, title, body, created_at, product_id")
+        .eq("user_id", data.id)
+        .order("created_at", { ascending: false })
+        .limit(20),
+    ]);
+
+    const list = orders ?? [];
+    const paid = list.filter((o) => o.status !== "cancelled");
+    const spend = paid.reduce((s, o) => s + Number(o.total), 0);
+
+    let items: Array<{
+      order_id: string;
+      product_name: string;
+      variant_label: string | null;
+      quantity: number;
+      line_total: number;
+    }> = [];
+    if (list.length) {
+      const { data: rows } = await context.supabase
+        .from("order_items")
+        .select("order_id, product_name, variant_label, quantity, line_total")
+        .in(
+          "order_id",
+          list.map((o) => o.id),
+        );
+      items = rows ?? [];
+    }
+
+    return {
+      profile: profile ?? null,
+      orders: list,
+      items,
+      reviews: reviews ?? [],
+      stats: {
+        orders: list.length,
+        cancelled: list.length - paid.length,
+        spend,
+        avg: paid.length ? spend / paid.length : 0,
+        lastOrderAt: list[0]?.created_at ?? null,
+      },
+    };
+  });
