@@ -43,6 +43,7 @@ type CouponRow = {
   usage_limit: number | null;
   used_count: number;
   is_active: boolean;
+  banner_url: string | null;
 };
 
 const blank = {
@@ -54,6 +55,7 @@ const blank = {
   min_order: 299,
   max_discount: "",
   usage_limit: "",
+  banner_url: "",
   is_active: true,
 };
 
@@ -91,6 +93,7 @@ function AdminCouponsPage() {
           min_order: Number(form.min_order) || 0,
           max_discount: form.max_discount === "" ? null : Number(form.max_discount),
           usage_limit: form.usage_limit === "" ? null : Number(form.usage_limit),
+          banner_url: form.banner_url,
           is_active: form.is_active,
         },
       }),
@@ -215,6 +218,22 @@ function AdminCouponsPage() {
                   />
                 </div>
               </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="c-banner">Banner image URL</Label>
+                <Input
+                  id="c-banner"
+                  value={form.banner_url}
+                  placeholder="https://…"
+                  onChange={(e) => setForm({ ...form, banner_url: e.target.value })}
+                />
+                {form.banner_url && (
+                  <img
+                    src={form.banner_url}
+                    alt="Coupon banner preview"
+                    className="aspect-[16/7] w-full rounded-xl object-cover"
+                  />
+                )}
+              </div>
               <div className="flex items-center gap-2">
                 <Switch
                   id="c-active"
@@ -270,6 +289,7 @@ function AdminCouponsPage() {
                       min_order: Number(c.min_order),
                       max_discount: c.max_discount === null ? "" : String(c.max_discount),
                       usage_limit: c.usage_limit === null ? "" : String(c.usage_limit),
+                      banner_url: c.banner_url ?? "",
                       is_active: c.is_active,
                     });
                     setOpen(true);

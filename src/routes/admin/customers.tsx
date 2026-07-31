@@ -1,9 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { ChevronRight } from "lucide-react";
 import { getAdminCustomers } from "@/lib/admin.functions";
 import { formatINR, formatDate } from "@/lib/format";
+import { Input } from "@/components/ui/input";
 
 export const Route = createFileRoute("/admin/customers")({
   head: () => ({
@@ -26,10 +28,33 @@ function AdminCustomers() {
     queryFn: () => fetchCustomers(),
   });
 
+  const [q, setQ] = useState("");
+  const term = q.trim().toLowerCase();
+  const rows = term
+    ? data.filter(
+        (c) =>
+          (c.full_name ?? "").toLowerCase().includes(term) || (c.phone ?? "").includes(term),
+      )
+    : data;
+
   if (isLoading) return <div className="h-64 animate-pulse rounded-2xl bg-card" />;
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-border bg-card">
+    <div className="space-y-3">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <h1 className="text-lg font-bold text-foreground">Customers</h1>
+          <p className="text-xs text-muted-foreground">{rows.length} of {data.length} shown</p>
+        </div>
+        <Input
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          placeholder="Search name or phone"
+          className="max-w-[220px]"
+          aria-label="Search customers"
+        />
+      </div>
+      <div className="overflow-hidden rounded-2xl border border-border bg-card">
       <table className="w-full text-left text-sm">
         <thead className="bg-secondary/60 text-xs uppercase tracking-wide text-muted-foreground">
           <tr>
@@ -42,14 +67,14 @@ function AdminCustomers() {
           </tr>
         </thead>
         <tbody className="divide-y divide-border">
-          {data.length === 0 && (
+          {rows.length === 0 && (
             <tr>
               <td colSpan={6} className="px-4 py-10 text-center text-muted-foreground">
                 No customers yet.
               </td>
             </tr>
           )}
-          {data.map((c) => (
+          {rows.map((c) => (
             <tr key={c.id} className="transition-colors hover:bg-secondary/40">
               <td className="px-4 py-3 font-medium text-foreground">
                 <Link
@@ -78,6 +103,7 @@ function AdminCustomers() {
           ))}
         </tbody>
       </table>
+      </div>
     </div>
   );
 }

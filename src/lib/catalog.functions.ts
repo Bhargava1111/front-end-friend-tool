@@ -10,7 +10,11 @@ import {
 export const getHomeData = createServerFn({ method: "GET" }).handler(async () => {
   const supabase = getPublicSupabase();
   const [banners, categories, products] = await Promise.all([
-    supabase.from("banners").select("id, title, subtitle, image_url, link_slug").order("sort_order"),
+    supabase
+      .from("banners")
+      .select("id, title, subtitle, image_url, link_slug, placement")
+      .eq("placement", "home")
+      .order("sort_order"),
     supabase
       .from("categories")
       .select("id, name, slug, description, image_url")

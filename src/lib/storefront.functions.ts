@@ -8,13 +8,13 @@ export const getStorefrontMeta = createServerFn({ method: "GET" }).handler(async
     supabase.from("app_settings").select("key, value"),
     supabase
       .from("brands")
-      .select("id, name, slug, tagline, logo_url")
+      .select("id, name, slug, tagline, logo_url, banner_url")
       .eq("is_active", true)
       .order("sort_order"),
     supabase
       .from("coupons")
       .select(
-        "id, code, title, description, discount_type, discount_value, min_order, max_discount, is_active, starts_at, ends_at",
+        "id, code, title, description, discount_type, discount_value, min_order, max_discount, is_active, starts_at, ends_at, banner_url",
       )
       .eq("is_active", true)
       .order("min_order"),
@@ -31,6 +31,19 @@ export const getStorefrontMeta = createServerFn({ method: "GET" }).handler(async
     coupons: coupons.data ?? [],
   };
 });
+
+export const getPlacementBanners = createServerFn({ method: "GET" })
+  .inputValidator((data: { placement: "home" | "offers" | "coupons" | "brands" }) => data)
+  .handler(async ({ data }) => {
+    const supabase = getPublicSupabase();
+    const { data: rows } = await supabase
+      .from("banners")
+      .select("id, title, subtitle, image_url, link_slug, placement, brand_id, coupon_id")
+      .eq("is_active", true)
+      .eq("placement", data.placement)
+      .order("sort_order");
+    return rows ?? [];
+  });
 
 export const getProductReviews = createServerFn({ method: "GET" })
   .inputValidator((data: { productId: string }) => data)
@@ -59,7 +72,7 @@ export const getBrandDirectory = createServerFn({ method: "GET" }).handler(async
   const [{ data: brands }, { data: products }, { data: banners }] = await Promise.all([
     supabase
       .from("brands")
-      .select("id, name, slug, tagline, logo_url")
+      .select("id, name, slug, tagline, logo_url, banner_url")
       .eq("is_active", true)
       .order("sort_order"),
     supabase
@@ -69,16 +82,19 @@ export const getBrandDirectory = createServerFn({ method: "GET" }).handler(async
       .order("created_at", { ascending: false }),
     supabase
       .from("banners")
-      .select("id, title, subtitle, image_url, link_slug")
+      .select("id, title, subtitle, image_url, link_slug, brand_id")
       .eq("is_active", true)
+      .eq("placement", "brands")
       .order("sort_order"),
   ]);
   const all = await attachGalleries(supabase, products ?? []);
+  const banderList = banners ?? [];
   return {
-    banners: banners ?? [],
-    brands: (brands ?? []).map((b, i) => ({
+    banners: banderList.filter((b) => !b.brand_id),
+    brands: (brands ?? []).map((b) => ({
       ...b,
-      banner_url: (banners ?? [])[i % Math.max(1, (banners ?? []).length)]?.image_url ?? null,
+      banner_url:
+        b.banner_url ?? banderList.find((x) => x.brand_id === b.id)?.image_url ?? null,
       products: all.filter((p) => p.brand_id === b.id).slice(0, 10),
     })),
   };

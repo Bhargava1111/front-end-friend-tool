@@ -91,39 +91,64 @@ export type Database = {
       }
       banners: {
         Row: {
+          brand_id: string | null
+          coupon_id: string | null
           created_at: string
           id: string
           image_url: string
           is_active: boolean
           link_slug: string | null
+          placement: string
           sort_order: number
           subtitle: string | null
           title: string
         }
         Insert: {
+          brand_id?: string | null
+          coupon_id?: string | null
           created_at?: string
           id?: string
           image_url: string
           is_active?: boolean
           link_slug?: string | null
+          placement?: string
           sort_order?: number
           subtitle?: string | null
           title: string
         }
         Update: {
+          brand_id?: string | null
+          coupon_id?: string | null
           created_at?: string
           id?: string
           image_url?: string
           is_active?: boolean
           link_slug?: string | null
+          placement?: string
           sort_order?: number
           subtitle?: string | null
           title?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "banners_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "banners_coupon_id_fkey"
+            columns: ["coupon_id"]
+            isOneToOne: false
+            referencedRelation: "coupons"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       brands: {
         Row: {
+          banner_url: string | null
           created_at: string
           id: string
           is_active: boolean
@@ -135,6 +160,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          banner_url?: string | null
           created_at?: string
           id?: string
           is_active?: boolean
@@ -146,6 +172,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          banner_url?: string | null
           created_at?: string
           id?: string
           is_active?: boolean
@@ -238,6 +265,7 @@ export type Database = {
       }
       coupons: {
         Row: {
+          banner_url: string | null
           code: string
           created_at: string
           description: string | null
@@ -255,6 +283,7 @@ export type Database = {
           used_count: number
         }
         Insert: {
+          banner_url?: string | null
           code: string
           created_at?: string
           description?: string | null
@@ -272,6 +301,7 @@ export type Database = {
           used_count?: number
         }
         Update: {
+          banner_url?: string | null
           code?: string
           created_at?: string
           description?: string | null

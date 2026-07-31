@@ -427,10 +427,20 @@ export const saveAdminBanner = createServerFn({ method: "POST" })
       link_slug: string | null;
       sort_order: number;
       is_active: boolean;
+      placement?: string;
+      brand_id?: string | null;
+      coupon_id?: string | null;
     }) => data,
   )
   .handler(async ({ data, context }) => {
-    const { id, ...fields } = data;
+    const { id, ...rest } = data;
+    const placement = rest.placement ?? "home";
+    const fields = {
+      ...rest,
+      placement,
+      brand_id: placement === "brands" ? (rest.brand_id ?? null) : null,
+      coupon_id: placement === "coupons" ? (rest.coupon_id ?? null) : null,
+    };
     const res = id
       ? await context.supabase.from("banners").update(fields).eq("id", id)
       : await context.supabase.from("banners").insert(fields);
@@ -565,8 +575,78 @@ export const getAdminCustomerDetail = createServerFn({ method: "GET" })
       items = rows ?? [];
     }
 
+    // Extra detail (email, addresses, cart/wishlist, returns) needs privileged
+    // access, so verify the caller really is an admin first.
+    const { data: isAdmin } = await context.supabase.rpc("has_role", {
+      _user_id: context.userId,
+      _role: "admin",
+    });
+
+    let email: string | null = null;
+    let lastSignInAt: string | null = null;
+    let addresses: Array<{
+      id: string;
+      label: string;
+      recipient_name: string;
+      phone: string;
+      line1: string;
+      line2: string | null;
+      landmark: string | null;
+      city: string;
+      state: string;
+      pincode: string;
+      is_default: boolean;
+    }> = [];
+    let returns: Array<{
+      id: string;
+      order_id: string;
+      reason: string;
+      details: string | null;
+      status: string;
+      created_at: string;
+    }> = [];
+    let cartCount = 0;
+    let wishlistCount = 0;
+
+    if (isAdmin) {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const [authUser, addr, ret, cart, wish] = await Promise.all([
+        supabaseAdmin.auth.admin.getUserById(data.id),
+        supabaseAdmin
+          .from("addresses")
+          .select(
+            "id, label, recipient_name, phone, line1, line2, landmark, city, state, pincode, is_default",
+          )
+          .eq("user_id", data.id)
+          .order("is_default", { ascending: false }),
+        supabaseAdmin
+          .from("order_returns")
+          .select("id, order_id, reason, details, status, created_at")
+          .eq("user_id", data.id)
+          .order("created_at", { ascending: false }),
+        supabaseAdmin
+          .from("cart_items")
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", data.id),
+        supabaseAdmin
+          .from("wishlist_items")
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", data.id),
+      ]);
+      email = authUser.data?.user?.email ?? null;
+      lastSignInAt = authUser.data?.user?.last_sign_in_at ?? null;
+      addresses = addr.data ?? [];
+      returns = ret.data ?? [];
+      cartCount = cart.count ?? 0;
+      wishlistCount = wish.count ?? 0;
+    }
+
     return {
       profile: profile ?? null,
+      email,
+      lastSignInAt,
+      addresses,
+      returns,
       orders: list,
       items,
       reviews: reviews ?? [],
@@ -576,6 +656,8 @@ export const getAdminCustomerDetail = createServerFn({ method: "GET" })
         spend,
         avg: paid.length ? spend / paid.length : 0,
         lastOrderAt: list[0]?.created_at ?? null,
+        cartCount,
+        wishlistCount,
       },
     };
   });

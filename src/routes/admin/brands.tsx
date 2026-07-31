@@ -29,11 +29,20 @@ type BrandRow = {
   slug: string;
   tagline: string | null;
   logo_url: string | null;
+  banner_url: string | null;
   sort_order: number;
   is_active: boolean;
 };
 
-const blank = { name: "", slug: "", tagline: "", logo_url: "", sort_order: 0, is_active: true };
+const blank = {
+  name: "",
+  slug: "",
+  tagline: "",
+  logo_url: "",
+  banner_url: "",
+  sort_order: 0,
+  is_active: true,
+};
 
 function AdminBrandsPage() {
   const list = useServerFn(adminListBrands);
@@ -58,6 +67,7 @@ function AdminBrandsPage() {
           slug: form.slug.trim() || form.name.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-"),
           tagline: form.tagline,
           logo_url: form.logo_url,
+          banner_url: form.banner_url,
           sort_order: Number(form.sort_order) || 0,
           is_active: form.is_active,
         },
@@ -65,6 +75,7 @@ function AdminBrandsPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-brands"] });
       queryClient.invalidateQueries({ queryKey: ["storefront-meta"] });
+      queryClient.invalidateQueries({ queryKey: ["brand-directory"] });
       toast.success(editing ? "Brand updated" : "Brand added");
       setOpen(false);
     },
@@ -93,6 +104,7 @@ function AdminBrandsPage() {
       slug: b.slug,
       tagline: b.tagline ?? "",
       logo_url: b.logo_url ?? "",
+      banner_url: b.banner_url ?? "",
       sort_order: b.sort_order,
       is_active: b.is_active,
     });
@@ -137,6 +149,22 @@ function AdminBrandsPage() {
               <div className="space-y-1.5">
                 <Label htmlFor="b-logo">Logo URL</Label>
                 <Input id="b-logo" value={form.logo_url} onChange={(e) => setForm({ ...form, logo_url: e.target.value })} />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="b-banner">Banner image URL</Label>
+                <Input
+                  id="b-banner"
+                  value={form.banner_url}
+                  placeholder="https://…"
+                  onChange={(e) => setForm({ ...form, banner_url: e.target.value })}
+                />
+                {form.banner_url && (
+                  <img
+                    src={form.banner_url}
+                    alt="Brand banner preview"
+                    className="aspect-[16/7] w-full rounded-xl object-cover"
+                  />
+                )}
               </div>
               <div className="grid grid-cols-2 items-end gap-3">
                 <div className="space-y-1.5">
