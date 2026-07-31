@@ -1,7 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
+import { queryOptions, useQuery, useSuspenseQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { Gift, ChevronRight } from "lucide-react";
 import { getHomeData } from "@/lib/catalog.functions";
+import { getPlacementBanners } from "@/lib/storefront.functions";
 import { PageShell, TopBar, EmptyState } from "@/components/page-shell";
 import { GridSkeleton } from "@/components/skeletons";
 import { Reveal } from "@/components/motion";
@@ -48,6 +50,13 @@ export const Route = createFileRoute("/offers")({
 
 function OffersPage() {
   const { data } = useSuspenseQuery(offersQuery);
+  const fetchBanners = useServerFn(getPlacementBanners);
+  const { data: offerBanners = [] } = useQuery({
+    queryKey: ["placement-banners", "offers"],
+    queryFn: () => fetchBanners({ data: { placement: "offers" as const } }),
+    staleTime: 5 * 60 * 1000,
+  });
+  const banners = offerBanners.length ? offerBanners : data.banners;
   const all = Array.from(
     new Map(
       [...(data.all ?? []), ...data.newest, ...data.featured, ...data.bestSelling].map((p) => [p.id, p]),
@@ -59,7 +68,7 @@ function OffersPage() {
       <TopBar title="Offers & festive picks" subtitle="Every live campaign" backTo="/" />
 
       <div className="space-y-3 px-4 pt-4">
-        {data.banners.map((b, i) => {
+        {banners.map((b, i) => {
           const card = (
             <div className="relative h-[150px] w-full overflow-hidden rounded-3xl card-elevated">
               <img src={b.image_url} alt={b.title} loading="lazy" className="h-full w-full object-cover" />
