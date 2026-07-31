@@ -23,6 +23,7 @@ import { Route as DealsRouteImport } from './routes/deals'
 import { Route as CouponsRouteImport } from './routes/coupons'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as CategoriesRouteImport } from './routes/categories'
+import { Route as BrandsRouteImport } from './routes/brands'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as AdminRouteRouteImport } from './routes/admin/route'
@@ -127,6 +128,11 @@ const ContactRoute = ContactRouteImport.update({
 const CategoriesRoute = CategoriesRouteImport.update({
   id: '/categories',
   path: '/categories',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BrandsRoute = BrandsRouteImport.update({
+  id: '/brands',
+  path: '/brands',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -311,6 +317,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRouteRouteWithChildren
   '/about': typeof AboutRoute
   '/auth': typeof AuthRoute
+  '/brands': typeof BrandsRoute
   '/categories': typeof CategoriesRoute
   '/contact': typeof ContactRoute
   '/coupons': typeof CouponsRoute
@@ -360,6 +367,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/auth': typeof AuthRoute
+  '/brands': typeof BrandsRoute
   '/categories': typeof CategoriesRoute
   '/contact': typeof ContactRoute
   '/coupons': typeof CouponsRoute
@@ -412,6 +420,7 @@ export interface FileRoutesById {
   '/admin': typeof AdminRouteRouteWithChildren
   '/about': typeof AboutRoute
   '/auth': typeof AuthRoute
+  '/brands': typeof BrandsRoute
   '/categories': typeof CategoriesRoute
   '/contact': typeof ContactRoute
   '/coupons': typeof CouponsRoute
@@ -464,6 +473,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/about'
     | '/auth'
+    | '/brands'
     | '/categories'
     | '/contact'
     | '/coupons'
@@ -513,6 +523,7 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/auth'
+    | '/brands'
     | '/categories'
     | '/contact'
     | '/coupons'
@@ -564,6 +575,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/about'
     | '/auth'
+    | '/brands'
     | '/categories'
     | '/contact'
     | '/coupons'
@@ -616,6 +628,7 @@ export interface RootRouteChildren {
   AdminRouteRoute: typeof AdminRouteRouteWithChildren
   AboutRoute: typeof AboutRoute
   AuthRoute: typeof AuthRoute
+  BrandsRoute: typeof BrandsRoute
   CategoriesRoute: typeof CategoriesRoute
   ContactRoute: typeof ContactRoute
   CouponsRoute: typeof CouponsRoute
@@ -735,6 +748,13 @@ declare module '@tanstack/react-router' {
       path: '/categories'
       fullPath: '/categories'
       preLoaderRoute: typeof CategoriesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/brands': {
+      id: '/brands'
+      path: '/brands'
+      fullPath: '/brands'
+      preLoaderRoute: typeof BrandsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -1060,6 +1080,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRouteRoute: AdminRouteRouteWithChildren,
   AboutRoute: AboutRoute,
   AuthRoute: AuthRoute,
+  BrandsRoute: BrandsRoute,
   CategoriesRoute: CategoriesRoute,
   ContactRoute: ContactRoute,
   CouponsRoute: CouponsRoute,
