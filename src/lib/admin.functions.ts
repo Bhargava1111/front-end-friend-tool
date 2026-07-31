@@ -427,10 +427,20 @@ export const saveAdminBanner = createServerFn({ method: "POST" })
       link_slug: string | null;
       sort_order: number;
       is_active: boolean;
+      placement?: string;
+      brand_id?: string | null;
+      coupon_id?: string | null;
     }) => data,
   )
   .handler(async ({ data, context }) => {
-    const { id, ...fields } = data;
+    const { id, ...rest } = data;
+    const placement = rest.placement ?? "home";
+    const fields = {
+      ...rest,
+      placement,
+      brand_id: placement === "brands" ? (rest.brand_id ?? null) : null,
+      coupon_id: placement === "coupons" ? (rest.coupon_id ?? null) : null,
+    };
     const res = id
       ? await context.supabase.from("banners").update(fields).eq("id", id)
       : await context.supabase.from("banners").insert(fields);
