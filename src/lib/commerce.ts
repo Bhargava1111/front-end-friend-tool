@@ -12,6 +12,7 @@ export type CouponRow = {
   is_active: boolean;
   starts_at?: string | null;
   ends_at?: string | null;
+  banner_url?: string | null;
 };
 
 export type StoreSettings = {
