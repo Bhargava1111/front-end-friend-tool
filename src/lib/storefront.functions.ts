@@ -1,5 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
-import { getPublicSupabase } from "./catalog.server";
+import { attachGalleries, getPublicSupabase, PRODUCT_COLUMNS } from "./catalog.server";
 import { DEFAULT_SETTINGS, type StoreSettings } from "./commerce";
 
 export const getStorefrontMeta = createServerFn({ method: "GET" }).handler(async () => {
@@ -53,3 +53,33 @@ export const getProductReviews = createServerFn({ method: "GET" })
     }));
     return { reviews: list, average, total: list.length, distribution };
   });
+
+export const getBrandDirectory = createServerFn({ method: "GET" }).handler(async () => {
+  const supabase = getPublicSupabase();
+  const [{ data: brands }, { data: products }, { data: banners }] = await Promise.all([
+    supabase
+      .from("brands")
+      .select("id, name, slug, tagline, logo_url")
+      .eq("is_active", true)
+      .order("sort_order"),
+    supabase
+      .from("products")
+      .select(PRODUCT_COLUMNS)
+      .eq("is_active", true)
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("banners")
+      .select("id, title, subtitle, image_url, link_slug")
+      .eq("is_active", true)
+      .order("sort_order"),
+  ]);
+  const all = await attachGalleries(supabase, products ?? []);
+  return {
+    banners: banners ?? [],
+    brands: (brands ?? []).map((b, i) => ({
+      ...b,
+      banner_url: (banners ?? [])[i % Math.max(1, (banners ?? []).length)]?.image_url ?? null,
+      products: all.filter((p) => p.brand_id === b.id).slice(0, 10),
+    })),
+  };
+});
