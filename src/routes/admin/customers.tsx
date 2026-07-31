@@ -1,6 +1,7 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
+import { ChevronRight } from "lucide-react";
 import { getAdminCustomers } from "@/lib/admin.functions";
 import { formatINR, formatDate } from "@/lib/format";
 
@@ -37,12 +38,13 @@ function AdminCustomers() {
             <th className="px-4 py-3">Joined</th>
             <th className="px-4 py-3 text-right">Orders</th>
             <th className="px-4 py-3 text-right">Spend</th>
+            <th className="px-4 py-3" />
           </tr>
         </thead>
         <tbody className="divide-y divide-border">
           {data.length === 0 && (
             <tr>
-              <td colSpan={5} className="px-4 py-10 text-center text-muted-foreground">
+              <td colSpan={6} className="px-4 py-10 text-center text-muted-foreground">
                 No customers yet.
               </td>
             </tr>
