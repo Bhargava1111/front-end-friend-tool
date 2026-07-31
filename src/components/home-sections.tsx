@@ -8,6 +8,8 @@ import { useAutoScroll } from "@/hooks/use-auto-scroll";
 import { useHydrated } from "@/hooks/use-hydrated";
 import { useRecentlyViewed } from "@/lib/client-store";
 import { BRANDS, COUPONS, OFFER_CARDS, flashSaleEndsAt } from "@/lib/mock-content";
+import { useStorefront } from "@/hooks/use-storefront";
+import { couponLabel } from "@/lib/commerce";
 import { formatINR } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { Banner, Product } from "@/lib/types";
@@ -24,6 +26,20 @@ function useCountdown(target: number) {
   const m = Math.floor((left % 3_600_000) / 60_000);
   const s = Math.floor((left % 60_000) / 1000);
   return [h, m, s].map((n) => String(n).padStart(2, "0"));
+}
+
+export function SeeAll({ to, tone = "primary" }: { to: string; tone?: "primary" | "onDark" }) {
+  return (
+    <Link
+      to={to}
+      className={cn(
+        "flex shrink-0 items-center gap-0.5 text-xs font-semibold",
+        tone === "onDark" ? "text-primary-foreground/90" : "text-primary",
+      )}
+    >
+      See all <ChevronRight className="h-3.5 w-3.5" />
+    </Link>
+  );
 }
 
 function CountdownPill() {
@@ -60,7 +76,10 @@ export function FlashSaleRail({ products }: { products: Product[] }) {
             </span>
             Flash Sale
           </h2>
-          <CountdownPill />
+          <div className="flex items-center gap-2">
+            <CountdownPill />
+            <SeeAll to="/deals" tone="onDark" />
+          </div>
         </div>
         <p className="mt-1 px-4 text-xs text-primary-foreground/70">
           Ends at midnight — grab them before they're gone
@@ -80,15 +99,27 @@ export function FlashSaleRail({ products }: { products: Product[] }) {
 
 export function CouponStrip() {
   const [copied, setCopied] = useState<string | null>(null);
+  const { coupons } = useStorefront();
+  const list = coupons.length
+    ? coupons.slice(0, 8).map((c) => ({
+        code: c.code,
+        title: c.title,
+        description: c.description ?? "Apply at checkout",
+        discount: couponLabel(c),
+        minOrder: Number(c.min_order),
+      }))
+    : COUPONS;
+
   return (
     <Reveal className="mt-7">
       <div className="flex items-center justify-between px-4">
         <h2 className="flex items-center gap-2 text-base font-bold text-foreground">
           <Ticket className="h-4.5 w-4.5 text-accent" /> Coupons for you
         </h2>
+        <SeeAll to="/coupons" />
       </div>
       <div className="no-scrollbar mt-3 flex gap-3 overflow-x-auto px-4 pb-1">
-        {COUPONS.map((c) => (
+        {list.map((c) => (
           <div
             key={c.code}
             className="w-[230px] shrink-0 rounded-2xl border border-dashed border-accent/60 bg-accent-soft/70 p-4"
@@ -97,11 +128,9 @@ export function CouponStrip() {
               {c.discount}
             </p>
             <p className="mt-1 text-sm font-semibold text-foreground">{c.title}</p>
-            <p className="mt-0.5 text-xs text-muted-foreground">{c.description}</p>
+            <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">{c.description}</p>
             <div className="mt-3 flex items-center justify-between">
-              <span className="text-[11px] text-muted-foreground">
-                Min {formatINR(c.minOrder)}
-              </span>
+              <span className="text-[11px] text-muted-foreground">Min {formatINR(c.minOrder)}</span>
               <button
                 type="button"
                 onClick={() => {
@@ -112,11 +141,7 @@ export function CouponStrip() {
                 }}
                 className="flex items-center gap-1 rounded-full bg-card px-3 py-1.5 text-[11px] font-bold text-primary"
               >
-                {copied === c.code ? (
-                  <Check className="h-3 w-3" />
-                ) : (
-                  <Copy className="h-3 w-3" />
-                )}
+                {copied === c.code ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
                 {c.code}
               </button>
             </div>
@@ -156,25 +181,46 @@ export function OfferCards() {
 }
 
 export function BrandRail() {
-  const brandScrollRef = useAutoScroll<HTMLDivElement>(BRANDS.length > 3);
+  const { brands } = useStorefront();
+  const list = brands.length
+    ? brands.map((b) => ({
+        key: b.id,
+        name: b.name,
+        tagline: b.tagline ?? "Trusted brand",
+        logo: b.logo_url,
+        initials: b.name.slice(0, 2).toUpperCase(),
+      }))
+    : BRANDS.map((b) => ({ key: b.name, name: b.name, tagline: b.tagline, logo: null, initials: b.initials }));
+  const brandScrollRef = useAutoScroll<HTMLDivElement>(list.length > 3);
+
   return (
     <Reveal className="mt-7">
-      <h2 className="px-4 text-base font-bold text-foreground">Featured brands</h2>
-      <div
-        ref={brandScrollRef}
-        className="no-scrollbar mt-3 flex gap-3 overflow-x-auto px-4 pb-1"
-      >
-        {BRANDS.map((b) => (
-          <div
-            key={b.name}
-            className="flex w-[128px] shrink-0 flex-col items-center gap-2 rounded-2xl border border-border bg-card p-3 text-center card-elevated"
+      <div className="flex items-center justify-between px-4">
+        <h2 className="text-base font-bold text-foreground">Featured brands</h2>
+        <SeeAll to="/brands" />
+      </div>
+      <div ref={brandScrollRef} className="no-scrollbar mt-3 flex gap-3 overflow-x-auto px-4 pb-1">
+        {list.map((b) => (
+          <Link
+            key={b.key}
+            to="/brands"
+            className="flex w-[128px] shrink-0 flex-col items-center gap-2 rounded-2xl border border-border bg-card p-3 text-center card-elevated transition-transform active:scale-[0.97]"
           >
-            <span className="grid h-11 w-11 place-items-center rounded-full bg-primary-soft text-sm font-bold text-primary">
-              {b.initials}
-            </span>
-            <span className="text-xs font-semibold text-foreground">{b.name}</span>
-            <span className="text-[10px] text-muted-foreground">{b.tagline}</span>
-          </div>
+            {b.logo ? (
+              <img
+                src={b.logo}
+                alt={b.name}
+                loading="lazy"
+                className="h-11 w-11 rounded-full object-cover"
+              />
+            ) : (
+              <span className="grid h-11 w-11 place-items-center rounded-full bg-primary-soft text-sm font-bold text-primary">
+                {b.initials}
+              </span>
+            )}
+            <span className="line-clamp-1 text-xs font-semibold text-foreground">{b.name}</span>
+            <span className="line-clamp-1 text-[10px] text-muted-foreground">{b.tagline}</span>
+          </Link>
         ))}
       </div>
     </Reveal>
@@ -188,7 +234,10 @@ export function RecentlyViewedRail() {
   if (!hydrated || items.length === 0) return null;
   return (
     <Reveal className="mt-7">
-      <h2 className="px-4 text-base font-bold text-foreground">Recently viewed</h2>
+      <div className="flex items-center justify-between px-4">
+        <h2 className="text-base font-bold text-foreground">Recently viewed</h2>
+        <SeeAll to="/search" />
+      </div>
       <div
         ref={recentScrollRef}
         className="no-scrollbar mt-3 flex gap-3 overflow-x-auto px-4 pb-1"
@@ -207,7 +256,10 @@ export function OfferBannerCarousel({ banners }: { banners: Banner[] }) {
   if (banners.length === 0) return null;
   return (
     <Reveal className="mt-7">
-      <h2 className="px-4 text-base font-bold text-foreground">Offers &amp; festive picks</h2>
+      <div className="flex items-center justify-between px-4">
+        <h2 className="text-base font-bold text-foreground">Offers &amp; festive picks</h2>
+        <SeeAll to="/offers" />
+      </div>
       <div ref={ref} className="no-scrollbar mt-3 flex gap-3 overflow-x-auto px-4 pb-1">
         {banners.map((b) => {
           const body = (
@@ -255,9 +307,12 @@ export function DealOfTheDay({ products }: { products: Product[] }) {
     <Reveal className="mt-7 px-4">
       <div className="flex items-center justify-between">
         <h2 className="text-base font-bold text-foreground">Deal of the day</h2>
+        <div className="flex items-center gap-2">
         <span className="rounded-full bg-primary-soft px-2.5 py-1 text-[11px] font-semibold tabular-nums text-primary">
           {hydrated ? `${h}:${m}:${s}` : "--:--:--"}
         </span>
+        <SeeAll to="/deals" />
+        </div>
       </div>
       <Link
         to="/product/$slug"
@@ -305,7 +360,10 @@ export function FestivalPicks({
 
   return (
     <Reveal className="mt-7">
-      <h2 className="px-4 text-base font-bold text-foreground">{title}</h2>
+      <div className="flex items-center justify-between px-4">
+        <h2 className="text-base font-bold text-foreground">{title}</h2>
+        <SeeAll to="/offers" />
+      </div>
       <div className="no-scrollbar mt-3 flex gap-2 overflow-x-auto px-4">
         {tabs.map((t) => (
           <button
@@ -345,7 +403,10 @@ export function BudgetRail({ products, ceiling = 99 }: { products: Product[]; ce
   return (
     <Reveal className="mt-7">
       <div className="mx-4 rounded-3xl bg-gradient-to-br from-accent-soft to-accent-soft/40 p-4">
-        <h2 className="text-base font-bold text-accent-foreground">Under {formatINR(ceiling)} store</h2>
+        <div className="flex items-center justify-between">
+          <h2 className="text-base font-bold text-accent-foreground">Under {formatINR(ceiling)} store</h2>
+          <SeeAll to="/deals" />
+        </div>
         <p className="mt-0.5 text-xs text-accent-foreground/75">Small basket, big savings</p>
         <div ref={ref} className="no-scrollbar mt-3 flex gap-3 overflow-x-auto pb-1">
           {items.map((p) => (
@@ -363,7 +424,10 @@ export function ShopByNeed({ categories }: { categories: Array<{ id: string; nam
   if (tiles.length === 0) return null;
   return (
     <Reveal className="mt-7">
-      <h2 className="px-4 text-base font-bold text-foreground">Shop by need</h2>
+      <div className="flex items-center justify-between px-4">
+        <h2 className="text-base font-bold text-foreground">Shop by need</h2>
+        <SeeAll to="/categories" />
+      </div>
       <div className="mt-3 grid grid-cols-3 gap-3 px-4">
         {tiles.map((c) => (
           <Link
