@@ -8,7 +8,7 @@ export const adminListBrands = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const { data, error } = await context.supabase
       .from("brands")
-      .select("id, name, slug, tagline, logo_url, sort_order, is_active")
+      .select("id, name, slug, tagline, logo_url, banner_url, sort_order, is_active")
       .order("sort_order");
     if (error) throw new Error(error.message);
     return data ?? [];
@@ -23,6 +23,7 @@ export const adminSaveBrand = createServerFn({ method: "POST" })
       slug: string;
       tagline?: string;
       logo_url?: string;
+      banner_url?: string;
       sort_order: number;
       is_active: boolean;
     }) => data,
@@ -33,6 +34,7 @@ export const adminSaveBrand = createServerFn({ method: "POST" })
       ...fields,
       tagline: fields.tagline || null,
       logo_url: fields.logo_url || null,
+      banner_url: fields.banner_url || null,
     };
     const { error } = id
       ? await context.supabase.from("brands").update(payload).eq("id", id)
@@ -58,7 +60,7 @@ export const adminListCoupons = createServerFn({ method: "GET" })
     const { data, error } = await context.supabase
       .from("coupons")
       .select(
-        "id, code, title, description, discount_type, discount_value, min_order, max_discount, usage_limit, used_count, is_active, ends_at",
+        "id, code, title, description, discount_type, discount_value, min_order, max_discount, usage_limit, used_count, is_active, ends_at, banner_url",
       )
       .order("created_at", { ascending: false });
     if (error) throw new Error(error.message);
@@ -78,6 +80,7 @@ export const adminSaveCoupon = createServerFn({ method: "POST" })
       min_order: number;
       max_discount?: number | null;
       usage_limit?: number | null;
+      banner_url?: string;
       is_active: boolean;
     }) => data,
   )
@@ -89,6 +92,7 @@ export const adminSaveCoupon = createServerFn({ method: "POST" })
       description: fields.description || null,
       max_discount: fields.max_discount ?? null,
       usage_limit: fields.usage_limit ?? null,
+      banner_url: fields.banner_url || null,
     };
     const { error } = id
       ? await context.supabase.from("coupons").update(payload).eq("id", id)
