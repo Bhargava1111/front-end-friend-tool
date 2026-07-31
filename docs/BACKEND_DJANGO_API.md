@@ -413,3 +413,89 @@ exceptions. Retain app activity logs 180 days (`clean_activity_logs` Celery beat
   layer means replacing the server functions in `src/lib/*.functions.ts` with
   `fetch` calls to this API, keeping the same return shapes documented in `src/lib/types.ts`.
 - CORS must allow the app origin, `Authorization` header, and `PATCH`/`DELETE`.
+
+---
+
+## 10. Storefront discovery, coupons & brands (update — Jul 2026)
+
+The home screen now exposes a **See all** action on every rail. Each one maps to a
+dedicated page and endpoint.
+
+| Home section | Page | Endpoint |
+| --- | --- | --- |
+| Flash sale | `/deals` | `GET /catalog/deals` |
+| Deal of the day | `/deals` | `GET /catalog/deals?tab=flash` |
+| Today's deals / Trending | `/deals` | `GET /catalog/deals?tab=today` |
+| Under ₹99 store | `/deals` | `GET /catalog/deals?tab=budget&max_price=99` |
+| Offers & festive picks | `/offers` | `GET /catalog/offers` |
+| Coupons for you | `/coupons` | `GET /coupons` |
+| Featured brands | `/brands` | `GET /catalog/brands/directory` |
+| Shop by need / Newly added | `/categories` | `GET /catalog/categories` |
+
+### 10.1 New public endpoints
+
+```
+GET /catalog/deals?tab=all|flash|today|budget&max_price=&page=
+→ { results: [Product], counts: { discounted, budget }, deal_of_the_day: Product }
+   Product ordering: discount_percent DESC, where
+   discount_percent = round((mrp - price) / mrp * 100)
+
+GET /catalog/offers
+→ { banners: [Banner], categories: [Category], products: [Product] }
+   Banners filtered on is_active, ordered by sort_order.
+
+GET /coupons
+→ [{ id, code, title, description, discount_type, discount_value,
+     min_order, max_discount, starts_at, ends_at, is_active }]
+   Only is_active=true and (ends_at is null or ends_at >= now()).
+   Badge text is derived client-side:
+     percent → "{value}% OFF", flat → "₹{value} OFF", free_shipping → "FREE SHIP".
+
+GET /catalog/brands/directory
+→ { banners: [Banner],
+    brands: [{ id, name, slug, tagline, logo_url, banner_url, products: [Product] }] }
+   banner_url: the brand's own hero image; fall back to the rotating active
+   banners when a brand has none. products: up to 10 active products per brand.
+```
+
+### 10.2 Brand model additions (`catalog.Brand`)
+
+| Field | Type | Notes |
+| --- | --- | --- |
+| `banner_url` | URLField, nullable | Wide hero image shown on `/brands` |
+| `tagline` | CharField(120), nullable | Shown under the brand name |
+| `sort_order` | Integer, default 0 | Rail + directory ordering |
+| `is_active` | Boolean, default true | Hidden brands are excluded everywhere |
+
+### 10.3 Admin customer detail
+
+The admin panel list at `/admin/customers` links each row to `/admin/customer/{id}`.
+
+```
+GET /admin-api/customers/{id}
+→ {
+    profile: { id, full_name, phone, avatar_url, created_at },
+    stats:   { orders, cancelled, spend, avg, last_order_at },
+    orders:  [{ id, order_number, status, total, subtotal, discount, delivery_fee,
+                payment_method, recipient_name, phone, address_text,
+                delivery_slot, created_at }],
+    items:   [{ order_id, product_name, variant_label, quantity, line_total }],
+    reviews: [{ id, product_id, rating, title, body, created_at }]
+  }
+```
+
+Rules:
+- Permission `IsAdminRole`; never exposed to customers.
+- `spend` sums non-cancelled orders only; `avg = spend / count(non-cancelled)`.
+- `items` is a single batched query over the customer's order ids (no N+1).
+- The most recent order's `address_text` is displayed as the customer's last
+  known delivery address (the `Address` book itself stays private to the owner).
+
+### 10.4 Changelog discipline
+
+This document is updated in the same change as any frontend/data-layer work.
+Latest entries:
+- Jul 2026 — See-all pages (`/deals`, `/offers`, `/coupons`, `/brands`), live
+  coupon + brand data on the home screen, admin customer detail view.
+- Earlier — product variants (pack sizes), multi-image galleries, filters,
+  reviews, returns, notifications, store locations.
