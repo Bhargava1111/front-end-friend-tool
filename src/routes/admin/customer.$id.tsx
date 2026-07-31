@@ -25,12 +25,35 @@ export const Route = createFileRoute("/admin/customer/$id")({
 function CustomerDetail() {
   const { id } = useParams({ from: "/admin/customer/$id" });
   const fetchDetail = useServerFn(getAdminCustomerDetail);
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["admin-customer", id],
     queryFn: () => fetchDetail({ data: { id } }),
   });
 
-  if (isLoading) return <div className="h-64 animate-pulse rounded-2xl bg-card" />;
+  if (isLoading) {
+    return (
+      <div className="space-y-3">
+        <div className="h-20 animate-pulse rounded-2xl bg-card" />
+        <div className="h-24 animate-pulse rounded-2xl bg-card" />
+        <div className="h-64 animate-pulse rounded-2xl bg-card" />
+      </div>
+    );
+  }
+  if (isError) {
+    return (
+      <div className="rounded-2xl border border-border bg-card p-8 text-center">
+        <p className="text-sm font-semibold text-foreground">Couldn't load this customer</p>
+        <p className="mt-1 text-xs text-muted-foreground">{(error as Error)?.message}</p>
+        <button
+          type="button"
+          onClick={() => refetch()}
+          className="mt-4 rounded-full bg-primary px-4 py-1.5 text-xs font-semibold text-primary-foreground"
+        >
+          Try again
+        </button>
+      </div>
+    );
+  }
   if (!data?.profile) {
     return (
       <div className="rounded-2xl border border-border bg-card p-8 text-center text-sm text-muted-foreground">
@@ -39,7 +62,7 @@ function CustomerDetail() {
     );
   }
 
-  const { profile, orders, items, reviews, stats } = data;
+  const { profile, orders, items, reviews, stats, addresses, returns, email, lastSignInAt } = data;
   const lastAddress = orders[0]?.address_text;
 
   const cards = [
@@ -47,6 +70,8 @@ function CustomerDetail() {
     { label: "Lifetime spend", value: formatINR(stats.spend), icon: IndianRupee },
     { label: "Avg order", value: formatINR(stats.avg), icon: IndianRupee },
     { label: "Cancelled", value: String(stats.cancelled), icon: ShoppingBag },
+    { label: "In cart", value: String(stats.cartCount), icon: ShoppingBag },
+    { label: "Wishlisted", value: String(stats.wishlistCount), icon: Star },
   ];
 
   return (
