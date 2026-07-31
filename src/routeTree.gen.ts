@@ -20,6 +20,7 @@ import { Route as HelpRouteImport } from './routes/help'
 import { Route as FeedbackRouteImport } from './routes/feedback'
 import { Route as FaqRouteImport } from './routes/faq'
 import { Route as DealsRouteImport } from './routes/deals'
+import { Route as CouponsRouteImport } from './routes/coupons'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as CategoriesRouteImport } from './routes/categories'
 import { Route as AuthRouteImport } from './routes/auth'
@@ -111,6 +112,11 @@ const FaqRoute = FaqRouteImport.update({
 const DealsRoute = DealsRouteImport.update({
   id: '/deals',
   path: '/deals',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CouponsRoute = CouponsRouteImport.update({
+  id: '/coupons',
+  path: '/coupons',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ContactRoute = ContactRouteImport.update({
@@ -307,6 +313,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/categories': typeof CategoriesRoute
   '/contact': typeof ContactRoute
+  '/coupons': typeof CouponsRoute
   '/deals': typeof DealsRoute
   '/faq': typeof FaqRoute
   '/feedback': typeof FeedbackRoute
@@ -355,6 +362,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/categories': typeof CategoriesRoute
   '/contact': typeof ContactRoute
+  '/coupons': typeof CouponsRoute
   '/deals': typeof DealsRoute
   '/faq': typeof FaqRoute
   '/feedback': typeof FeedbackRoute
@@ -406,6 +414,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/categories': typeof CategoriesRoute
   '/contact': typeof ContactRoute
+  '/coupons': typeof CouponsRoute
   '/deals': typeof DealsRoute
   '/faq': typeof FaqRoute
   '/feedback': typeof FeedbackRoute
@@ -457,6 +466,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/categories'
     | '/contact'
+    | '/coupons'
     | '/deals'
     | '/faq'
     | '/feedback'
@@ -505,6 +515,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/categories'
     | '/contact'
+    | '/coupons'
     | '/deals'
     | '/faq'
     | '/feedback'
@@ -555,6 +566,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/categories'
     | '/contact'
+    | '/coupons'
     | '/deals'
     | '/faq'
     | '/feedback'
@@ -606,6 +618,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   CategoriesRoute: typeof CategoriesRoute
   ContactRoute: typeof ContactRoute
+  CouponsRoute: typeof CouponsRoute
   DealsRoute: typeof DealsRoute
   FaqRoute: typeof FaqRoute
   FeedbackRoute: typeof FeedbackRoute
@@ -701,6 +714,13 @@ declare module '@tanstack/react-router' {
       path: '/deals'
       fullPath: '/deals'
       preLoaderRoute: typeof DealsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/coupons': {
+      id: '/coupons'
+      path: '/coupons'
+      fullPath: '/coupons'
+      preLoaderRoute: typeof CouponsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/contact': {
@@ -1042,6 +1062,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   CategoriesRoute: CategoriesRoute,
   ContactRoute: ContactRoute,
+  CouponsRoute: CouponsRoute,
   DealsRoute: DealsRoute,
   FaqRoute: FaqRoute,
   FeedbackRoute: FeedbackRoute,
