@@ -11,6 +11,7 @@ import {
   toggleAdminBanner,
   getAdminCategories,
 } from "@/lib/admin.functions";
+import { adminListBrands, adminListCoupons } from "@/lib/admin-extra.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -38,8 +39,20 @@ export const Route = createFileRoute("/admin/banners")({
   component: AdminBanners,
 });
 
+const PLACEMENTS = [
+  { value: "home", label: "Home" },
+  { value: "offers", label: "Offers" },
+  { value: "coupons", label: "Coupons" },
+  { value: "brands", label: "Brands" },
+] as const;
+
+type Placement = (typeof PLACEMENTS)[number]["value"];
+
 type Form = {
   id?: string;
+  placement: Placement;
+  brand_id: string;
+  coupon_id: string;
   title: string;
   subtitle: string;
   image_url: string;
@@ -49,6 +62,9 @@ type Form = {
 };
 
 const empty: Form = {
+  placement: "home",
+  brand_id: "",
+  coupon_id: "",
   title: "",
   subtitle: "",
   image_url: "",
@@ -64,6 +80,9 @@ function AdminBanners() {
   const save = useServerFn(saveAdminBanner);
   const remove = useServerFn(deleteAdminBanner);
   const toggle = useServerFn(toggleAdminBanner);
+  const listBrands = useServerFn(adminListBrands);
+  const listCoupons = useServerFn(adminListCoupons);
+  const [tab, setTab] = useState<Placement>("home");
   const [form, setForm] = useState<Form | null>(null);
 
   const { data = [], isLoading } = useQuery({
@@ -74,10 +93,22 @@ function AdminBanners() {
     queryKey: ["admin-categories"],
     queryFn: () => fetchCategories(),
   });
+  const { data: brands = [] } = useQuery({
+    queryKey: ["admin-brands"],
+    queryFn: () => listBrands(),
+  });
+  const { data: coupons = [] } = useQuery({
+    queryKey: ["admin-coupons"],
+    queryFn: () => listCoupons(),
+  });
+
+  const visible = data.filter((b) => (b.placement ?? "home") === tab);
 
   const invalidate = () => {
     qc.invalidateQueries({ queryKey: ["admin-banners"] });
     qc.invalidateQueries({ queryKey: ["home"] });
+    qc.invalidateQueries({ queryKey: ["brand-directory"] });
+    qc.invalidateQueries({ queryKey: ["placement-banners"] });
   };
 
   const saveMutation = useMutation({
@@ -91,6 +122,9 @@ function AdminBanners() {
           link_slug: f.link_slug || null,
           sort_order: Number(f.sort_order) || 0,
           is_active: f.is_active,
+          placement: f.placement,
+          brand_id: f.brand_id || null,
+          coupon_id: f.coupon_id || null,
         },
       }),
     onSuccess: () => {
@@ -119,17 +153,48 @@ function AdminBanners() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-2">
-        <h1 className="text-base font-semibold text-foreground">Banners</h1>
-        <Button onClick={() => setForm(empty)} className="gap-2">
+        <div>
+          <h1 className="text-base font-semibold text-foreground">Banners</h1>
+          <p className="text-xs text-muted-foreground">
+            Manage banners separately for each screen
+          </p>
+        </div>
+        <Button onClick={() => setForm({ ...empty, placement: tab })} className="gap-2">
           <Plus className="h-4 w-4" /> New banner
         </Button>
       </div>
 
+      <div className="flex flex-wrap gap-2">
+        {PLACEMENTS.map((p) => {
+          const count = data.filter((b) => (b.placement ?? "home") === p.value).length;
+          return (
+            <button
+              key={p.value}
+              type="button"
+              onClick={() => setTab(p.value)}
+              className={
+                tab === p.value
+                  ? "rounded-full bg-primary px-3.5 py-1.5 text-xs font-semibold text-primary-foreground"
+                  : "rounded-full bg-secondary px-3.5 py-1.5 text-xs font-semibold text-foreground"
+              }
+            >
+              {p.label} ({count})
+            </button>
+          );
+        })}
+      </div>
+
       {isLoading && <div className="h-56 animate-pulse rounded-2xl bg-card" />}
+
+      {!isLoading && visible.length === 0 && (
+        <div className="rounded-2xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
+          No banners for this screen yet.
+        </div>
+      )}
 
       {!isLoading && (
         <div className="grid gap-3 sm:grid-cols-2">
-          {data.map((b) => (
+          {visible.map((b) => (
             <div key={b.id} className="overflow-hidden rounded-2xl border border-border bg-card">
               <div className="relative aspect-[16/7] bg-secondary">
                 <img
@@ -165,6 +230,9 @@ function AdminBanners() {
                         link_slug: b.link_slug ?? "",
                         sort_order: String(b.sort_order),
                         is_active: b.is_active,
+                        placement: (b.placement ?? "home") as Placement,
+                        brand_id: b.brand_id ?? "",
+                        coupon_id: b.coupon_id ?? "",
                       })
                     }
                     className="grid h-8 w-8 place-items-center rounded-lg bg-secondary text-foreground"
@@ -231,6 +299,68 @@ function AdminBanners() {
                   alt="Banner preview"
                   className="aspect-[16/7] w-full rounded-xl object-cover"
                 />
+              )}
+              <div>
+                <Label>Shown on</Label>
+                <Select
+                  value={form.placement}
+                  onValueChange={(v) =>
+                    setForm({ ...form, placement: v as Placement, brand_id: "", coupon_id: "" })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {PLACEMENTS.map((p) => (
+                      <SelectItem key={p.value} value={p.value}>
+                        {p.label} screen
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              {form.placement === "brands" && (
+                <div>
+                  <Label>Attach to brand</Label>
+                  <Select
+                    value={form.brand_id || "none"}
+                    onValueChange={(v) => setForm({ ...form, brand_id: v === "none" ? "" : v })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="All brands" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Whole brands page</SelectItem>
+                      {brands.map((b) => (
+                        <SelectItem key={b.id} value={b.id}>
+                          {b.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+              {form.placement === "coupons" && (
+                <div>
+                  <Label>Attach to coupon</Label>
+                  <Select
+                    value={form.coupon_id || "none"}
+                    onValueChange={(v) => setForm({ ...form, coupon_id: v === "none" ? "" : v })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="All coupons" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Whole coupons page</SelectItem>
+                      {coupons.map((c) => (
+                        <SelectItem key={c.id} value={c.id}>
+                          {c.code} — {c.title}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               )}
               <div className="grid grid-cols-2 gap-3">
                 <div>
