@@ -46,12 +46,12 @@ export const Route = createFileRoute("/deals")({
   ),
   errorComponent: ({ error }) => (
     <PageShell>
-      <EmptyState title="Couldn't load deals" subtitle={error.message} />
+      <EmptyState icon={<Zap className="h-6 w-6" />} title="Couldn't load deals" description={error.message} />
     </PageShell>
   ),
   notFoundComponent: () => (
     <PageShell>
-      <EmptyState title="Not found" subtitle="This page doesn't exist." />
+      <EmptyState icon={<Zap className="h-6 w-6" />} title="Not found" description="This page doesn't exist." />
     </PageShell>
   ),
 });
@@ -132,7 +132,7 @@ function DealsPage() {
       </div>
 
       {list.length === 0 ? (
-        <EmptyState title="No deals here yet" subtitle="Check back soon for fresh offers." />
+        <EmptyState icon={<Zap className="h-6 w-6" />} title="No deals here yet" description="Check back soon for fresh offers." />
       ) : (
         <div className="grid grid-cols-2 gap-3 p-4">
           {list.map((p) => (

@@ -18,6 +18,7 @@ import { Route as MaintenanceRouteImport } from './routes/maintenance'
 import { Route as HelpRouteImport } from './routes/help'
 import { Route as FeedbackRouteImport } from './routes/feedback'
 import { Route as FaqRouteImport } from './routes/faq'
+import { Route as DealsRouteImport } from './routes/deals'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as CategoriesRouteImport } from './routes/categories'
 import { Route as AuthRouteImport } from './routes/auth'
@@ -99,6 +100,11 @@ const FeedbackRoute = FeedbackRouteImport.update({
 const FaqRoute = FaqRouteImport.update({
   id: '/faq',
   path: '/faq',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DealsRoute = DealsRouteImport.update({
+  id: '/deals',
+  path: '/deals',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ContactRoute = ContactRouteImport.update({
@@ -295,6 +301,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/categories': typeof CategoriesRoute
   '/contact': typeof ContactRoute
+  '/deals': typeof DealsRoute
   '/faq': typeof FaqRoute
   '/feedback': typeof FeedbackRoute
   '/help': typeof HelpRoute
@@ -341,6 +348,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/categories': typeof CategoriesRoute
   '/contact': typeof ContactRoute
+  '/deals': typeof DealsRoute
   '/faq': typeof FaqRoute
   '/feedback': typeof FeedbackRoute
   '/help': typeof HelpRoute
@@ -390,6 +398,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/categories': typeof CategoriesRoute
   '/contact': typeof ContactRoute
+  '/deals': typeof DealsRoute
   '/faq': typeof FaqRoute
   '/feedback': typeof FeedbackRoute
   '/help': typeof HelpRoute
@@ -439,6 +448,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/categories'
     | '/contact'
+    | '/deals'
     | '/faq'
     | '/feedback'
     | '/help'
@@ -485,6 +495,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/categories'
     | '/contact'
+    | '/deals'
     | '/faq'
     | '/feedback'
     | '/help'
@@ -533,6 +544,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/categories'
     | '/contact'
+    | '/deals'
     | '/faq'
     | '/feedback'
     | '/help'
@@ -582,6 +594,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   CategoriesRoute: typeof CategoriesRoute
   ContactRoute: typeof ContactRoute
+  DealsRoute: typeof DealsRoute
   FaqRoute: typeof FaqRoute
   FeedbackRoute: typeof FeedbackRoute
   HelpRoute: typeof HelpRoute
@@ -661,6 +674,13 @@ declare module '@tanstack/react-router' {
       path: '/faq'
       fullPath: '/faq'
       preLoaderRoute: typeof FaqRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/deals': {
+      id: '/deals'
+      path: '/deals'
+      fullPath: '/deals'
+      preLoaderRoute: typeof DealsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/contact': {
@@ -1002,6 +1022,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   CategoriesRoute: CategoriesRoute,
   ContactRoute: ContactRoute,
+  DealsRoute: DealsRoute,
   FaqRoute: FaqRoute,
   FeedbackRoute: FeedbackRoute,
   HelpRoute: HelpRoute,
