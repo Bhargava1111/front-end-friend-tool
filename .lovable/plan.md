@@ -1,37 +1,39 @@
 ## Goal
 
-1. Rebuild the product detail page to match the reference screens (sticky header with share + cart badge, framed hero image, stock/discount chips, rating line, price with inline quantity stepper, trust tiles, Description, Benefits, Specifications grid, dual "Go to Cart" / "Add to Cart" bottom bar).
-2. Add real pack-size variants (100 g, 250 g, 500 g, 1 kg, 500 ml, 1 L, custom) that customers pick on the product page and admins manage per product.
+1. Manage banners separately per surface (home, offers, coupons, brands) from the admin panel, and give each brand and coupon its own banner image.
+2. Make the admin customer detail view actually usable — today it only shows what the orders table already carries, has no error state, and no email/address info.
 
-Today the "Pack size" chips on the product page are fake — they link to other products in the same category. Cart and orders only store `product_id`, so variants must be added to the data layer to work for real.
+## What I verified
 
-## Database (one migration)
+- `banners` has no placement/type column, so every banner is a home banner; `/brands` currently fakes brand banners by cycling home banner images (`getBrandDirectory` in `src/lib/storefront.functions.ts`), and coupons have no image at all.
+- `brands` and `coupons` tables have no `banner_url` column.
+- The admin customer detail route `/admin/customer/$id` exists and is registered, and the access rules already let admins read profiles, orders, order items and reviews. So the page renders — but it has no error state, no email, no saved addresses, and "Customer not found" is shown for any failure. Data exists (7 customer profiles, 2 orders).
 
-New table `product_variants`: `product_id`, `label` (e.g. "500 g"), `unit` (g / kg / ml / l / pcs), `unit_value`, `price`, `mrp`, `stock`, `sku`, `image_url`, `is_default`, `is_active`, `sort_order`, timestamps + update trigger. Public read for active rows, admin write via `has_role`, with GRANTs for anon/authenticated/service_role.
+## Part 1 — Banner management
 
-New optional columns for the richer PDP + specs block: `products.benefits` (text array), `products.brand_name` is already available via `brands`, plus `products.shelf_life`, `products.origin`, `products.rating`, `products.rating_count`.
+Database changes:
+- Add `placement` to `banners` (text, default `home`, allowed: `home`, `offers`, `coupons`, `brands`), plus optional `brand_id` / `coupon_id` links so a banner can be attached to one brand or coupon.
+- Add `banner_url` to `brands` and to `coupons`.
 
-Cart/order linkage: `cart_items.variant_id` (nullable, unique per user+product+variant) and `order_items.variant_id` + `variant_label`, so historical orders keep the chosen pack.
+Admin (`/admin/banners`):
+- Tabs across the top: Home / Offers / Coupons / Brands. The list is filtered by the selected placement and new banners default to that placement.
+- Banner form gains a Placement select and, when Coupons or Brands is chosen, a picker to attach the banner to a specific coupon or brand.
+- Brand and coupon editors (`/admin/brands`, `/admin/coupons`) each get a Banner image URL field with a live thumbnail preview.
 
-## Customer side
+Storefront:
+- `/brands` uses real brand banners (`brands.banner_url`, falling back to banners with placement `brands`) instead of recycled home images.
+- `/coupons` shows a hero banner strip from `placement = 'coupons'` plus a banner image on each coupon card when set.
+- `/offers` shows only `placement = 'offers'` (falling back to home when none exist); the home carousel shows only `home`.
 
-- Product page loads variants; the selected variant drives price, MRP, discount %, stock text, gallery image and add-to-cart. First `is_default` (else cheapest active) is preselected. Deep-link support via `?variant=` search param.
-- Pack-size chips become a real segmented selector grouped by unit, showing label + price + strikethrough MRP, disabled when out of stock.
-- Sections in reference order: hero + wishlist heart overlay, chips row, title, weight, rating, price + stepper, trust tiles, Description, Benefits bullet list, Specifications 2-column grid (Brand, Weight, Shelf, Origin), then existing bundle / reviews / FAQ / related rails.
-- Bottom bar: outline "Go to Cart" and filled "Add to Cart", pill quantity stepper, safe-area padding.
-- Cart, checkout and order pages show the variant label under each item name; cart quantity/remove actions key off product + variant.
-- Product cards and rails show the default variant's price and a "N sizes" hint when a product has multiple variants.
+## Part 2 — Admin customer details
 
-## Admin side
-
-- Product editor gains a Variants manager: repeatable rows (label, unit, unit value, price, MRP, stock, SKU, image, active, default) with quick-add presets for 100 g / 250 g / 500 g / 1 kg / 200 ml / 500 ml / 1 L, drag-free sort ordering, and validation (one default, unique labels, price > 0).
-- New Benefits, Shelf life and Origin fields in the same editor, feeding the PDP Specifications and Benefits blocks.
-- Product list shows variant count and price range instead of a single price.
+- Customers table gets a search box (name/phone) and keeps the row link to the detail page.
+- Detail page: proper loading skeleton, an explicit error state with retry, and a real "not found" state distinguished from a failed fetch.
+- Detail data extended with: the customer's email and last sign-in (read server-side via the privileged auth admin API), their saved addresses, wishlist and cart counts, and return requests — alongside the existing order history, spend stats and reviews.
+- Adds quick actions in the header: call phone link, copy email, and a link into that customer's orders filtered in the admin orders list.
 
 ## Technical notes
 
-- Variant CRUD goes through `src/lib/admin.functions.ts` server functions using the authenticated Supabase client (admin role check), mirroring the existing `product_images` sync pattern (delete + reinsert on save).
-- `PRODUCT_COLUMNS` in `catalog.server.ts` extends with the new columns; a new `attachVariants` helper batches variant fetches for lists, same shape as `attachGalleries`.
-- `src/lib/types.ts` gains a `ProductVariant` type and `variants?: ProductVariant[]` on `Product`; `CartLine` gains `variant`.
-- Cart/order server functions in `shop.functions.ts` accept an optional `variantId` and resolve price/stock from the variant when present, falling back to the product for variant-less items so existing data keeps working.
-- All colors stay on existing semantic tokens; no hardcoded color utilities.
+- One migration: `banners.placement/brand_id/coupon_id`, `brands.banner_url`, `coupons.banner_url`. Existing rows default to `home`, so nothing disappears.
+- Server-side work stays in `src/lib/admin.functions.ts` (admin CRUD + customer detail) and `src/lib/storefront.functions.ts` (public banner reads by placement); email lookup happens inside the handler after the admin-role check.
+- `docs/BACKEND_DJANGO_API.md` updated with the new banner placement fields, brand/coupon banner fields and the expanded customer detail response.
