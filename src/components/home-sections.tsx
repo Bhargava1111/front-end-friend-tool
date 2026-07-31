@@ -31,7 +31,7 @@ function useCountdown(target: number) {
 export function SeeAll({ to, tone = "primary" }: { to: string; tone?: "primary" | "onDark" }) {
   return (
     <Link
-      to={to}
+      to={to as never}
       className={cn(
         "flex shrink-0 items-center gap-0.5 text-xs font-semibold",
         tone === "onDark" ? "text-primary-foreground/90" : "text-primary",
