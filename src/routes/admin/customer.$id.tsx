@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { ArrowLeft, Phone, Calendar, ShoppingBag, IndianRupee, Star } from "lucide-react";
+import { ArrowLeft, Phone, Calendar, ShoppingBag, IndianRupee, Star, Mail, MapPin } from "lucide-react";
 import { getAdminCustomerDetail } from "@/lib/admin.functions";
 import { formatINR, formatDate } from "@/lib/format";
 import { STATUS_STYLES } from "@/lib/order-status";
