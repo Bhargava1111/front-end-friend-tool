@@ -53,6 +53,7 @@ const emptyForm: FormState = {
 
 function AddressesPage() {
   const queryClient = useQueryClient();
+  const { session } = useSession();
   const fetchAddresses = useServerFn(getAddresses);
   const save = useServerFn(saveAddress);
   const remove = useServerFn(deleteAddress);
@@ -61,6 +62,7 @@ function AddressesPage() {
   const { data, isLoading } = useQuery({
     queryKey: ["addresses"],
     queryFn: () => fetchAddresses() as Promise<Address[]>,
+    enabled: !!session,
   });
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ["addresses"] });
