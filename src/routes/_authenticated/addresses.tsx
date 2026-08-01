@@ -1,3 +1,4 @@
+import { useSession } from "@/hooks/use-shop";
 import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -53,6 +54,7 @@ const emptyForm: FormState = {
 
 function AddressesPage() {
   const queryClient = useQueryClient();
+  const { session } = useSession();
   const fetchAddresses = useServerFn(getAddresses);
   const save = useServerFn(saveAddress);
   const remove = useServerFn(deleteAddress);
@@ -61,6 +63,7 @@ function AddressesPage() {
   const { data, isLoading } = useQuery({
     queryKey: ["addresses"],
     queryFn: () => fetchAddresses() as Promise<Address[]>,
+    enabled: !!session,
   });
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ["addresses"] });

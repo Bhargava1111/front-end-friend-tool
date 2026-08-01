@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Clock, CreditCard, Loader2, MapPin, Truck } from "lucide-react";
 import { toast } from "sonner";
-import { useCart } from "@/hooks/use-shop";
+import { useCart, useSession } from "@/hooks/use-shop";
 import { useStorefront } from "@/hooks/use-storefront";
 import { getAddresses, placeOrder } from "@/lib/shop.functions";
 import { PageShell, TopBar } from "@/components/page-shell";
@@ -41,6 +41,7 @@ export const Route = createFileRoute("/_authenticated/checkout")({
 function CheckoutPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { session } = useSession();
   const { data: lines } = useCart();
   const { settings, coupons } = useStorefront();
   const { code: appliedCode, clear: clearCoupon } = useAppliedCoupon();
@@ -55,6 +56,7 @@ function CheckoutPage() {
   const { data: addresses } = useQuery({
     queryKey: ["addresses"],
     queryFn: () => fetchAddresses() as Promise<Address[]>,
+    enabled: !!session,
   });
 
   useEffect(() => {

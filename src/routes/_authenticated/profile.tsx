@@ -40,13 +40,14 @@ export const Route = createFileRoute("/_authenticated/profile")({
 function ProfilePage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { user } = useSession();
+  const { user, session } = useSession();
   const fetchProfile = useServerFn(getProfile);
   const save = useServerFn(updateProfile);
 
   const { data: profile } = useQuery({
     queryKey: ["profile"],
     queryFn: () => fetchProfile() as Promise<Profile>,
+    enabled: !!session,
   });
 
   const [fullName, setFullName] = useState("");
