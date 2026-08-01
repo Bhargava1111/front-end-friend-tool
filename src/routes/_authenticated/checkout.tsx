@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Clock, CreditCard, Loader2, MapPin, Truck } from "lucide-react";
 import { toast } from "sonner";
-import { useCart } from "@/hooks/use-shop";
+import { useCart, useSession } from "@/hooks/use-shop";
 import { useStorefront } from "@/hooks/use-storefront";
 import { getAddresses, placeOrder } from "@/lib/shop.functions";
 import { PageShell, TopBar } from "@/components/page-shell";
