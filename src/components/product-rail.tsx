@@ -8,7 +8,7 @@ export function ProductRail({
   title,
   products,
   href,
-  autoScroll = true,
+  autoScroll = false,
 }: {
   title: string;
   products: Product[];
