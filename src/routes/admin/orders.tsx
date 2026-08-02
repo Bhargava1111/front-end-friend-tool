@@ -3,7 +3,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Check, Plus, X, Trash2 } from "lucide-react";
+import { CalendarClock, Check, Plus, X, Trash2 } from "lucide-react";
+import { setOrderDelivery } from "@/lib/admin-ops.functions";
 import {
   getAdminOrders,
   setOrderStatus,
@@ -50,6 +51,8 @@ function AdminOrders() {
   const updateStatus = useServerFn(setOrderStatus);
   const [filter, setFilter] = useState<"all" | OrderStatus>("all");
   const [creating, setCreating] = useState(false);
+  const [dates, setDates] = useState<Record<string, string>>({});
+  const scheduleFn = useServerFn(setOrderDelivery);
 
   const { data = [], isLoading } = useQuery({
     queryKey: ["admin-orders"],
@@ -62,6 +65,17 @@ function AdminOrders() {
       toast.success("Order updated");
       qc.invalidateQueries({ queryKey: ["admin-orders"] });
       qc.invalidateQueries({ queryKey: ["admin-dashboard"] });
+      qc.invalidateQueries({ queryKey: ["notifications"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const schedule = useMutation({
+    mutationFn: (vars: { id: string; delivery_date: string; status?: string }) =>
+      scheduleFn({ data: vars }),
+    onSuccess: () => {
+      toast.success("Delivery date saved");
+      qc.invalidateQueries({ queryKey: ["admin-orders"] });
       qc.invalidateQueries({ queryKey: ["notifications"] });
     },
     onError: (e: Error) => toast.error(e.message),
@@ -145,10 +159,14 @@ function AdminOrders() {
                   <Button
                     size="sm"
                     className="h-9 gap-1.5 text-xs"
-                    disabled={mutation.isPending}
-                    onClick={() => mutation.mutate({ id: o.id, status: "confirmed" })}
+                    disabled={mutation.isPending || schedule.isPending}
+                    onClick={() => {
+                      const date = dates[o.id] ?? o.delivery_date ?? "";
+                      if (!date) return toast.error("Pick a delivery date first");
+                      schedule.mutate({ id: o.id, delivery_date: date, status: "confirmed" });
+                    }}
                   >
-                    <Check className="h-3.5 w-3.5" /> Approve
+                    <Check className="h-3.5 w-3.5" /> Approve & schedule
                   </Button>
                   <Button
                     size="sm"
@@ -161,6 +179,29 @@ function AdminOrders() {
                   </Button>
                 </>
               )}
+              <div className="flex items-center gap-1.5">
+                <CalendarClock className="h-3.5 w-3.5 shrink-0 text-primary" />
+                <Input
+                  type="date"
+                  aria-label={`Delivery date for ${o.order_number}`}
+                  className="h-9 w-[9.5rem] text-xs"
+                  value={dates[o.id] ?? o.delivery_date ?? ""}
+                  onChange={(e) => setDates({ ...dates, [o.id]: e.target.value })}
+                />
+                {(dates[o.id] ?? "") !== "" && dates[o.id] !== (o.delivery_date ?? "") && (
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    className="h-9 text-xs"
+                    disabled={schedule.isPending}
+                    onClick={() =>
+                      schedule.mutate({ id: o.id, delivery_date: dates[o.id]! })
+                    }
+                  >
+                    Save
+                  </Button>
+                )}
+              </div>
               <Select
                 value={o.status}
                 onValueChange={(v) => mutation.mutate({ id: o.id, status: v as OrderStatus })}
