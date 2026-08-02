@@ -164,29 +164,84 @@ export function CouponStrip() {
 }
 
 export function OfferCards() {
+  const fetchBanners = useServerFn(getPlacementBanners);
+  const { data } = useQuery({
+    queryKey: ["placement-banners", "combos"],
+    queryFn: () => fetchBanners({ data: { placement: "combos" } }),
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const combos = (data ?? []).map((b, i) => ({
+    key: b.id,
+    title: b.title,
+    subtitle: b.subtitle ?? "",
+    image: b.image_url || null,
+    slug: b.link_slug ?? "",
+    tone: i % 2 === 0 ? ("accent" as const) : ("primary" as const),
+    cta: "Shop now",
+  }));
+
+  const fallback = OFFER_CARDS.map((o, i) => ({
+    key: o.title,
+    title: o.title,
+    subtitle: o.subtitle,
+    image: null as string | null,
+    slug: o.slug,
+    tone: o.tone,
+    cta: o.cta,
+  }));
+
+  const list = combos.length ? combos : fallback;
+
   return (
     <Reveal className="mt-7 grid grid-cols-2 gap-3 px-4 lg:grid-cols-4 lg:gap-4">
-      {OFFER_CARDS.map((o) => (
-        <Link
-          key={o.title}
-          to="/category/$slug"
-          params={{ slug: o.slug }}
-          className={cn(
-            "flex flex-col justify-between rounded-3xl p-4 transition-transform active:scale-[0.98]",
-            o.tone === "accent"
+      {list.map((o) => {
+        const inner = (
+          <>
+            {o.image && (
+              <>
+                <img
+                  src={o.image}
+                  alt={o.title}
+                  loading="lazy"
+                  className="absolute inset-0 h-full w-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/35 to-black/10" />
+              </>
+            )}
+            <div className="relative">
+              <p className="text-sm font-bold leading-tight">{o.title}</p>
+              {o.subtitle && <p className="mt-1 text-[11px] opacity-80">{o.subtitle}</p>}
+            </div>
+            <span className="relative mt-5 flex items-center gap-0.5 text-[11px] font-semibold">
+              {o.cta} <ChevronRight className="h-3.5 w-3.5" />
+            </span>
+          </>
+        );
+
+        const className = cn(
+          "relative flex min-h-[128px] flex-col justify-between overflow-hidden rounded-3xl p-4 transition-transform active:scale-[0.98]",
+          o.image
+            ? "text-white"
+            : o.tone === "accent"
               ? "bg-gradient-to-br from-accent to-accent/70 text-accent-foreground"
               : "bg-gradient-to-br from-primary to-primary/75 text-primary-foreground",
-          )}
-        >
-          <div>
-            <p className="text-sm font-bold leading-tight">{o.title}</p>
-            <p className="mt-1 text-[11px] opacity-80">{o.subtitle}</p>
-          </div>
-          <span className="mt-5 flex items-center gap-0.5 text-[11px] font-semibold">
-            {o.cta} <ChevronRight className="h-3.5 w-3.5" />
-          </span>
-        </Link>
-      ))}
+        );
+
+        if (!o.slug) {
+          return (
+            <div key={o.key} className={className}>
+              {inner}
+            </div>
+          );
+        }
+
+        return (
+          <Link key={o.key} to="/category/$slug" params={{ slug: o.slug }} className={className}>
+            {inner}
+          </Link>
+        );
+      })}
     </Reveal>
   );
 }
