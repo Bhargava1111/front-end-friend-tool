@@ -198,9 +198,13 @@ export const setOrderDelivery = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     await assertAdmin(context as never);
-    const patch: Record<string, unknown> = { delivery_date: data.delivery_date };
-    if (data.status) patch.status = data.status;
-    const { error } = await context.supabase.from("orders").update(patch).eq("id", data.id);
+    const { error } = await context.supabase
+      .from("orders")
+      .update({
+        delivery_date: data.delivery_date,
+        ...(data.status ? { status: data.status as "pending" } : {}),
+      })
+      .eq("id", data.id);
     if (error) throw new Error(error.message);
     return { ok: true };
   });
@@ -241,7 +245,7 @@ export const saveAdminBlogPost = createServerFn({ method: "POST" })
       title: data.title.trim(),
       slug: data.slug.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, ""),
       excerpt: data.excerpt.trim() || null,
-      body: data.body.trim() || null,
+      body: data.body.trim(),
       cover_url: data.cover_url,
       author: data.author.trim() || null,
       tags: data.tags,
