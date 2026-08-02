@@ -62,18 +62,19 @@ function useAutoLocation(stores: StoreLocation[]) {
       (pos) => {
         const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
         const closest = nearestStore(coords, stores);
+        const accuracy = pos.coords.accuracy ? ` · ±${Math.round(pos.coords.accuracy)} m` : "";
         setLocation({
           label: closest ? `Near ${storeLabel(closest.store.name)}` : "Current location",
           detail: closest
-            ? `${formatKm(closest.km)} from ${closest.store.name}`
-            : `${coords.lat.toFixed(3)}, ${coords.lng.toFixed(3)}`,
+            ? `${formatKm(closest.km)} from ${closest.store.name}${accuracy}`
+            : `${coords.lat.toFixed(4)}, ${coords.lng.toFixed(4)}${accuracy}`,
           lat: coords.lat,
           lng: coords.lng,
           source: "gps",
         });
       },
       fallback,
-      { enableHighAccuracy: false, timeout: 8000, maximumAge: 300000 },
+      { enableHighAccuracy: true, timeout: 12000, maximumAge: 60000 },
     );
   }, [hydrated, location, stores, setLocation]);
 }
@@ -132,23 +133,28 @@ export function LocationPicker({ onDone }: { onDone?: () => void }) {
       (pos) => {
         const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
         const closest = nearestStore(coords, stores);
+        const accuracy = pos.coords.accuracy ? ` · ±${Math.round(pos.coords.accuracy)} m` : "";
         setLocation({
           label: closest ? `Near ${closest.store.name.split("—").pop()?.trim()}` : "Current location",
           detail: closest
-            ? `${formatKm(closest.km)} from ${closest.store.name}`
-            : `${coords.lat.toFixed(3)}, ${coords.lng.toFixed(3)}`,
+            ? `${formatKm(closest.km)} from ${closest.store.name}${accuracy}`
+            : `${coords.lat.toFixed(4)}, ${coords.lng.toFixed(4)}${accuracy}`,
           lat: coords.lat,
           lng: coords.lng,
           source: "gps",
         });
         setLocating(false);
-        toast.success("Location updated");
+        toast.success(
+          pos.coords.accuracy && pos.coords.accuracy > 150
+            ? "Location saved, but accuracy is low — try again outdoors"
+            : "Location updated",
+        );
       },
       () => {
         setLocating(false);
         toast.error("Couldn't get your location. Pick a store instead.");
       },
-      { enableHighAccuracy: true, timeout: 10000 },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 },
     );
   }
 
