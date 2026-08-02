@@ -45,6 +45,7 @@ const PLACEMENTS = [
   { value: "offers", label: "Offers" },
   { value: "coupons", label: "Coupons" },
   { value: "brands", label: "Brands" },
+  { value: "combos", label: "Combos" },
 ] as const;
 
 type Placement = (typeof PLACEMENTS)[number]["value"];
