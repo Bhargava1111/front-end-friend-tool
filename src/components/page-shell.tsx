@@ -11,11 +11,13 @@ export function PageShell({
   className,
   withNav = true,
   withCartBar = true,
+  withFooter = true,
 }: {
   children: ReactNode;
   className?: string;
   withNav?: boolean;
   withCartBar?: boolean;
+  withFooter?: boolean;
 }) {
   return (
     <div className="min-h-screen bg-background">
@@ -28,7 +30,9 @@ export function PageShell({
         )}
       >
         {children}
+        {withNav && withFooter && <SiteFooter />}
       </div>
+
       {withNav && withCartBar && (
         <>
           <StickyCartBar />
