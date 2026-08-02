@@ -262,7 +262,7 @@ export const saveAdminBlogPost = createServerFn({ method: "POST" })
       tags: data.tags,
       read_minutes: data.read_minutes,
       is_published: data.is_published,
-      published_at: data.is_published ? new Date().toISOString() : null,
+      published_at: data.is_published ? new Date().toISOString() : undefined,
     };
     const query = data.id
       ? context.supabase.from("blog_posts").update(row).eq("id", data.id)
