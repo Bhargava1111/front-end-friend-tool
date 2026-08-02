@@ -146,6 +146,54 @@ export type Database = {
           },
         ]
       }
+      blog_posts: {
+        Row: {
+          author: string | null
+          body: string
+          cover_url: string | null
+          created_at: string
+          excerpt: string | null
+          id: string
+          is_published: boolean
+          published_at: string
+          read_minutes: number
+          slug: string
+          tags: string[]
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          author?: string | null
+          body?: string
+          cover_url?: string | null
+          created_at?: string
+          excerpt?: string | null
+          id?: string
+          is_published?: boolean
+          published_at?: string
+          read_minutes?: number
+          slug: string
+          tags?: string[]
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          author?: string | null
+          body?: string
+          cover_url?: string | null
+          created_at?: string
+          excerpt?: string | null
+          id?: string
+          is_published?: boolean
+          published_at?: string
+          read_minutes?: number
+          slug?: string
+          tags?: string[]
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       brands: {
         Row: {
           banner_url: string | null
@@ -510,6 +558,7 @@ export type Database = {
           address_text: string
           coupon_code: string | null
           created_at: string
+          delivery_date: string | null
           delivery_fee: number
           delivery_slot: string | null
           discount: number
@@ -530,6 +579,7 @@ export type Database = {
           address_text: string
           coupon_code?: string | null
           created_at?: string
+          delivery_date?: string | null
           delivery_fee?: number
           delivery_slot?: string | null
           discount?: number
@@ -550,6 +600,7 @@ export type Database = {
           address_text?: string
           coupon_code?: string | null
           created_at?: string
+          delivery_date?: string | null
           delivery_fee?: number
           delivery_slot?: string | null
           discount?: number
@@ -754,28 +805,58 @@ export type Database = {
       }
       profiles: {
         Row: {
+          address_text: string | null
           avatar_url: string | null
           created_at: string
           full_name: string | null
           id: string
+          latitude: number | null
+          location_accuracy_m: number | null
+          longitude: number | null
           phone: string | null
+          pincode: string | null
+          rejection_reason: string | null
+          submitted_at: string | null
           updated_at: string
+          verification_status: string
+          verified_at: string | null
+          verified_by: string | null
         }
         Insert: {
+          address_text?: string | null
           avatar_url?: string | null
           created_at?: string
           full_name?: string | null
           id: string
+          latitude?: number | null
+          location_accuracy_m?: number | null
+          longitude?: number | null
           phone?: string | null
+          pincode?: string | null
+          rejection_reason?: string | null
+          submitted_at?: string | null
           updated_at?: string
+          verification_status?: string
+          verified_at?: string | null
+          verified_by?: string | null
         }
         Update: {
+          address_text?: string | null
           avatar_url?: string | null
           created_at?: string
           full_name?: string | null
           id?: string
+          latitude?: number | null
+          location_accuracy_m?: number | null
+          longitude?: number | null
           phone?: string | null
+          pincode?: string | null
+          rejection_reason?: string | null
+          submitted_at?: string | null
           updated_at?: string
+          verification_status?: string
+          verified_at?: string | null
+          verified_by?: string | null
         }
         Relationships: []
       }
