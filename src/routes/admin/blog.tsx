@@ -10,7 +10,7 @@ import {
   deleteAdminBlogPost,
 } from "@/lib/admin-ops.functions";
 import { formatDate } from "@/lib/format";
-import { ImageUpload } from "@/components/image-upload";
+import { ImageUploadField } from "@/components/image-upload";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -257,14 +257,12 @@ function AdminBlog() {
                   />
                 </div>
               </div>
-              <div>
-                <Label>Cover image</Label>
-                <ImageUpload
-                  folder="misc"
-                  value={draft.cover_url}
-                  onChange={(url) => setDraft({ ...draft, cover_url: url })}
-                />
-              </div>
+              <ImageUploadField
+                label="Cover image"
+                folder="misc"
+                value={draft.cover_url ?? ""}
+                onChange={(url: string) => setDraft({ ...draft, cover_url: url || null })}
+              />
               <div className="flex items-center justify-between rounded-xl border border-border p-3">
                 <Label htmlFor="b-pub">Published</Label>
                 <Switch
