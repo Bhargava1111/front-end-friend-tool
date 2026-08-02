@@ -1,39 +1,42 @@
-## Goal
+# Responsive Shell, Image Uploads & OTP Auth
 
-1. Manage banners separately per surface (home, offers, coupons, brands) from the admin panel, and give each brand and coupon its own banner image.
-2. Make the admin customer detail view actually usable — today it only shows what the orders table already carries, has no error state, and no email/address info.
+## What you get
 
-## What I verified
+1. **Full responsive app** — mobile keeps the current phone layout with bottom tabs; tablet/desktop gets a real wide layout (top header with nav + search, sticky category sidebar on listing pages, multi-column product grids, wide banners, footer). Admin panel also becomes desktop-first with a persistent sidebar.
+2. **Image uploads everywhere in admin** — drag-and-drop / file picker with instant preview for banners, coupon banners, brand logo + banner, category images, product main image, product gallery (multiple), and product variant images. Pasting a URL still works as a fallback.
+3. **Banner carousels driven by your uploads** — every banner strip (home hero, offers, coupons, brands) renders however many banners you upload (10+ scrolls smoothly), with swipe, dots, arrows on desktop, and per-placement ordering from admin.
+4. **Auto-scroll fully removed** — product rails are manual swipe/scroll only, everywhere. The hero banner carousel keeps a slow slide (it can be turned off in admin settings).
+5. **OTP login + register pages** — a single polished flow: phone/email entry → 6-digit OTP boxes → resend timer → success. Both modes are supported: real email OTP through Cloud auth, and simulated OTP (code `123456`) for phone/dev, switchable so it swaps cleanly to your Django backend later.
+6. **Docs updated** — `docs/BACKEND_DJANGO_API.md` gets the new image-upload endpoints, banner placement fields, and the OTP request/verify contracts so your Django backend matches after you clone the repo.
 
-- `banners` has no placement/type column, so every banner is a home banner; `/brands` currently fakes brand banners by cycling home banner images (`getBrandDirectory` in `src/lib/storefront.functions.ts`), and coupons have no image at all.
-- `brands` and `coupons` tables have no `banner_url` column.
-- The admin customer detail route `/admin/customer/$id` exists and is registered, and the access rules already let admins read profiles, orders, order items and reviews. So the page renders — but it has no error state, no email, no saved addresses, and "Customer not found" is shown for any failure. Data exists (7 customer profiles, 2 orders).
+## Technical details
 
-## Part 1 — Banner management
+**Storage**
+- New public bucket `media` (folders: `banners/`, `brands/`, `coupons/`, `categories/`, `products/`, `variants/`).
+- RLS on `storage.objects`: public read; insert/update/delete only for admins (`has_role`).
+- New `<ImageUploadField>` component: client-side upload via the browser Supabase client, returns a public URL written into the existing `image_url` / `banner_url` / `logo_url` columns — no schema change needed for images.
+- Product gallery uses the existing `product_images` table with a multi-file uploader plus drag-to-reorder.
 
-Database changes:
-- Add `placement` to `banners` (text, default `home`, allowed: `home`, `offers`, `coupons`, `brands`), plus optional `brand_id` / `coupon_id` links so a banner can be attached to one brand or coupon.
-- Add `banner_url` to `brands` and to `coupons`.
+**Responsive layout**
+- `page-shell.tsx`: replace fixed `max-w-lg` with responsive container (`max-w-lg` on mobile, `max-w-6xl`/`max-w-7xl` from `md`).
+- New `DesktopHeader` (logo, nav links, search, location, cart, account) rendered `md:` and up; `BottomNav` stays `md:hidden`.
+- Home sections, product rails, category grids and coupon/brand cards get responsive grid variants instead of horizontal-only scroll on desktop.
+- Product detail becomes two-column (gallery left, buy box right) on desktop; category page keeps sidebar + wider grid; cart/checkout become two-column.
+- Admin routes get a persistent left sidebar on desktop, drawer on mobile, and tables switch from cards to real tables at `lg`.
 
-Admin (`/admin/banners`):
-- Tabs across the top: Home / Offers / Coupons / Brands. The list is filtered by the selected placement and new banners default to that placement.
-- Banner form gains a Placement select and, when Coupons or Brands is chosen, a picker to attach the banner to a specific coupon or brand.
-- Brand and coupon editors (`/admin/brands`, `/admin/coupons`) each get a Banner image URL field with a live thumbnail preview.
+**Banner carousel**
+- Rewrite `banner-slider.tsx` as a reusable carousel: scroll-snap track, arrows on `md+`, dot/progress indicator that condenses when there are many slides, lazy image loading, `aria` labels.
+- All placements (`home`, `offers`, `coupons`, `brands`) reuse it via the existing `getPlacementBanners` server fn.
 
-Storefront:
-- `/brands` uses real brand banners (`brands.banner_url`, falling back to banners with placement `brands`) instead of recycled home images.
-- `/coupons` shows a hero banner strip from `placement = 'coupons'` plus a banner image on each coupon card when set.
-- `/offers` shows only `placement = 'offers'` (falling back to home when none exist); the home carousel shows only `home`.
+**Auto-scroll**
+- Delete `use-auto-scroll.ts` usage from `product-rail.tsx` and remove the `autoScroll` prop and all call-site usages.
 
-## Part 2 — Admin customer details
+**OTP auth**
+- `/auth` rebuilt with tabs: Login / Register, each supporting Email OTP, Phone OTP, Password, and Google.
+- Email OTP: `supabase.auth.signInWithOtp` (magic-code) + `verifyOtp`.
+- Phone OTP: existing `demo_otp_codes` table + server fns for request/verify (code `123456` in demo mode), rate-limited and expiring.
+- Shared `<OtpInput>` 6-box component, 30s resend cooldown, error states, `sonner` toasts.
+- Register collects name + phone into `profiles`.
 
-- Customers table gets a search box (name/phone) and keeps the row link to the detail page.
-- Detail page: proper loading skeleton, an explicit error state with retry, and a real "not found" state distinguished from a failed fetch.
-- Detail data extended with: the customer's email and last sign-in (read server-side via the privileged auth admin API), their saved addresses, wishlist and cart counts, and return requests — alongside the existing order history, spend stats and reviews.
-- Adds quick actions in the header: call phone link, copy email, and a link into that customer's orders filtered in the admin orders list.
-
-## Technical notes
-
-- One migration: `banners.placement/brand_id/coupon_id`, `brands.banner_url`, `coupons.banner_url`. Existing rows default to `home`, so nothing disappears.
-- Server-side work stays in `src/lib/admin.functions.ts` (admin CRUD + customer detail) and `src/lib/storefront.functions.ts` (public banner reads by placement); email lookup happens inside the handler after the admin-role check.
-- `docs/BACKEND_DJANGO_API.md` updated with the new banner placement fields, brand/coupon banner fields and the expanded customer detail response.
+**Docs**
+- `docs/BACKEND_DJANGO_API.md`: add `POST /api/media/upload`, banner placement/ordering fields, `POST /api/auth/otp/request`, `POST /api/auth/otp/verify`, register-with-OTP flow, and the product image/variant payload shapes.
