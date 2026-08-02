@@ -184,7 +184,7 @@ export function OfferCards() {
     cta: "Shop now",
   }));
 
-  const fallback = OFFER_CARDS.map((o, i) => ({
+  const fallback = OFFER_CARDS.map((o) => ({
     key: o.title,
     title: o.title,
     subtitle: o.subtitle,
