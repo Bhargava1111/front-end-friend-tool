@@ -33,7 +33,9 @@ export const getStorefrontMeta = createServerFn({ method: "GET" }).handler(async
 });
 
 export const getPlacementBanners = createServerFn({ method: "GET" })
-  .inputValidator((data: { placement: "home" | "offers" | "coupons" | "brands" }) => data)
+  .inputValidator(
+    (data: { placement: "home" | "offers" | "coupons" | "brands" | "combos" }) => data,
+  )
   .handler(async ({ data }) => {
     const supabase = getPublicSupabase();
     const { data: rows } = await supabase
