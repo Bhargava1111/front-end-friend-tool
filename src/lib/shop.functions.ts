@@ -240,6 +240,18 @@ export const placeOrder = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
 
+    // Only admin-verified shoppers can place orders.
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("verification_status")
+      .eq("id", userId)
+      .maybeSingle();
+    if (profile?.verification_status !== "verified") {
+      throw new Error(
+        "Your account is awaiting verification. Submit your details and wait for admin approval.",
+      );
+    }
+
     const { data: address } = await supabase
       .from("addresses")
       .select("*")

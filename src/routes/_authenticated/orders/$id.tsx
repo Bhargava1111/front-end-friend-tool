@@ -187,6 +187,12 @@ function OrderDetailPage() {
             )}
           </div>
 
+          {order.delivery_date && order.status !== "cancelled" && (
+            <p className="mt-2 rounded-xl bg-primary-soft px-3 py-2 text-xs font-semibold text-primary">
+              Delivery scheduled for {formatDate(order.delivery_date)}
+            </p>
+          )}
+
           {order.status !== "cancelled" && (
             <div className="mt-4 flex items-center">
               {STATUS_STEPS.map((step, i) => (

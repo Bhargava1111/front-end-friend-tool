@@ -4,6 +4,8 @@ import { ChevronLeft } from "lucide-react";
 import { BottomNav } from "./bottom-nav";
 import { DesktopHeader } from "./desktop-header";
 import { BackToTop, StickyCartBar } from "./cart-pill";
+import { SiteFooter } from "./site-footer";
+
 import { cn } from "@/lib/utils";
 
 export function PageShell({
@@ -11,11 +13,13 @@ export function PageShell({
   className,
   withNav = true,
   withCartBar = true,
+  withFooter = true,
 }: {
   children: ReactNode;
   className?: string;
   withNav?: boolean;
   withCartBar?: boolean;
+  withFooter?: boolean;
 }) {
   return (
     <div className="min-h-screen bg-background">
@@ -28,7 +32,9 @@ export function PageShell({
         )}
       >
         {children}
+        {withNav && withFooter && <SiteFooter />}
       </div>
+
       {withNav && withCartBar && (
         <>
           <StickyCartBar />

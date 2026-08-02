@@ -2,11 +2,12 @@ import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Clock, CreditCard, Loader2, MapPin, Truck } from "lucide-react";
+import { Clock, CreditCard, Loader2, MapPin, ShieldCheck, Truck } from "lucide-react";
 import { toast } from "sonner";
 import { useCart, useSession } from "@/hooks/use-shop";
 import { useStorefront } from "@/hooks/use-storefront";
 import { getAddresses, placeOrder } from "@/lib/shop.functions";
+import { getMyVerification } from "@/lib/account.functions";
 import { PageShell, TopBar } from "@/components/page-shell";
 import { FulfilmentMap } from "@/components/fulfilment-map";
 import { Button } from "@/components/ui/button";
@@ -53,6 +54,14 @@ function CheckoutPage() {
   const [slotId, setSlotId] = useState(slots[0]?.id ?? "express");
   const [payment, setPayment] = useState("cod");
 
+  const fetchVerification = useServerFn(getMyVerification);
+  const { data: verification } = useQuery({
+    queryKey: ["my-verification"],
+    queryFn: () => fetchVerification(),
+    enabled: !!session,
+  });
+  const verified = verification?.verification_status === "verified";
+
   const { data: addresses } = useQuery({
     queryKey: ["addresses"],
     queryFn: () => fetchAddresses() as Promise<Address[]>,
@@ -96,6 +105,33 @@ function CheckoutPage() {
   return (
     <PageShell withCartBar={false}>
       <TopBar title="Checkout" subtitle="Secure & simple" />
+
+      {verification && !verified && (
+        <section className="px-4 pt-4">
+          <div className="flex gap-3 rounded-2xl border border-accent/50 bg-accent/10 p-4">
+            <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-accent-foreground" />
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-foreground">
+                {verification.verification_status === "submitted"
+                  ? "Verification in review"
+                  : "Verify your account to order"}
+              </p>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                {verification.verification_status === "submitted"
+                  ? "Our team is checking your details. You'll be able to place orders as soon as it's approved."
+                  : "Share your mobile number, address and location once — approval usually takes a few minutes."}
+              </p>
+              <Button asChild size="sm" className="mt-3 rounded-xl">
+                <Link to="/verify-account">
+                  {verification.verification_status === "submitted"
+                    ? "Review my details"
+                    : "Start verification"}
+                </Link>
+              </Button>
+            </div>
+          </div>
+        </section>
+      )}
 
       <section className="px-4 pt-4">
         <FulfilmentMap />
@@ -270,11 +306,11 @@ function CheckoutPage() {
       <div className="p-4">
         <Button
           className="h-12 w-full rounded-xl text-base"
-          disabled={!addressId || items.length === 0 || orderMutation.isPending}
+          disabled={!addressId || items.length === 0 || orderMutation.isPending || !verified}
           onClick={() => orderMutation.mutate()}
         >
           {orderMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          Place order · {formatINR(totals.total)}
+          {verified ? `Place order · ${formatINR(totals.total)}` : "Awaiting account verification"}
         </Button>
       </div>
     </PageShell>

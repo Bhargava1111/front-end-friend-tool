@@ -209,7 +209,69 @@ function Home() {
       </Reveal>
 
 
-      <Reveal className="mt-8 px-4">
+      <Reveal className="mt-8 px-4 lg:px-0">
+        <div className="grid gap-4 rounded-3xl border border-border bg-card p-5 lg:grid-cols-2 lg:p-8">
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-widest text-primary">
+              Since 1994
+            </p>
+            <h2 className="mt-2 text-lg font-bold text-foreground lg:text-2xl">
+              A neighbourhood store, now at your doorstep
+            </h2>
+            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+              Three generations of the same family pick every sack of rice, press every bottle of
+              oil and pack every pooja kit. Nothing leaves the counter unless we would use it in our
+              own kitchen.
+            </p>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <Link
+                to="/about"
+                className="rounded-xl bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground"
+              >
+                Our story
+              </Link>
+              <Link
+                to="/stores"
+                className="rounded-xl border border-border px-4 py-2 text-xs font-semibold text-foreground"
+              >
+                Visit the store
+              </Link>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            {[
+              { k: "30+", v: "years serving families" },
+              { k: "4.8★", v: "average shopper rating" },
+              { k: "90 min", v: "typical delivery time" },
+              { k: "1,200+", v: "curated products" },
+            ].map((s) => (
+              <div key={s.k} className="rounded-2xl bg-secondary/50 p-4">
+                <p className="text-lg font-bold text-foreground">{s.k}</p>
+                <p className="mt-0.5 text-[11px] text-muted-foreground">{s.v}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </Reveal>
+
+      <Reveal className="mt-6 px-4 lg:px-0">
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-3xl bg-primary p-5 text-primary-foreground lg:p-8">
+          <div className="min-w-0">
+            <h2 className="text-base font-bold lg:text-xl">From the journal</h2>
+            <p className="mt-1 text-xs text-primary-foreground/80">
+              Ritual guides, oil explainers and pantry tips from our team.
+            </p>
+          </div>
+          <Link
+            to="/blogs"
+            className="rounded-xl bg-primary-foreground px-4 py-2 text-xs font-semibold text-primary"
+          >
+            Read articles
+          </Link>
+        </div>
+      </Reveal>
+
+      <Reveal className="mt-6 px-4 lg:px-0">
         <div className="rounded-3xl border border-accent/30 bg-gradient-to-br from-accent-soft to-accent-soft/40 p-5 text-center">
           <p className="text-sm font-semibold text-accent-foreground">
             Free delivery on orders above ₹499

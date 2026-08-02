@@ -603,3 +603,133 @@ navigation (search, categories, deals, offers, brands, coupons, stores, cart,
 account) above `lg`, keeps the bottom tab bar below `lg`, and widens product
 grids to 3–5 columns. List endpoints should therefore support a `page_size` up
 to 60 so desktop grids can fill without extra round-trips.
+
+---
+
+## 12. Shopper verification, reporting, delivery dates & blog
+
+This section documents the latest platform behaviour so a Django REST
+implementation stays feature-identical.
+
+### 12.1 Shopper verification gate
+
+`Profile` gains:
+
+| Field | Type | Notes |
+|---|---|---|
+| `verification_status` | choice | `pending` (default on signup), `submitted`, `verified`, `rejected` |
+| `address_text` | text | Full delivery address supplied by the shopper |
+| `pincode` | char(6) | |
+| `latitude` / `longitude` | float | Captured from the browser GPS at submission time |
+| `location_accuracy_m` | float | GPS accuracy reported by the device; used to flag imprecise pins |
+| `verification_note` | text | Admin note shown to the shopper on rejection |
+
+Endpoints:
+
+```
+GET  /api/v1/account/verification/     -> current status + submitted details
+POST /api/v1/account/verification/     -> { full_name, phone, address_text, pincode,
+                                            latitude, longitude, location_accuracy_m }
+                                          sets status = "submitted"
+```
+
+Rules:
+
+- A new user can browse, search, save items and build a cart while `pending`.
+- `POST /api/v1/orders/` MUST return `403 { "detail": "Your account is awaiting
+  verification." }` unless `verification_status == "verified"`.
+- Submitting again from `rejected` resets the status to `submitted`.
+- Accuracy above ~150 m should be surfaced to the admin as "low accuracy" so the
+  pin can be confirmed against the store's delivery radius before approval.
+
+Admin endpoints:
+
+```
+GET   /api/v1/admin/users/?status=submitted|verified|rejected|pending
+PATCH /api/v1/admin/users/{id}/verification/   { "status": "verified"|"rejected", "note": "…" }
+POST  /api/v1/admin/users/                      create a shopper (email, name, phone, password)
+DELETE /api/v1/admin/users/{id}/
+```
+
+Approving or rejecting a shopper writes a notification row for that user.
+
+### 12.2 Delivery dates on approval
+
+`Order` gains `delivery_date` (date, nullable).
+
+```
+PATCH /api/v1/admin/orders/{id}/delivery/   { "delivery_date": "2026-08-14", "status": "confirmed" }
+```
+
+- Setting a delivery date while approving is the normal admin flow: the same
+  call may move `status` from `pending` to `confirmed`.
+- Each change appends an order notification ("Delivery scheduled for …").
+- The shopper's order-tracking screen renders `delivery_date` above the status
+  timeline.
+
+### 12.3 Sales & revenue reporting
+
+```
+GET /api/v1/admin/reports/sales/?from=YYYY-MM-DD&to=YYYY-MM-DD&granularity=day|week|month
+```
+
+Response:
+
+```json
+{
+  "totals": { "revenue": 128400, "orders": 212, "units": 918, "avg_order_value": 605.6 },
+  "buckets": [ { "bucket": "2026-07-01", "revenue": 8200, "orders": 14, "units": 61 } ],
+  "status_counts": [ { "status": "delivered", "count": 168 } ],
+  "top_products": [ { "name": "Cold-pressed sesame oil 1 L", "units": 91, "revenue": 27300 } ]
+}
+```
+
+- Cancelled orders are excluded from revenue but reported in `status_counts`.
+- Buckets are truncated server-side (`TruncDay` / `TruncWeek` / `TruncMonth`)
+  and returned zero-filled so charts have no gaps.
+- CSV export is generated client-side from this payload; if a server export is
+  preferred, expose the same endpoint with `?format=csv` returning
+  `text/csv` with the bucket rows.
+
+### 12.4 Single-store fulfilment
+
+The business now operates one physical store. `StoreLocation` keeps its shape,
+but only one row is `is_active = true`, and all delivery-radius checks resolve
+against that row. Keep the list endpoint (`GET /api/v1/stores/`) so the map and
+locator continue to work if more branches open later.
+
+Location capture uses `enableHighAccuracy: true` with a fresh fix
+(`maximumAge` near zero) and stores the reported accuracy, so both the shopper
+and the admin can tell a rooftop-accurate pin from a network-tower guess.
+
+### 12.5 Blog / journal
+
+`BlogPost` model:
+
+| Field | Type |
+|---|---|
+| `title`, `slug` (unique), `excerpt`, `body` | text |
+| `cover_url` | text (media URL) |
+| `author` | text |
+| `tags` | array of text |
+| `read_minutes` | int |
+| `is_published` | bool |
+| `published_at` | datetime, nullable |
+
+```
+GET  /api/v1/blog/                 published posts, newest first
+GET  /api/v1/blog/{slug}/          post + 2 related posts
+GET  /api/v1/admin/blog/           all posts incl. drafts
+POST /api/v1/admin/blog/           create or upsert by slug
+PATCH/DELETE /api/v1/admin/blog/{id}/
+```
+
+Public reads must exclude drafts. Admin reads include them. Cover images are
+uploaded through the existing media upload endpoint (section 11).
+
+### 12.6 Storefront landing content
+
+No API impact: the home page adds a store-story block with headline stats, a
+journal call-to-action, and every storefront page now ends with a shared footer
+(delivery promises, navigation links, store address and phone). Admin pages use
+a collapsible sidebar on desktop and a drawer on mobile.

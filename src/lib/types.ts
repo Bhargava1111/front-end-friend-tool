@@ -102,6 +102,7 @@ export type Order = {
   coupon_code?: string | null;
   payment_method?: string | null;
   delivery_slot?: string | null;
+  delivery_date?: string | null;
   total: number;
   recipient_name: string;
   phone: string;
