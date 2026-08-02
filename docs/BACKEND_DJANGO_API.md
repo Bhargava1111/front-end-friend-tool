@@ -548,9 +548,16 @@ matching array index.
 `GET /api/v1/banners/?placement=home` may now return **any number** of active
 banners (10+ is expected). Ordering is `sort_order, created_at`. The client
 renders every banner in one paginating hero carousel with swipe, desktop arrows
-and a scrollable dot strip; no server-side cap. Placements remain
-`home | offers | coupons | brands`, with optional `brand_id` / `coupon_id`
-attachment.
+and a scrollable dot strip; no server-side cap. Placements are
+`home | offers | coupons | brands | combos`, with optional `brand_id` /
+`coupon_id` attachment.
+
+`placement=combos` powers the two-up "combo" cards on the home page and offers
+page (e.g. *Pooja Combo*, *Monthly Staples*). Each row uses `title`, `subtitle`,
+`image_url` (optional — when empty the client falls back to a gradient card),
+`link_slug` (category slug the card opens) and `sort_order`. Any number of
+combos may be returned; the client lays them out 2-up on mobile and 4-up on
+desktop.
 
 Auto-scrolling product rails have been removed app-wide; rails are manual-scroll
 only, so no `auto_scroll` flag is needed on any response.
