@@ -78,6 +78,17 @@ const groups = [
   },
 ] as const;
 
+const FLAT_LINKS: Array<{ to: string; label: string; exact?: boolean }> = groups.flatMap(
+  (group) => group.links.map((l) => ({ to: l.to, label: l.label, exact: "exact" in l ? true : false })),
+);
+
+function currentLabel(pathname: string) {
+  const matches = FLAT_LINKS.filter((l) =>
+    l.exact ? pathname === l.to : pathname.startsWith(l.to),
+  );
+  return matches[matches.length - 1]?.label ?? "Admin";
+}
+
 function NavList({ pathname, onNavigate }: { pathname: string; onNavigate?: () => void }) {
   return (
     <nav className="space-y-5">
