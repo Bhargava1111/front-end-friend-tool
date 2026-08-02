@@ -197,11 +197,9 @@ function AdminLayout() {
 
             <div className="min-w-0">
               <p className="truncate text-sm font-semibold text-foreground">
-                {groups
-                  .flatMap((g) => g.links)
-                  .filter((l) => ("exact" in l && l.exact ? pathname === l.to : pathname.startsWith(l.to)))
-                  .slice(-1)[0]?.label ?? "Admin"}
+                {currentLabel(pathname)}
               </p>
+
               <p className="truncate text-[11px] text-muted-foreground">Manage your store</p>
             </div>
 
