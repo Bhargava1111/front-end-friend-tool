@@ -134,7 +134,7 @@ function DealsPage() {
       {list.length === 0 ? (
         <EmptyState icon={<Zap className="h-6 w-6" />} title="No deals here yet" description="Check back soon for fresh offers." />
       ) : (
-        <div className="grid grid-cols-2 gap-3 p-4">
+        <div className="grid grid-cols-2 gap-3 p-4 sm:grid-cols-3 lg:grid-cols-5 lg:gap-4">
           {list.map((p) => (
             <ProductCard key={p.id} product={p} />
           ))}

@@ -229,7 +229,7 @@ function SearchPage() {
       ) : (
         <>
           <p className="px-4 pt-4 text-xs text-muted-foreground">{results.length} results</p>
-          <div className="grid grid-cols-2 gap-3 px-4 pt-2">
+          <div className="grid grid-cols-2 gap-3 px-4 pt-2 sm:grid-cols-3 lg:grid-cols-5 lg:gap-4">
             {results.map((p, i) => (
               <Reveal key={p.id} delay={Math.min(i, 6) * 0.03}>
                 <ProductCard product={p} />

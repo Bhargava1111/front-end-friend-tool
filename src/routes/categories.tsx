@@ -47,7 +47,7 @@ function CategoriesPage() {
         </p>
       </header>
 
-      <div className="grid grid-cols-2 gap-3 px-4 pt-5">
+      <div className="grid grid-cols-2 gap-3 px-4 pt-5 sm:grid-cols-3 lg:grid-cols-5 lg:gap-4">
         {categories.map((c) => (
           <Link
             key={c.id}

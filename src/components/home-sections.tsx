@@ -154,7 +154,7 @@ export function CouponStrip() {
 
 export function OfferCards() {
   return (
-    <Reveal className="mt-7 grid grid-cols-2 gap-3 px-4">
+    <Reveal className="mt-7 grid grid-cols-2 gap-3 px-4 lg:grid-cols-4 lg:gap-4">
       {OFFER_CARDS.map((o) => (
         <Link
           key={o.title}
@@ -428,7 +428,7 @@ export function ShopByNeed({ categories }: { categories: Array<{ id: string; nam
         <h2 className="text-base font-bold text-foreground">Shop by need</h2>
         <SeeAll to="/categories" />
       </div>
-      <div className="mt-3 grid grid-cols-3 gap-3 px-4">
+      <div className="mt-3 grid grid-cols-3 gap-3 px-4 sm:grid-cols-4 lg:grid-cols-6">
         {tiles.map((c) => (
           <Link
             key={c.id}
@@ -460,7 +460,7 @@ export function ServicePromises() {
     { icon: Leaf, label: "Farm fresh" },
   ];
   return (
-    <Reveal className="mt-7 grid grid-cols-4 gap-2 px-4">
+    <Reveal className="mt-7 grid grid-cols-4 gap-2 px-4 sm:grid-cols-6 lg:grid-cols-8">
       {items.map((i) => (
         <div
           key={i.label}
