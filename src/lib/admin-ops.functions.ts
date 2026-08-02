@@ -3,10 +3,20 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 /* -------------------------- shared admin guard ------------------------ */
 
-async function assertAdmin(context: { supabase: ReturnType<typeof Object> } & {
-  supabase: any;
+type AdminContext = {
+  supabase: {
+    from: (table: "user_roles") => {
+      select: (cols: string) => {
+        eq: (col: string, val: string) => {
+          eq: (col: string, val: string) => { maybeSingle: () => Promise<{ data: unknown }> };
+        };
+      };
+    };
+  };
   userId: string;
-}) {
+};
+
+async function assertAdmin(context: AdminContext) {
   const { data } = await context.supabase
     .from("user_roles")
     .select("role")
@@ -15,6 +25,7 @@ async function assertAdmin(context: { supabase: ReturnType<typeof Object> } & {
     .maybeSingle();
   if (!data) throw new Error("Admins only");
 }
+
 
 /* ----------------------------- SALES REPORT --------------------------- */
 
