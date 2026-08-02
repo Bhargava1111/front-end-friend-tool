@@ -1,0 +1,2 @@
+ALTER TABLE public.banners DROP CONSTRAINT banners_placement_check;
+ALTER TABLE public.banners ADD CONSTRAINT banners_placement_check CHECK (placement = ANY (ARRAY['home'::text, 'offers'::text, 'coupons'::text, 'brands'::text, 'combos'::text]));
