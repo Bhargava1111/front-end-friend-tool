@@ -105,10 +105,11 @@ export function CouponStrip() {
         code: c.code,
         title: c.title,
         description: c.description ?? "Apply at checkout",
+        banner: c.banner_url ?? null,
         discount: couponLabel(c),
         minOrder: Number(c.min_order),
       }))
-    : COUPONS;
+    : COUPONS.map((c) => ({ ...c, banner: null as string | null }));
 
   return (
     <Reveal className="mt-7">
@@ -122,8 +123,17 @@ export function CouponStrip() {
         {list.map((c) => (
           <div
             key={c.code}
-            className="w-[230px] shrink-0 rounded-2xl border border-dashed border-accent/60 bg-accent-soft/70 p-4"
+            className="w-[230px] shrink-0 overflow-hidden rounded-2xl border border-dashed border-accent/60 bg-accent-soft/70 sm:w-[268px]"
           >
+            {c.banner && (
+              <img
+                src={c.banner}
+                alt={c.title}
+                loading="lazy"
+                className="h-[86px] w-full object-cover"
+              />
+            )}
+            <div className="p-4">
             <p className="text-[11px] font-bold uppercase tracking-wide text-accent-foreground">
               {c.discount}
             </p>
@@ -145,6 +155,7 @@ export function CouponStrip() {
                 {c.code}
               </button>
             </div>
+            </div>
           </div>
         ))}
       </div>
@@ -154,7 +165,7 @@ export function CouponStrip() {
 
 export function OfferCards() {
   return (
-    <Reveal className="mt-7 grid grid-cols-2 gap-3 px-4">
+    <Reveal className="mt-7 grid grid-cols-2 gap-3 px-4 lg:grid-cols-4 lg:gap-4">
       {OFFER_CARDS.map((o) => (
         <Link
           key={o.title}
@@ -188,38 +199,60 @@ export function BrandRail() {
         name: b.name,
         tagline: b.tagline ?? "Trusted brand",
         logo: b.logo_url,
+        banner: b.banner_url,
         initials: b.name.slice(0, 2).toUpperCase(),
       }))
-    : BRANDS.map((b) => ({ key: b.name, name: b.name, tagline: b.tagline, logo: null, initials: b.initials }));
-  const brandScrollRef = useAutoScroll<HTMLDivElement>(list.length > 3);
+    : BRANDS.map((b) => ({
+        key: b.name,
+        name: b.name,
+        tagline: b.tagline,
+        logo: null,
+        banner: null,
+        initials: b.initials,
+      }));
 
   return (
     <Reveal className="mt-7">
       <div className="flex items-center justify-between px-4">
-        <h2 className="text-base font-bold text-foreground">Featured brands</h2>
+        <h2 className="text-base font-bold text-foreground sm:text-lg">Featured brands</h2>
         <SeeAll to="/brands" />
       </div>
-      <div ref={brandScrollRef} className="no-scrollbar mt-3 flex gap-3 overflow-x-auto px-4 pb-1">
+      <div className="no-scrollbar mt-3 flex gap-3 overflow-x-auto px-4 pb-1 sm:gap-4">
         {list.map((b) => (
           <Link
             key={b.key}
             to="/brands"
-            className="flex w-[128px] shrink-0 flex-col items-center gap-2 rounded-2xl border border-border bg-card p-3 text-center card-elevated transition-transform active:scale-[0.97]"
+            className="relative flex w-[164px] shrink-0 flex-col overflow-hidden rounded-2xl border border-border bg-card text-center card-elevated transition-transform active:scale-[0.97] sm:w-[200px]"
           >
-            {b.logo ? (
-              <img
-                src={b.logo}
-                alt={b.name}
-                loading="lazy"
-                className="h-11 w-11 rounded-full object-cover"
-              />
-            ) : (
-              <span className="grid h-11 w-11 place-items-center rounded-full bg-primary-soft text-sm font-bold text-primary">
-                {b.initials}
-              </span>
-            )}
-            <span className="line-clamp-1 text-xs font-semibold text-foreground">{b.name}</span>
-            <span className="line-clamp-1 text-[10px] text-muted-foreground">{b.tagline}</span>
+            <span className="relative block h-[86px] w-full bg-secondary sm:h-[104px]">
+              {b.banner ? (
+                <img
+                  src={b.banner}
+                  alt={`${b.name} offers`}
+                  loading="lazy"
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <span className="block h-full w-full bg-gradient-to-br from-primary to-primary/70" />
+              )}
+              <span className="absolute inset-0 bg-gradient-to-t from-foreground/70 to-transparent" />
+            </span>
+            <span className="-mt-6 flex flex-col items-center gap-1.5 px-3 pb-3">
+              {b.logo ? (
+                <img
+                  src={b.logo}
+                  alt={b.name}
+                  loading="lazy"
+                  className="h-11 w-11 rounded-full border-2 border-card object-cover"
+                />
+              ) : (
+                <span className="grid h-11 w-11 place-items-center rounded-full border-2 border-card bg-primary-soft text-sm font-bold text-primary">
+                  {b.initials}
+                </span>
+              )}
+              <span className="line-clamp-1 text-xs font-semibold text-foreground">{b.name}</span>
+              <span className="line-clamp-1 text-[10px] text-muted-foreground">{b.tagline}</span>
+            </span>
           </Link>
         ))}
       </div>
@@ -428,7 +461,7 @@ export function ShopByNeed({ categories }: { categories: Array<{ id: string; nam
         <h2 className="text-base font-bold text-foreground">Shop by need</h2>
         <SeeAll to="/categories" />
       </div>
-      <div className="mt-3 grid grid-cols-3 gap-3 px-4">
+      <div className="mt-3 grid grid-cols-3 gap-3 px-4 sm:grid-cols-4 lg:grid-cols-6">
         {tiles.map((c) => (
           <Link
             key={c.id}
@@ -460,7 +493,7 @@ export function ServicePromises() {
     { icon: Leaf, label: "Farm fresh" },
   ];
   return (
-    <Reveal className="mt-7 grid grid-cols-4 gap-2 px-4">
+    <Reveal className="mt-7 grid grid-cols-4 gap-2 px-4 sm:grid-cols-6 lg:grid-cols-8">
       {items.map((i) => (
         <div
           key={i.label}

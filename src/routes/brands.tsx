@@ -84,7 +84,7 @@ function BrandsPage() {
                   </div>
                 </div>
                 {b.products.length > 0 ? (
-                  <ProductRail title={`From ${b.name}`} products={b.products} autoScroll={false} />
+                  <ProductRail title={`From ${b.name}`} products={b.products} />
                 ) : (
                   <p className="px-4 py-5 text-xs text-muted-foreground">
                     Products from this brand are coming soon.

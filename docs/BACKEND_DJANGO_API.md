@@ -499,3 +499,107 @@ Latest entries:
   coupon + brand data on the home screen, admin customer detail view.
 - Earlier — product variants (pack sizes), multi-image galleries, filters,
   reviews, returns, notifications, store locations.
+
+---
+
+## 11. Media uploads, responsive shell & OTP auth (update — Aug 2026)
+
+### 11.1 Media library
+
+The frontend now uploads all imagery (banners, brand logos/banners, coupon
+banners, category images, product galleries and pack/variant images) instead of
+pasting URLs. On Lovable Cloud this uses a **private** `media` storage bucket and
+stores a long-lived signed URL on the row. A Django backend should mirror this
+with a single upload endpoint plus object storage (S3 / MinIO):
+
+```
+POST /api/v1/media/                      (admin only, multipart)
+  form-data: file=<binary>, folder=banners|brands|coupons|categories|products|variants
+  201 -> { "id": uuid, "url": "https://cdn…/banners/oils-1723.jpg",
+           "path": "banners/oils-1723.jpg", "content_type": "image/jpeg", "size": 148213 }
+
+DELETE /api/v1/media/<id>/               (admin only)
+```
+
+Rules enforced on both client and server:
+
+- Allowed types: `image/png`, `image/jpeg`, `image/webp`, `image/avif`, `image/gif`, `image/svg+xml`
+- Max size: 8 MB per file
+- Filenames are slugified and suffixed with a timestamp + random token
+- `Cache-Control: public, max-age=31536000, immutable`
+
+Affected write payloads (all accept an absolute URL string):
+
+| Model | Fields |
+| --- | --- |
+| `Banner` | `image_url` |
+| `Brand` | `logo_url`, `banner_url` |
+| `Coupon` | `banner_url` |
+| `Category` | `image_url` |
+| `Product` | `image_url`, `video_url`, `images[]` (ordered, first = main) |
+| `ProductVariant` | `image_url` |
+
+`Product.images[]` replaces the old newline-delimited text field: send an ordered
+array of URLs; the backend rewrites `product_images` rows with `sort_order`
+matching array index.
+
+### 11.2 Banner carousel behaviour
+
+`GET /api/v1/banners/?placement=home` may now return **any number** of active
+banners (10+ is expected). Ordering is `sort_order, created_at`. The client
+renders every banner in one paginating hero carousel with swipe, desktop arrows
+and a scrollable dot strip; no server-side cap. Placements remain
+`home | offers | coupons | brands`, with optional `brand_id` / `coupon_id`
+attachment.
+
+Auto-scrolling product rails have been removed app-wide; rails are manual-scroll
+only, so no `auto_scroll` flag is needed on any response.
+
+### 11.3 Phone OTP + Email OTP authentication
+
+Three sign-in methods are exposed in the UI: **Mobile OTP**, **Email OTP** and
+**Password** (plus Google OAuth). Register and sign-in share the same endpoints;
+the `mode` only controls whether a missing account is created.
+
+```
+POST /api/v1/auth/otp/request/
+  { "channel": "phone" | "email", "identifier": "+919876543210", "full_name": "optional" }
+  200 -> { "ok": true, "expires_at": iso8601, "cooldown_seconds": 30,
+           "preview_code": "482913"   # non-production hosts only
+         }
+  429 -> { "ok": false, "detail": "Please wait 18s before requesting another code." }
+
+POST /api/v1/auth/otp/verify/
+  { "channel": "phone" | "email", "identifier": "+919876543210",
+    "code": "482913", "full_name": "optional" }
+  200 -> { "access": jwt, "refresh": jwt, "is_new": false, "user": {...} }
+  400 -> { "ok": false, "detail": "That code is incorrect.", "attempts_remaining": 3 }
+```
+
+Server-side policy (matches the implementation):
+
+- Code: 6 random digits, stored only as SHA-256 hash
+- TTL: 300 s · resend cooldown: 30 s · max verify attempts: 5
+- Requesting a new code consumes all live codes for that identifier + purpose
+- Phone numbers are normalised to `+91XXXXXXXXXX` (last 10 digits)
+- Phone-only accounts get a deterministic internal email `p<10digits>@phone.mnxstore.in`
+  so a single user table serves both channels
+- The plaintext code is returned as `preview_code` **only** on localhost/preview
+  hosts; production requires a real SMS/email provider
+
+Password reset uses:
+
+```
+POST /api/v1/auth/password/reset/          { "email": "…" }   -> emails a link to /reset-password
+POST /api/v1/auth/password/reset/confirm/  { "token": "…", "password": "…" }
+```
+
+The frontend hosts the matching `/reset-password` page.
+
+### 11.4 Responsive shell
+
+No API impact, recorded for parity: the storefront now renders a desktop top
+navigation (search, categories, deals, offers, brands, coupons, stores, cart,
+account) above `lg`, keeps the bottom tab bar below `lg`, and widens product
+grids to 3–5 columns. List endpoints should therefore support a `page_size` up
+to 60 so desktop grids can fill without extra round-trips.

@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { Link, useRouter } from "@tanstack/react-router";
 import { ChevronLeft } from "lucide-react";
 import { BottomNav } from "./bottom-nav";
+import { DesktopHeader } from "./desktop-header";
 import { BackToTop, StickyCartBar } from "./cart-pill";
 import { cn } from "@/lib/utils";
 
@@ -18,14 +19,27 @@ export function PageShell({
 }) {
   return (
     <div className="min-h-screen bg-background">
-      <div className={cn("mx-auto w-full max-w-lg", withNav && "pb-36", className)}>{children}</div>
+      {withNav && <DesktopHeader />}
+      <div
+        className={cn(
+          "mx-auto w-full max-w-lg lg:max-w-7xl lg:px-6",
+          withNav && "pb-36 lg:pb-16",
+          className,
+        )}
+      >
+        {children}
+      </div>
       {withNav && withCartBar && (
         <>
           <StickyCartBar />
           <BackToTop />
         </>
       )}
-      {withNav && <BottomNav />}
+      {withNav && (
+        <div className="lg:hidden">
+          <BottomNav />
+        </div>
+      )}
     </div>
   );
 }
@@ -44,7 +58,7 @@ export function TopBar({
 }) {
   const router = useRouter();
   return (
-    <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-border bg-background/95 px-4 py-3 backdrop-blur-md">
+    <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-border bg-background/95 px-4 py-3 backdrop-blur-md lg:static lg:rounded-b-3xl lg:border-x lg:px-6 lg:py-5">
       {backTo ? (
         <Link
           to={backTo}
@@ -64,8 +78,10 @@ export function TopBar({
         </button>
       )}
       <div className="min-w-0 flex-1">
-        <h1 className="truncate text-base font-semibold text-foreground">{title}</h1>
-        {subtitle && <p className="truncate text-xs text-muted-foreground">{subtitle}</p>}
+        <h1 className="truncate text-base font-semibold text-foreground lg:text-2xl">{title}</h1>
+        {subtitle && (
+          <p className="truncate text-xs text-muted-foreground lg:text-sm">{subtitle}</p>
+        )}
       </div>
       {action}
     </header>

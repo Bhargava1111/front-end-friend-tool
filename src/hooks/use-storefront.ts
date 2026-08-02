@@ -5,7 +5,7 @@ import { DEFAULT_SETTINGS, type CouponRow, type StoreSettings } from "@/lib/comm
 
 export type StorefrontMeta = {
   settings: StoreSettings;
-  brands: Array<{ id: string; name: string; slug: string; tagline: string | null; logo_url: string | null }>;
+  brands: Array<{ id: string; name: string; slug: string; tagline: string | null; logo_url: string | null; banner_url: string | null }>;
   coupons: CouponRow[];
 };
 
