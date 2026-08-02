@@ -25,6 +25,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { formatINR, formatDate } from "@/lib/format";
+import { downloadInvoicePdf } from "@/lib/invoice-pdf";
+
 import { STATUS_STYLES, STATUS_STEPS } from "@/lib/order-status";
 import type { Order } from "@/lib/types";
 import { cn } from "@/lib/utils";
