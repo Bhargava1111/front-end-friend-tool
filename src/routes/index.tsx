@@ -93,7 +93,7 @@ function Home() {
         />
         <div className="relative flex items-start justify-between gap-3">
           <LocationBar className="min-w-0 flex-1" />
-          <div className="flex shrink-0 items-center gap-2">
+          <div className="flex shrink-0 items-center gap-2 lg:hidden">
             <Link
               to="/stores"
               aria-label="Store locator"
@@ -120,7 +120,7 @@ function Home() {
         <FadeIn delay={0.12}>
           <Link
             to="/search"
-            className="mt-4 flex items-center gap-2 rounded-2xl border border-border/40 bg-card/90 px-4 py-3 text-sm text-muted-foreground shadow-lg backdrop-blur lg:max-w-xl"
+            className="mt-4 flex items-center gap-2 rounded-2xl border border-border/40 bg-card/90 px-4 py-3 text-sm text-muted-foreground shadow-lg backdrop-blur lg:hidden"
           >
             <Search className="h-4 w-4" />
             Search for rice, ghee, agarbatti…
