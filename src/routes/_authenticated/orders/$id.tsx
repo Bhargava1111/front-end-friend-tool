@@ -25,6 +25,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { formatINR, formatDate } from "@/lib/format";
+import { downloadInvoicePdf } from "@/lib/invoice-pdf";
+
 import { STATUS_STYLES, STATUS_STEPS } from "@/lib/order-status";
 import type { Order } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -110,39 +112,15 @@ function OrderDetailPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
-  function downloadInvoice() {
+  async function downloadInvoice() {
     if (!order) return;
-    const rows = (order.order_items ?? [])
-      .map(
-        (i) =>
-          `${i.product_name}${i.product_weight ? ` (${i.product_weight})` : ""} x${i.quantity} — ${formatINR(i.line_total)}`,
-      )
-      .join("\n");
-    const text = [
-      "SRI MAHALAKSHMI STORES",
-      `Invoice for ${order.order_number}`,
-      `Date: ${formatDate(order.created_at)}`,
-      "",
-      rows,
-      "",
-      `Subtotal: ${formatINR(order.subtotal)}`,
-      order.discount ? `Discount: -${formatINR(order.discount)}` : "",
-      `Delivery: ${Number(order.delivery_fee) === 0 ? "FREE" : formatINR(order.delivery_fee)}`,
-      order.tax ? `Taxes: ${formatINR(order.tax)}` : "",
-      `Total: ${formatINR(order.total)}`,
-      "",
-      `Deliver to: ${order.recipient_name}, ${order.address_text}, ${order.phone}`,
-    ]
-      .filter(Boolean)
-      .join("\n");
-
-    const url = URL.createObjectURL(new Blob([text], { type: "text/plain" }));
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${order.order_number}-invoice.txt`;
-    a.click();
-    URL.revokeObjectURL(url);
+    try {
+      await downloadInvoicePdf(order);
+    } catch {
+      toast.error("Could not generate the invoice PDF");
+    }
   }
+
 
   if (isLoading) {
     return (
