@@ -78,14 +78,15 @@ function Home() {
   );
   const trending = data.bestSelling.length ? data.bestSelling : data.newest;
   const categoryScrollRef = useAutoScroll<HTMLDivElement>(data.categories.length > 3);
-  const heroBanners = data.banners.slice(0, 3);
+  // All home banners feed the hero carousel — it paginates cleanly past 10 slides.
+  const heroBanners = data.banners;
   const offerBanners = data.banners.length > 3 ? data.banners.slice(3) : data.banners;
 
 
 
   return (
     <PageShell>
-      <header className="relative overflow-hidden rounded-b-[2rem] bg-gradient-to-br from-primary via-primary to-primary/85 px-4 pb-7 pt-5 text-primary-foreground">
+      <header className="relative overflow-hidden rounded-b-[2rem] bg-gradient-to-br from-primary via-primary to-primary/85 px-4 pb-7 pt-5 text-primary-foreground lg:rounded-[2rem] lg:px-8 lg:pb-9 lg:pt-8">
         <div
           aria-hidden
           className="pointer-events-none absolute -right-16 -top-20 h-56 w-56 rounded-full bg-accent/25 blur-3xl"
@@ -109,7 +110,7 @@ function Home() {
           <span className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-primary-foreground/15 px-3 py-1 text-[11px] font-medium">
             <Sparkles className="h-3 w-3 text-accent" /> Delivery in 60 minutes
           </span>
-          <h1 className="mt-2.5 text-[26px] font-bold leading-[1.15] tracking-tight text-balance-tight">
+          <h1 className="mt-2.5 text-[26px] font-bold leading-[1.15] tracking-tight text-balance-tight lg:text-4xl">
             Groceries &amp; pooja essentials,
             <br />
             delivered fresh.
@@ -119,7 +120,7 @@ function Home() {
         <FadeIn delay={0.12}>
           <Link
             to="/search"
-            className="mt-4 flex items-center gap-2 rounded-2xl border border-border/40 bg-card/90 px-4 py-3 text-sm text-muted-foreground shadow-lg backdrop-blur"
+            className="mt-4 flex items-center gap-2 rounded-2xl border border-border/40 bg-card/90 px-4 py-3 text-sm text-muted-foreground shadow-lg backdrop-blur lg:max-w-xl"
           >
             <Search className="h-4 w-4" />
             Search for rice, ghee, agarbatti…
