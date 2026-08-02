@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ImageUploadField } from "@/components/image-upload";
 
 export const Route = createFileRoute("/admin/categories")({
   head: () => ({
@@ -213,14 +214,13 @@ function AdminCategories() {
                   />
                 </div>
               </div>
-              <div>
-                <Label htmlFor="c-image">Image URL</Label>
-                <Input
-                  id="c-image"
-                  value={form.image_url}
-                  onChange={(e) => setForm({ ...form, image_url: e.target.value })}
-                />
-              </div>
+              <ImageUploadField
+                label="Category image"
+                folder="categories"
+                aspect="aspect-square max-w-[200px]"
+                value={form.image_url}
+                onChange={(url) => setForm({ ...form, image_url: url })}
+              />
               <div>
                 <Label htmlFor="c-desc">Description</Label>
                 <Textarea

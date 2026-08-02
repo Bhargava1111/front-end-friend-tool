@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/skeletons";
 import { ErrorState } from "@/components/state-blocks";
+import { ImageUploadField } from "@/components/image-upload";
 
 export const Route = createFileRoute("/admin/brands")({
   component: AdminBrandsPage,
@@ -146,26 +147,20 @@ function AdminBrandsPage() {
                 <Label htmlFor="b-tag">Tagline</Label>
                 <Input id="b-tag" value={form.tagline} onChange={(e) => setForm({ ...form, tagline: e.target.value })} />
               </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="b-logo">Logo URL</Label>
-                <Input id="b-logo" value={form.logo_url} onChange={(e) => setForm({ ...form, logo_url: e.target.value })} />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="b-banner">Banner image URL</Label>
-                <Input
-                  id="b-banner"
-                  value={form.banner_url}
-                  placeholder="https://…"
-                  onChange={(e) => setForm({ ...form, banner_url: e.target.value })}
-                />
-                {form.banner_url && (
-                  <img
-                    src={form.banner_url}
-                    alt="Brand banner preview"
-                    className="aspect-[16/7] w-full rounded-xl object-cover"
-                  />
-                )}
-              </div>
+              <ImageUploadField
+                label="Brand logo"
+                folder="brands"
+                aspect="aspect-square max-w-[160px]"
+                value={form.logo_url}
+                onChange={(url) => setForm({ ...form, logo_url: url })}
+              />
+              <ImageUploadField
+                label="Brand banner"
+                folder="brands"
+                value={form.banner_url}
+                onChange={(url) => setForm({ ...form, banner_url: url })}
+                hint="Shown behind the brand on the Featured brands rail and brands page."
+              />
               <div className="grid grid-cols-2 items-end gap-3">
                 <div className="space-y-1.5">
                   <Label htmlFor="b-sort">Sort order</Label>

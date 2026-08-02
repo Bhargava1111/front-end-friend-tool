@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ImageUploadField } from "@/components/image-upload";
 import {
   Select,
   SelectContent,
@@ -284,22 +285,14 @@ function AdminBanners() {
                   onChange={(e) => setForm({ ...form, subtitle: e.target.value })}
                 />
               </div>
-              <div>
-                <Label htmlFor="b-image">Image URL</Label>
-                <Input
-                  id="b-image"
-                  required
-                  value={form.image_url}
-                  onChange={(e) => setForm({ ...form, image_url: e.target.value })}
-                />
-              </div>
-              {form.image_url && (
-                <img
-                  src={form.image_url}
-                  alt="Banner preview"
-                  className="aspect-[16/7] w-full rounded-xl object-cover"
-                />
-              )}
+              <ImageUploadField
+                label="Banner image"
+                folder="banners"
+                required
+                value={form.image_url}
+                onChange={(url) => setForm({ ...form, image_url: url })}
+                hint="Wide images work best (16:7). Upload as many banners as you like — the carousel paginates."
+              />
               <div>
                 <Label>Shown on</Label>
                 <Select

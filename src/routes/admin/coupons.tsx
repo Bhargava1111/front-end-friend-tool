@@ -26,6 +26,7 @@ import {
 import { Skeleton } from "@/components/skeletons";
 import { ErrorState } from "@/components/state-blocks";
 import { formatINR } from "@/lib/format";
+import { ImageUploadField } from "@/components/image-upload";
 
 export const Route = createFileRoute("/admin/coupons")({
   component: AdminCouponsPage,
@@ -218,22 +219,13 @@ function AdminCouponsPage() {
                   />
                 </div>
               </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="c-banner">Banner image URL</Label>
-                <Input
-                  id="c-banner"
-                  value={form.banner_url}
-                  placeholder="https://…"
-                  onChange={(e) => setForm({ ...form, banner_url: e.target.value })}
-                />
-                {form.banner_url && (
-                  <img
-                    src={form.banner_url}
-                    alt="Coupon banner preview"
-                    className="aspect-[16/7] w-full rounded-xl object-cover"
-                  />
-                )}
-              </div>
+              <ImageUploadField
+                label="Coupon banner"
+                folder="coupons"
+                value={form.banner_url}
+                onChange={(url) => setForm({ ...form, banner_url: url })}
+                hint="Appears on the coupon card in “Coupons for you” and the coupons page."
+              />
               <div className="flex items-center gap-2">
                 <Switch
                   id="c-active"
