@@ -35,7 +35,7 @@ export const Route = createFileRoute("/admin/reports")({
       { name: "twitter:card", content: "summary" },
     ],
   }),
-  component: AdminReports;
+  component: AdminReports,
 });
 
 function isoDaysAgo(days: number) {
