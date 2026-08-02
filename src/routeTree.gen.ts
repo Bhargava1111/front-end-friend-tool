@@ -36,6 +36,7 @@ import { Route as ProductSlugRouteImport } from './routes/product.$slug'
 import { Route as DevLoginTestRouteImport } from './routes/dev/login-test'
 import { Route as CategorySlugRouteImport } from './routes/category.$slug'
 import { Route as BlogsSlugRouteImport } from './routes/blogs.$slug'
+import { Route as AdminUsersRouteImport } from './routes/admin/users'
 import { Route as AdminStoresRouteImport } from './routes/admin/stores'
 import { Route as AdminSettingsRouteImport } from './routes/admin/settings'
 import { Route as AdminReviewsRouteImport } from './routes/admin/reviews'
@@ -196,6 +197,11 @@ const BlogsSlugRoute = BlogsSlugRouteImport.update({
   id: '/blogs/$slug',
   path: '/blogs/$slug',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AdminUsersRoute = AdminUsersRouteImport.update({
+  id: '/users',
+  path: '/users',
+  getParentRoute: () => AdminRouteRoute,
 } as any)
 const AdminStoresRoute = AdminStoresRouteImport.update({
   id: '/stores',
@@ -374,6 +380,7 @@ export interface FileRoutesByFullPath {
   '/admin/reviews': typeof AdminReviewsRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/stores': typeof AdminStoresRoute
+  '/admin/users': typeof AdminUsersRoute
   '/blogs/$slug': typeof BlogsSlugRoute
   '/category/$slug': typeof CategorySlugRoute
   '/dev/login-test': typeof DevLoginTestRoute
@@ -427,6 +434,7 @@ export interface FileRoutesByTo {
   '/admin/reviews': typeof AdminReviewsRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/stores': typeof AdminStoresRoute
+  '/admin/users': typeof AdminUsersRoute
   '/blogs/$slug': typeof BlogsSlugRoute
   '/category/$slug': typeof CategorySlugRoute
   '/dev/login-test': typeof DevLoginTestRoute
@@ -483,6 +491,7 @@ export interface FileRoutesById {
   '/admin/reviews': typeof AdminReviewsRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/stores': typeof AdminStoresRoute
+  '/admin/users': typeof AdminUsersRoute
   '/blogs/$slug': typeof BlogsSlugRoute
   '/category/$slug': typeof CategorySlugRoute
   '/dev/login-test': typeof DevLoginTestRoute
@@ -539,6 +548,7 @@ export interface FileRouteTypes {
     | '/admin/reviews'
     | '/admin/settings'
     | '/admin/stores'
+    | '/admin/users'
     | '/blogs/$slug'
     | '/category/$slug'
     | '/dev/login-test'
@@ -592,6 +602,7 @@ export interface FileRouteTypes {
     | '/admin/reviews'
     | '/admin/settings'
     | '/admin/stores'
+    | '/admin/users'
     | '/blogs/$slug'
     | '/category/$slug'
     | '/dev/login-test'
@@ -647,6 +658,7 @@ export interface FileRouteTypes {
     | '/admin/reviews'
     | '/admin/settings'
     | '/admin/stores'
+    | '/admin/users'
     | '/blogs/$slug'
     | '/category/$slug'
     | '/dev/login-test'
@@ -877,6 +889,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/blogs/$slug'
       preLoaderRoute: typeof BlogsSlugRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/admin/users': {
+      id: '/admin/users'
+      path: '/users'
+      fullPath: '/admin/users'
+      preLoaderRoute: typeof AdminUsersRouteImport
+      parentRoute: typeof AdminRouteRoute
     }
     '/admin/stores': {
       id: '/admin/stores'
@@ -1110,6 +1129,7 @@ interface AdminRouteRouteChildren {
   AdminReviewsRoute: typeof AdminReviewsRoute
   AdminSettingsRoute: typeof AdminSettingsRoute
   AdminStoresRoute: typeof AdminStoresRoute
+  AdminUsersRoute: typeof AdminUsersRoute
   AdminIndexRoute: typeof AdminIndexRoute
   AdminCustomerIdRoute: typeof AdminCustomerIdRoute
 }
@@ -1128,6 +1148,7 @@ const AdminRouteRouteChildren: AdminRouteRouteChildren = {
   AdminReviewsRoute: AdminReviewsRoute,
   AdminSettingsRoute: AdminSettingsRoute,
   AdminStoresRoute: AdminStoresRoute,
+  AdminUsersRoute: AdminUsersRoute,
   AdminIndexRoute: AdminIndexRoute,
   AdminCustomerIdRoute: AdminCustomerIdRoute,
 }
