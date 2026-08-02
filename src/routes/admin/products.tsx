@@ -16,6 +16,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ImageUploadField, MultiImageUpload } from "@/components/image-upload";
 import {
   Select,
   SelectContent,
@@ -412,14 +413,13 @@ function AdminProducts() {
                   </SelectContent>
                 </Select>
               </div>
-              <div>
-                <Label htmlFor="p-image">Image URL</Label>
-                <Input
-                  id="p-image"
-                  value={form.image_url}
-                  onChange={(e) => setForm({ ...form, image_url: e.target.value })}
-                />
-              </div>
+              <ImageUploadField
+                label="Main product image"
+                folder="products"
+                aspect="aspect-square max-w-[220px]"
+                value={form.image_url}
+                onChange={(url) => setForm({ ...form, image_url: url })}
+              />
               <div>
                 <Label htmlFor="p-video">Video URL (MP4 or YouTube embed)</Label>
                 <Input
@@ -429,16 +429,12 @@ function AdminProducts() {
                   onChange={(e) => setForm({ ...form, video_url: e.target.value })}
                 />
               </div>
-              <div>
-                <Label htmlFor="p-gallery">Extra image URLs (one per line)</Label>
-                <Textarea
-                  id="p-gallery"
-                  rows={3}
-                  placeholder={"https://…/img-2.jpg\nhttps://…/img-3.jpg"}
-                  value={form.gallery}
-                  onChange={(e) => setForm({ ...form, gallery: e.target.value })}
-                />
-              </div>
+              <MultiImageUpload
+                label="Gallery images"
+                folder="products"
+                values={form.gallery.split("\n").map((v) => v.trim()).filter(Boolean)}
+                onChange={(urls) => setForm({ ...form, gallery: urls.join("\n") })}
+              />
               <div>
                 <Label htmlFor="p-desc">Description</Label>
                 <Textarea
@@ -610,11 +606,12 @@ function AdminProducts() {
                             value={v.sku}
                             onChange={(e) => update({ sku: e.target.value })}
                           />
-                          <Input
-                            aria-label="Pack image URL"
-                            placeholder="Image URL"
+                          <ImageUploadField
+                            label="Pack image"
+                            folder="variants"
+                            aspect="aspect-square"
                             value={v.image_url}
-                            onChange={(e) => update({ image_url: e.target.value })}
+                            onChange={(url) => update({ image_url: url })}
                           />
                         </div>
                         <div className="mt-2 flex flex-wrap gap-4">
