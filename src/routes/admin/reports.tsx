@@ -107,7 +107,7 @@ function AdminReports() {
         <Button
           variant="secondary"
           className="shrink-0 gap-2"
-          disabled={!data?.orders.length}
+          disabled={!(data?.orders?.length)}
           onClick={() =>
             downloadCsv(
               `orders-${from}-to-${to}.csv`,
@@ -202,7 +202,7 @@ function AdminReports() {
             size="sm"
             variant="ghost"
             className="gap-1.5 text-xs"
-            disabled={!data?.buckets.length}
+            disabled={!(data?.buckets?.length)}
             onClick={() =>
               downloadCsv(
                 `revenue-${granularity}-${from}-to-${to}.csv`,
@@ -250,7 +250,7 @@ function AdminReports() {
               size="sm"
               variant="ghost"
               className="gap-1.5 text-xs"
-              disabled={!data?.topProducts.length}
+              disabled={!(data?.topProducts?.length)}
               onClick={() =>
                 downloadCsv(
                   `top-products-${from}-to-${to}.csv`,

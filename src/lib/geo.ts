@@ -67,4 +67,151 @@ export function projectPoints(points: LatLng[], padding = 12) {
   }));
 }
 
+import { getApiBase } from "@/lib/api";
+import { env } from "@/lib/env";
+import { getDeviceCoords } from "@/lib/device-location";
+
 export const DEFAULT_CENTER: LatLng = { lat: 13.0418, lng: 80.2341 };
+
+type ReverseGeocodeResponse = {
+  label: string;
+  detail: string;
+  street?: string | null;
+  suburb?: string | null;
+  city?: string | null;
+  state?: string | null;
+  pincode?: string | null;
+  line1?: string;
+  line2?: string | null;
+  landmark?: string | null;
+  latitude?: number;
+  longitude?: number;
+};
+
+export type ParsedAddress = {
+  line1: string;
+  line2: string;
+  city: string;
+  state: string;
+  pincode: string;
+  landmark?: string;
+  latitude: number;
+  longitude: number;
+};
+
+async function reverseGeocodeBigDataCloud(lat: number, lng: number): Promise<ReverseGeocodeResponse> {
+  const res = await fetch(
+    `${env.geoReverseUrl}?latitude=${lat}&longitude=${lng}&localityLanguage=en`,
+  );
+  if (!res.ok) throw new Error("reverse geocode failed");
+  const data = await res.json();
+  const admin = data.localityInfo?.administrative ?? [];
+  const suburb = [...admin].reverse().find((a: { order: number }) => a.order >= 8)?.name;
+  const city = data.city || data.locality;
+  const label =
+    suburb && city && suburb !== city
+      ? `${suburb}, ${city}`
+      : city || data.principalSubdivision || "Current location";
+  const detail = [suburb, city, data.principalSubdivision, data.postcode]
+    .filter((part: string, i: number, arr: string[]) => part && arr.indexOf(part) === i)
+    .join(" · ");
+  return {
+    label,
+    detail: detail || `${lat.toFixed(4)}, ${lng.toFixed(4)}`,
+    suburb,
+    city,
+    pincode: data.postcode || undefined,
+  };
+}
+
+/** Resolve GPS coordinates to saved-address form fields. */
+export async function addressFromCoords(lat: number, lng: number): Promise<ParsedAddress> {
+  try {
+    const res = await fetch(
+      `${getApiBase()}/geocode/reverse/?lat=${encodeURIComponent(lat)}&lng=${encodeURIComponent(lng)}`,
+    );
+    if (res.ok) {
+      const data = (await res.json()) as ReverseGeocodeResponse;
+      return {
+        line1: data.line1 || data.street || data.suburb || data.label.split(",")[0] || "",
+        line2: data.line2 || "",
+        city: data.city || "",
+        state: data.state || "",
+        pincode: data.pincode || "",
+        landmark: data.landmark || undefined,
+        latitude: data.latitude ?? lat,
+        longitude: data.longitude ?? lng,
+      };
+    }
+  } catch {
+    // fall through
+  }
+
+  const place = await reverseGeocodeLabel(lat, lng);
+  return {
+    line1: place.street || place.label.split(",")[0] || "",
+    line2: "",
+    city: "",
+    state: "",
+    pincode: place.pincode || "",
+    latitude: lat,
+    longitude: lng,
+  };
+}
+
+/** Read device GPS and return address form fields. */
+export async function detectCurrentAddress() {
+  const coords = await getDeviceCoords();
+  return addressFromCoords(coords.latitude, coords.longitude);
+}
+
+/** Resolve GPS coordinates to a human-readable street + area name. */
+export async function reverseGeocodeLabel(lat: number, lng: number) {
+  try {
+    const res = await fetch(
+      `${getApiBase()}/geocode/reverse/?lat=${encodeURIComponent(lat)}&lng=${encodeURIComponent(lng)}`,
+    );
+    if (res.ok) {
+      const data = (await res.json()) as ReverseGeocodeResponse;
+      return {
+        label: data.label,
+        detail: data.detail || `${lat.toFixed(4)}, ${lng.toFixed(4)}`,
+        pincode: data.pincode || undefined,
+        street: data.street || undefined,
+      };
+    }
+  } catch {
+    // fall through to backup provider
+  }
+
+  try {
+    return await reverseGeocodeBigDataCloud(lat, lng);
+  } catch {
+    return {
+      label: "Current location",
+      detail: `${lat.toFixed(4)}, ${lng.toFixed(4)}`,
+    };
+  }
+}
+
+export async function locationFromCoords(
+  coords: LatLng,
+  stores: Array<{ latitude: number; longitude: number; name: string }>,
+  accuracyM?: number,
+) {
+  const place = await reverseGeocodeLabel(coords.lat, coords.lng);
+  const closest = nearestStore(coords, stores);
+  const accuracy = accuracyM ? ` · ±${Math.round(accuracyM)} m` : "";
+  const storeNote = closest
+    ? `${formatKm(closest.km)} from ${closest.store.name.split("—").pop()?.trim() ?? closest.store.name}`
+    : null;
+  return {
+    label: place.label,
+    detail: storeNote ? `${place.detail}${accuracy} · ${storeNote}` : `${place.detail}${accuracy}`,
+    street: place.street,
+    lat: coords.lat,
+    lng: coords.lng,
+    pincode: place.pincode,
+    source: "gps" as const,
+  };
+}

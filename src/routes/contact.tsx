@@ -1,14 +1,17 @@
 import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Clock, Mail, MapPin, Phone, Send } from "lucide-react";
+import { Clock, Mail, MapPin, MessageCircle, Phone, Send } from "lucide-react";
+import { useMutation } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
+import { submitSupportTicket } from "@/lib/platform.functions";
 import { PageShell, TopBar } from "@/components/page-shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { SuccessState } from "@/components/state-blocks";
-import { useStorefront } from "@/hooks/use-storefront";
+import { SUPPORT_MAILTO_HREF, SUPPORT_PHONE_DISPLAY, SUPPORT_TEL_HREF, SUPPORT_WHATSAPP_HREF } from "@/lib/support-contact";
 
 export const Route = createFileRoute("/contact")({
   head: () => ({
@@ -28,18 +31,33 @@ export const Route = createFileRoute("/contact")({
 });
 
 function ContactPage() {
-  const { settings } = useStorefront();
+  const send = useServerFn(submitSupportTicket);
   const [sent, setSent] = useState(false);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
+
+  const sendMutation = useMutation({
+    mutationFn: () =>
+      send({
+        data: {
+          name: name.trim(),
+          email: email.trim(),
+          subject: "Contact form",
+          message: message.trim(),
+          category: "other",
+        },
+      }),
+    onSuccess: () => setSent(true),
+    onError: (e: Error) => toast.error(e.message),
+  });
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (name.trim().length < 2) return toast.error("Please enter your name");
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return toast.error("Please enter a valid email");
     if (message.trim().length < 10) return toast.error("Please add a little more detail");
-    setSent(true);
+    sendMutation.mutate();
   }
 
   return (
@@ -48,12 +66,14 @@ function ContactPage() {
 
       <section className="space-y-2.5 p-4">
         {[
-          { icon: Phone, label: settings.support_phone, sub: "Daily, 7 AM – 10 PM", href: `tel:${settings.support_phone}` },
-          { icon: Mail, label: settings.support_email, sub: "Email support", href: `mailto:${settings.support_email}` },
+          { icon: Phone, label: SUPPORT_PHONE_DISPLAY, sub: "Tap to call on mobile", href: SUPPORT_TEL_HREF },
+          { icon: Mail, label: "Email support", sub: "Opens your email app", href: SUPPORT_MAILTO_HREF },
+          { icon: MessageCircle, label: "WhatsApp", sub: "Chat with us on WhatsApp", href: SUPPORT_WHATSAPP_HREF, external: true },
         ].map((item) => (
           <a
             key={item.label}
             href={item.href}
+            {...(item.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
             className="flex items-center gap-3 rounded-2xl border border-border bg-card p-4 card-elevated"
           >
             <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-primary-soft text-primary">
@@ -127,8 +147,8 @@ function ContactPage() {
               required
             />
           </div>
-          <Button type="submit" className="h-12 w-full rounded-xl">
-            <Send className="mr-2 h-4 w-4" /> Send message
+          <Button type="submit" className="h-12 w-full rounded-xl" disabled={sendMutation.isPending}>
+            <Send className="mr-2 h-4 w-4" /> {sendMutation.isPending ? "Sending…" : "Send message"}
           </Button>
         </form>
       )}

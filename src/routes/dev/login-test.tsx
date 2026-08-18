@@ -23,6 +23,7 @@ import {
   DEMO_PASSWORD,
   type DemoAccount,
 } from "@/lib/demo-accounts";
+import { env } from "@/lib/env";
 import { requestDemoOtp, seedDemoAccounts, verifyDemoOtp } from "@/lib/dev-auth.functions";
 import { cn } from "@/lib/utils";
 
@@ -74,7 +75,7 @@ function short(value: unknown, max = 600) {
 
 function LoginTestPage() {
   const [backend, setBackend] = useState<Backend>("cloud");
-  const [djangoUrl, setDjangoUrl] = useState("http://localhost:8000/api/v1");
+  const [djangoUrl, setDjangoUrl] = useState(env.serverApiUrl);
   const [log, setLog] = useState<LogEntry[]>([]);
   const [results, setResults] = useState<Record<string, LoginResult>>({});
   const [busy, setBusy] = useState<string | null>(null);
@@ -285,7 +286,7 @@ function LoginTestPage() {
             <Input
               value={djangoUrl}
               onChange={(e) => setDjangoUrl(e.target.value)}
-              placeholder="http://localhost:8000/api/v1"
+              placeholder={env.serverApiUrl}
               className="mt-1.5 rounded-xl font-mono text-xs"
             />
             <p className="mt-2 text-[11px] text-muted-foreground">

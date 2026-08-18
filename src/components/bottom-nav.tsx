@@ -2,23 +2,25 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import { Home, LayoutGrid, ShoppingCart, ClipboardList, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCartCount } from "@/hooks/use-shop";
+import { useI18n } from "@/hooks/use-i18n";
 
 const tabs = [
-  { to: "/", label: "Home", icon: Home },
-  { to: "/categories", label: "Categories", icon: LayoutGrid },
-  { to: "/cart", label: "Cart", icon: ShoppingCart },
-  { to: "/orders", label: "Orders", icon: ClipboardList },
-  { to: "/profile", label: "Profile", icon: User },
+  { to: "/", labelKey: "nav.home", icon: Home },
+  { to: "/categories", labelKey: "nav.categories", icon: LayoutGrid },
+  { to: "/cart", labelKey: "nav.cart", icon: ShoppingCart },
+  { to: "/orders", labelKey: "nav.orders", icon: ClipboardList },
+  { to: "/profile", labelKey: "nav.profile", icon: User },
 ] as const;
 
 export function BottomNav() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const count = useCartCount();
+  const { t } = useI18n();
 
   return (
     <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card/95 backdrop-blur-md">
       <div className="mx-auto flex max-w-lg items-stretch justify-between px-2 pb-[env(safe-area-inset-bottom)]">
-        {tabs.map(({ to, label, icon: Icon }) => {
+        {tabs.map(({ to, labelKey, icon: Icon }) => {
           const active = to === "/" ? pathname === "/" : pathname.startsWith(to);
           return (
             <Link
@@ -37,7 +39,7 @@ export function BottomNav() {
                   </span>
                 )}
               </span>
-              {label}
+              {t(labelKey)}
               {active && (
                 <span className="absolute inset-x-5 top-0 h-0.5 rounded-full bg-primary" />
               )}

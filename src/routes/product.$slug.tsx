@@ -17,13 +17,16 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
+import { formatShopError } from "@/lib/auth-session";
 import { getProductBySlug } from "@/lib/catalog.functions";
 import { addToCart, toggleWishlist } from "@/lib/shop.functions";
 import { useCartCount, useSession, useWishlist } from "@/hooks/use-shop";
 import { PageShell, TopBar, EmptyState } from "@/components/page-shell";
+import { ProductDetailSkeleton } from "@/components/skeletons";
 import { ProductRail } from "@/components/product-rail";
 import { ImageGallery } from "@/components/image-gallery";
 import { VariantPicker, pickDefaultVariant } from "@/components/variant-picker";
+import { QtyPriceTable, unitPriceForQty } from "@/components/qty-price-table";
 import { ProductReviews } from "@/components/product-reviews";
 import { ProductCard } from "@/components/product-card";
 import {
@@ -64,7 +67,7 @@ const PRODUCT_FAQS = [
 export const Route = createFileRoute("/product/$slug")({
   loader: async ({ context, params }) => {
     const data = await context.queryClient.ensureQueryData(productQuery(params.slug));
-    if (!data.product) throw notFound();
+    if (!data.product?.slug) throw notFound();
     return {
       name: data.product.name,
       description: data.product.description,
@@ -93,6 +96,12 @@ export const Route = createFileRoute("/product/$slug")({
     return { meta };
   },
   component: ProductPage,
+  pendingComponent: () => (
+    <PageShell>
+      <TopBar title="Loading product…" backTo="/" />
+      <ProductDetailSkeleton />
+    </PageShell>
+  ),
   errorComponent: ({ error }) => (
     <div className="p-8 text-center text-sm text-destructive">{error.message}</div>
   ),
@@ -136,6 +145,7 @@ function ProductPage() {
   const mrp = variant ? (variant.mrp ? Number(variant.mrp) : null) : product.mrp ? Number(product.mrp) : null;
   const stock = variant ? variant.stock : product.stock;
   const packLabel = variant?.label ?? product.weight;
+  const activeUnitPrice = unitPriceForQty(qty, price, product.price_tiers);
   const trackViewed = useRecentlyViewed((s) => s.add);
   const saveLater = useSaveForLater();
 
@@ -164,7 +174,7 @@ function ProductPage() {
       queryClient.invalidateQueries({ queryKey: ["cart"] });
       toast.success("Added to cart");
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(formatShopError(e)),
   });
 
   const bundleMutation = useMutation({
@@ -177,13 +187,13 @@ function ProductPage() {
       queryClient.invalidateQueries({ queryKey: ["cart"] });
       toast.success("Bundle added to cart");
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(formatShopError(e)),
   });
 
   const wishMutation = useMutation({
     mutationFn: () => toggle({ data: { productId: product.id } }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["wishlist"] }),
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(formatShopError(e)),
   });
 
   async function share() {
@@ -310,11 +320,16 @@ function ProductPage() {
 
         <div className="mt-4 flex items-center justify-between gap-3">
           <div>
-            <span className="text-3xl font-bold text-primary">{formatINR(price)}</span>
+            <span className="text-3xl font-bold text-primary">{formatINR(activeUnitPrice)}</span>
             {discount > 0 && mrp && (
               <span className="ml-2 text-sm text-muted-foreground line-through">
                 {formatINR(mrp)}
               </span>
+            )}
+            {qty > 1 && (
+              <p className="mt-0.5 text-xs font-medium text-muted-foreground">
+                Total {formatINR(activeUnitPrice * qty)} for {qty} pcs
+              </p>
             )}
           </div>
           <div className="flex items-center gap-3 rounded-full border border-border bg-card px-2 py-1.5 card-elevated">
@@ -351,12 +366,57 @@ function ProductPage() {
           }}
         />
 
+        <QtyPriceTable
+          unitPrice={price}
+          mrp={mrp}
+          maxQty={stock > 0 ? stock : 999}
+          selectedQty={qty}
+          onSelectQty={(next) => setQty(Math.min(stock || 99, Math.max(1, next)))}
+          adminTiers={product.price_tiers}
+        />
+
         {product.description && (
           <div className="mt-5">
             <h2 className="text-sm font-semibold text-foreground">Description</h2>
             <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
               {product.description}
             </p>
+          </div>
+        )}
+
+        {product.is_combo && (product.combo_items ?? []).length > 0 && (
+          <div className="mt-5">
+            <h2 className="text-sm font-semibold text-foreground">This combo includes</h2>
+            <ul className="mt-2 space-y-2">
+              {(product.combo_items ?? []).map((item) => (
+                <li
+                  key={item.product_id}
+                  className="flex items-center gap-3 rounded-2xl bg-secondary p-3"
+                >
+                  {item.image_url ? (
+                    <img
+                      src={item.image_url}
+                      alt={item.name ?? "Product"}
+                      loading="lazy"
+                      className="h-12 w-12 shrink-0 rounded-xl object-cover"
+                    />
+                  ) : (
+                    <div className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-card">
+                      <PackageSearch className="h-5 w-5 text-muted-foreground" />
+                    </div>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium text-foreground">
+                      {item.name ?? "Product"}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Qty {item.quantity}
+                      {item.price != null ? ` · ${formatINR(item.price)} each` : ""}
+                    </p>
+                  </div>
+                </li>
+              ))}
+            </ul>
           </div>
         )}
 
@@ -508,7 +568,11 @@ function ProductPage() {
             }}
             className="flex-1 rounded-full bg-primary py-3 text-sm font-semibold text-primary-foreground transition-opacity active:opacity-80 disabled:opacity-40"
           >
-            {stock === 0 ? "Out of stock" : "Add to Cart"}
+            {stock === 0
+              ? "Out of stock"
+              : qty > 1
+                ? `Add to Cart · ${formatINR(activeUnitPrice * qty)}`
+                : "Add to Cart"}
           </button>
         </div>
       </div>

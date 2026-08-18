@@ -1,10 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Gift, Sparkles, Trophy } from "lucide-react";
-import { toast } from "sonner";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { Trophy } from "lucide-react";
 import { PageShell, TopBar } from "@/components/page-shell";
-import { Button } from "@/components/ui/button";
-import { REWARDS_DEMO } from "@/lib/content";
-import { formatDate } from "@/lib/format";
+import { getLoyalty } from "@/lib/platform.functions";
 
 export const Route = createFileRoute("/_authenticated/rewards")({
   head: () => ({
@@ -21,8 +20,16 @@ export const Route = createFileRoute("/_authenticated/rewards")({
 });
 
 function RewardsPage() {
-  const { points, tier, nextTier, pointsToNextTier, history, rewards } = REWARDS_DEMO;
-  const progress = Math.round((points / (points + pointsToNextTier)) * 100);
+  const fetch = useServerFn(getLoyalty);
+  const { data } = useQuery({
+    queryKey: ["loyalty"],
+    queryFn: () => fetch() as Promise<{ points: number; lifetime_points: number; tier: string }>,
+  });
+  const points = data?.points ?? 0;
+  const tier = data?.tier ?? "Bronze";
+  const nextTier = tier === "bronze" ? "Silver" : "Gold";
+  const pointsToNextTier = Math.max(0, 500 - points);
+  const progress = Math.min(100, Math.round((points / 500) * 100));
 
   return (
     <PageShell>
@@ -43,51 +50,10 @@ function RewardsPage() {
         </div>
       </section>
 
-      <section className="p-4">
-        <h2 className="mb-2 flex items-center gap-1.5 text-sm font-bold">
-          <Gift className="h-4 w-4 text-primary" /> Redeem
-        </h2>
-        <div className="space-y-2.5">
-          {rewards.map((r) => (
-            <div
-              key={r.id}
-              className="flex items-center gap-3 rounded-2xl border border-border bg-card p-4 card-elevated"
-            >
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-semibold">{r.label}</p>
-                <p className="text-[11px] text-muted-foreground">{r.cost} points</p>
-              </div>
-              <Button
-                size="sm"
-                className="rounded-xl"
-                disabled={points < r.cost}
-                onClick={() => toast.success(`${r.label} reserved — it will appear at checkout.`)}
-              >
-                Redeem
-              </Button>
-            </div>
-          ))}
-        </div>
-      </section>
-
       <section className="px-4 pb-8">
-        <h2 className="mb-2 flex items-center gap-1.5 text-sm font-bold">
-          <Sparkles className="h-4 w-4 text-primary" /> Points history
-        </h2>
-        <div className="rounded-2xl border border-border bg-card p-2 card-elevated">
-          {history.map((h) => (
-            <div key={h.id} className="flex items-center justify-between px-2 py-2.5">
-              <div className="min-w-0">
-                <p className="truncate text-sm">{h.label}</p>
-                <p className="text-[11px] text-muted-foreground">{formatDate(h.date)}</p>
-              </div>
-              <span className={h.points > 0 ? "text-sm font-bold text-primary" : "text-sm font-bold text-destructive"}>
-                {h.points > 0 ? "+" : ""}
-                {h.points}
-              </span>
-            </div>
-          ))}
-        </div>
+        <p className="text-sm text-muted-foreground">
+          Earn 1 point for every ₹10 spent. Points are credited when your order is delivered.
+        </p>
       </section>
     </PageShell>
   );

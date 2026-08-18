@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Check, MapPin, RotateCcw, Download, PackageX, Truck } from "lucide-react";
+import { Check, MapPin, RotateCcw, Download, PackageX, Truck, LifeBuoy } from "lucide-react";
 import { toast } from "sonner";
 import { getOrder, cancelOrder } from "@/lib/shop.functions";
 import { requestReturn, getReturnsForOrder, reorder } from "@/lib/engage.functions";
@@ -26,6 +26,8 @@ import {
 } from "@/components/ui/select";
 import { formatINR, formatDate } from "@/lib/format";
 import { downloadInvoicePdf } from "@/lib/invoice-pdf";
+import { getOrderInvoice } from "@/lib/platform.functions";
+import type { InvoiceApiPayload } from "@/lib/invoice-config";
 
 import { STATUS_STYLES, STATUS_STEPS } from "@/lib/order-status";
 import type { Order } from "@/lib/types";
@@ -61,6 +63,7 @@ function OrderDetailPage() {
   const sendReturn = useServerFn(requestReturn);
   const fetchReturns = useServerFn(getReturnsForOrder);
   const repeat = useServerFn(reorder);
+  const fetchInvoice = useServerFn(getOrderInvoice);
   const [returnOpen, setReturnOpen] = useState(false);
   const [reason, setReason] = useState(RETURN_REASONS[0]);
   const [details, setDetails] = useState("");
@@ -115,7 +118,13 @@ function OrderDetailPage() {
   async function downloadInvoice() {
     if (!order) return;
     try {
-      await downloadInvoicePdf(order);
+      let invoice: InvoiceApiPayload | null = null;
+      try {
+        invoice = (await fetchInvoice({ data: { orderId: order.id } })) as InvoiceApiPayload;
+      } catch {
+        // Fall back to order data when invoice API is unavailable.
+      }
+      await downloadInvoicePdf(order, invoice);
     } catch {
       toast.error("Could not generate the invoice PDF");
     }
@@ -376,6 +385,12 @@ function OrderDetailPage() {
             Cancel order
           </Button>
         )}
+
+        <Button variant="outline" className="h-11 w-full rounded-xl" asChild>
+          <Link to="/support" search={{ orderId: order.id }}>
+            <LifeBuoy className="mr-2 h-4 w-4" /> Get help with this order
+          </Link>
+        </Button>
       </div>
     </PageShell>
   );

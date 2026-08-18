@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import {
   LayoutDashboard,
@@ -23,11 +23,20 @@ import {
   Newspaper,
   Menu,
 } from "lucide-react";
-import { getAdminStatus } from "@/lib/admin.functions";
+import { getAdminStatus, getAdminPanelSessionStatus, revokeAdminPanelSession } from "@/lib/admin.functions";
+import { useSession } from "@/hooks/use-shop";
+import { useAdminIdle } from "@/hooks/use-admin-idle";
+import { AdminOtpGate } from "@/components/admin-otp-gate";
+import {
+  ADMIN_PANEL_IDLE_MS,
+  clearAdminPanelToken,
+  getAdminPanelToken,
+} from "@/lib/admin-session";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { NotificationBell } from "@/components/notification-bell";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin")({
   ssr: false,
@@ -65,8 +74,17 @@ const groups = [
     links: [
       { to: "/admin/users", label: "Users", icon: UserCheck },
       { to: "/admin/customers", label: "Customers", icon: Users },
+      { to: "/admin/tickets", label: "Support", icon: ShieldAlert },
       { to: "/admin/blog", label: "Blog", icon: Newspaper },
       { to: "/admin/notifications", label: "Notify", icon: Bell },
+    ],
+  },
+  {
+    label: "Operations",
+    links: [
+      { to: "/admin/delivery", label: "Delivery", icon: StoreIcon },
+      { to: "/admin/payments", label: "Payments", icon: BarChart3 },
+      { to: "/admin/promotions", label: "Promotions", icon: TicketPercent },
     ],
   },
   {
@@ -74,6 +92,7 @@ const groups = [
     links: [
       { to: "/admin/stores", label: "Store & delivery", icon: StoreIcon },
       { to: "/admin/settings", label: "Settings", icon: Settings },
+      { to: "/admin/audit-logs", label: "Audit logs", icon: ShieldAlert },
     ],
   },
 ] as const;
@@ -126,19 +145,102 @@ function NavList({ pathname, onNavigate }: { pathname: string; onNavigate?: () =
 }
 
 function AdminLayout() {
+  const queryClient = useQueryClient();
+  const { session, loading: sessionLoading } = useSession();
   const check = useServerFn(getAdminStatus);
+  const checkPanel = useServerFn(getAdminPanelSessionStatus);
+  const revokePanel = useServerFn(revokeAdminPanelSession);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [drawer, setDrawer] = useState(false);
+  const [panelUnlocked, setPanelUnlocked] = useState(false);
+
   const { data, isLoading, isError } = useQuery({
-    queryKey: ["admin-status"],
-    queryFn: () => check() as Promise<{ isAdmin: boolean }>,
+    queryKey: ["admin-status", session?.access],
+    queryFn: () => check() as Promise<{ isAdmin: boolean; role?: string }>,
+    enabled: !!session?.access,
     retry: false,
   });
 
-  if (isLoading) {
+  const {
+    data: panelSession,
+    isLoading: panelLoading,
+    refetch: refetchPanelSession,
+  } = useQuery({
+    queryKey: ["admin-panel-session", session?.access, getAdminPanelToken()],
+    queryFn: () => checkPanel() as Promise<{ valid: boolean; idle_timeout_seconds?: number }>,
+    enabled: !!session?.access && !!data?.isAdmin && !!getAdminPanelToken(),
+    retry: false,
+  });
+
+  const idleTimeoutMs =
+    panelSession?.idle_timeout_seconds != null
+      ? panelSession.idle_timeout_seconds * 1000
+      : ADMIN_PANEL_IDLE_MS;
+
+  useEffect(() => {
+    if (!data?.isAdmin) {
+      setPanelUnlocked(false);
+      return;
+    }
+    if (!getAdminPanelToken()) {
+      setPanelUnlocked(false);
+      return;
+    }
+    if (panelSession?.valid) setPanelUnlocked(true);
+    else if (panelSession && !panelSession.valid) setPanelUnlocked(false);
+  }, [data?.isAdmin, panelSession]);
+
+  const lockAdminPanel = useCallback(
+    async (message?: string) => {
+      clearAdminPanelToken();
+      setPanelUnlocked(false);
+      await queryClient.invalidateQueries({ queryKey: ["admin-panel-session"] });
+      if (message) toast.info(message);
+    },
+    [queryClient],
+  );
+
+  const handleIdleLogout = useCallback(async () => {
+    try {
+      await revokePanel();
+    } catch {
+      clearAdminPanelToken();
+    }
+    await lockAdminPanel("Admin session ended after 10 minutes of inactivity. Verify OTP again.");
+  }, [lockAdminPanel, revokePanel]);
+
+  useAdminIdle({
+    enabled: panelUnlocked,
+    timeoutMs: idleTimeoutMs,
+    onIdle: () => void handleIdleLogout(),
+  });
+
+  if (sessionLoading || (session && isLoading) || (data?.isAdmin && !!getAdminPanelToken() && panelLoading)) {
     return (
       <div className="grid min-h-screen place-items-center bg-background">
         <div className="h-10 w-10 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+      </div>
+    );
+  }
+
+  if (!session) {
+    return (
+      <div className="grid min-h-screen place-items-center bg-background px-6 text-center">
+        <div className="max-w-sm">
+          <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-destructive/10 text-destructive">
+            <ShieldAlert className="h-7 w-7" />
+          </div>
+          <h1 className="mt-4 text-lg font-semibold text-foreground">Sign in required</h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Sign in with an admin account to access the panel.
+          </p>
+          <Link
+            to="/auth"
+            className="mt-5 inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground"
+          >
+            Sign in
+          </Link>
+        </div>
       </div>
     );
   }
@@ -152,17 +254,37 @@ function AdminLayout() {
           </div>
           <h1 className="mt-4 text-lg font-semibold text-foreground">Admin access required</h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            Sign in with an admin account to manage the store. Ask an existing admin to grant your
-            account the admin role.
+            Sign in with an admin account to manage the store. Use{" "}
+            <span className="font-medium">admin@mnxstore.in</span> /{" "}
+            <span className="font-medium">Demo@12345</span> or admin mobile OTP.
           </p>
-          <Link
-            to="/"
-            className="mt-5 inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground"
-          >
-            <ArrowLeft className="h-4 w-4" /> Back to store
-          </Link>
+          <div className="mt-5 flex flex-wrap justify-center gap-2">
+            <Link
+              to="/auth"
+              className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground"
+            >
+              Sign in as admin
+            </Link>
+            <Link
+              to="/"
+              className="inline-flex items-center gap-2 rounded-full border border-border px-5 py-2.5 text-sm font-medium text-foreground"
+            >
+              <ArrowLeft className="h-4 w-4" /> Back to store
+            </Link>
+          </div>
         </div>
       </div>
+    );
+  }
+
+  if (!panelUnlocked) {
+    return (
+      <AdminOtpGate
+        onVerified={() => {
+          setPanelUnlocked(true);
+          void refetchPanelSession();
+        }}
+      />
     );
   }
 

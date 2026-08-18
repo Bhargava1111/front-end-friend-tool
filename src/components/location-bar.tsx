@@ -7,12 +7,20 @@ import { toast } from "sonner";
 import { getStoreLocations } from "@/lib/location.functions";
 import { useDeliveryLocation } from "@/lib/client-store";
 import { useHydrated } from "@/hooks/use-hydrated";
-import { distanceKm, etaMinutes, formatKm, nearestStore, type StoreLocation } from "@/lib/geo";
+import {
+  distanceKm,
+  etaMinutes,
+  formatKm,
+  locationFromCoords,
+  nearestStore,
+  type StoreLocation,
+} from "@/lib/geo";
 import { StoreMap } from "@/components/store-map";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { getDeviceCoords } from "@/lib/device-location";
 
 export function useStores() {
   const fetchStores = useServerFn(getStoreLocations);
@@ -28,55 +36,36 @@ function storeLabel(name: string) {
 }
 
 /**
- * Detects the customer's location automatically on first visit.
- * Geolocation is often blocked inside embedded previews, so we always
- * fall back to the first active store instead of leaving the bar empty.
+ * Detects the customer's real GPS location on first visit.
+ * Does not fall back to a hard-coded store — the user picks a store if GPS is unavailable.
  */
 function useAutoLocation(stores: StoreLocation[]) {
   const { location, setLocation } = useDeliveryLocation();
   const hydrated = useHydrated();
   const attempted = useRef(false);
+  const [detectFailed, setDetectFailed] = useState(false);
 
   useEffect(() => {
-    if (!hydrated || location || stores.length === 0 || attempted.current) return;
+    if (!hydrated || location || attempted.current) return;
     attempted.current = true;
 
-    const fallback = () => {
-      const s = stores[0];
-      setLocation({
-        label: storeLabel(s.name),
-        detail: s.address_text,
-        lat: s.latitude,
-        lng: s.longitude,
-        pincode: s.pincode,
-        source: "store",
-      });
-    };
-
-    if (typeof navigator === "undefined" || !navigator.geolocation) {
-      fallback();
-      return;
-    }
-
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-        const closest = nearestStore(coords, stores);
-        const accuracy = pos.coords.accuracy ? ` · ±${Math.round(pos.coords.accuracy)} m` : "";
-        setLocation({
-          label: closest ? `Near ${storeLabel(closest.store.name)}` : "Current location",
-          detail: closest
-            ? `${formatKm(closest.km)} from ${closest.store.name}${accuracy}`
-            : `${coords.lat.toFixed(4)}, ${coords.lng.toFixed(4)}${accuracy}`,
-          lat: coords.lat,
-          lng: coords.lng,
-          source: "gps",
-        });
-      },
-      fallback,
-      { enableHighAccuracy: true, timeout: 12000, maximumAge: 60000 },
-    );
+    void (async () => {
+      try {
+        const coords = await getDeviceCoords();
+        const next = await locationFromCoords(
+          { lat: coords.latitude, lng: coords.longitude },
+          stores,
+          coords.accuracy,
+        );
+        setLocation(next);
+        setDetectFailed(false);
+      } catch {
+        setDetectFailed(true);
+      }
+    })();
   }, [hydrated, location, stores, setLocation]);
+
+  return detectFailed;
 }
 
 export function LocationBar({ className }: { className?: string }) {
@@ -84,7 +73,20 @@ export function LocationBar({ className }: { className?: string }) {
   const { location } = useDeliveryLocation();
   const { data: stores = [] } = useStores();
   const [open, setOpen] = useState(false);
-  useAutoLocation(stores);
+  const detectFailed = useAutoLocation(stores);
+
+  const label = !hydrated
+    ? "Detecting location…"
+    : location
+      ? location.label
+      : detectFailed
+        ? "Set delivery location"
+        : "Detecting location…";
+
+  const sublabel =
+    location?.source === "gps" && location.detail
+      ? location.detail.split(" · ±")[0].split(" · ")[0]
+      : null;
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -93,11 +95,16 @@ export function LocationBar({ className }: { className?: string }) {
           <span className="flex items-center gap-1 text-xs text-primary-foreground/70">
             <MapPin className="h-3.5 w-3.5 shrink-0" /> Deliver to
           </span>
-          <span className="mt-0.5 flex items-center gap-1 text-sm font-semibold">
-            <span className="truncate">
-              {hydrated && location ? location.label : "Detecting location…"}
+          <span className="mt-0.5 flex min-w-0 items-start gap-1">
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-sm font-semibold">{label}</span>
+              {sublabel && sublabel !== label && (
+                <span className="block truncate text-[11px] font-normal text-primary-foreground/75">
+                  {sublabel}
+                </span>
+              )}
             </span>
-            <ChevronDown className="h-3.5 w-3.5 shrink-0 opacity-80" />
+            <ChevronDown className="mt-0.5 h-3.5 w-3.5 shrink-0 opacity-80" />
           </span>
         </button>
       </SheetTrigger>
@@ -111,62 +118,58 @@ export function LocationBar({ className }: { className?: string }) {
   );
 }
 
-
 export function LocationPicker({ onDone }: { onDone?: () => void }) {
   const { data: stores = [] } = useStores();
   const { location, setLocation } = useDeliveryLocation();
   const [pincode, setPincode] = useState("");
   const [locating, setLocating] = useState(false);
 
-  const point = location?.lat != null && location?.lng != null
-    ? { lat: location.lat, lng: location.lng }
-    : null;
+  const point =
+    location?.lat != null && location?.lng != null ? { lat: location.lat, lng: location.lng } : null;
   const near = useMemo(() => (point ? nearestStore(point, stores) : null), [point, stores]);
 
-  function detect() {
-    if (typeof navigator === "undefined" || !navigator.geolocation) {
-      toast.error("Location is not available on this device");
-      return;
-    }
+  async function detect() {
     setLocating(true);
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-        const closest = nearestStore(coords, stores);
-        const accuracy = pos.coords.accuracy ? ` · ±${Math.round(pos.coords.accuracy)} m` : "";
-        setLocation({
-          label: closest ? `Near ${closest.store.name.split("—").pop()?.trim()}` : "Current location",
-          detail: closest
-            ? `${formatKm(closest.km)} from ${closest.store.name}${accuracy}`
-            : `${coords.lat.toFixed(4)}, ${coords.lng.toFixed(4)}${accuracy}`,
-          lat: coords.lat,
-          lng: coords.lng,
-          source: "gps",
-        });
-        setLocating(false);
-        toast.success(
-          pos.coords.accuracy && pos.coords.accuracy > 150
-            ? "Location saved, but accuracy is low — try again outdoors"
-            : "Location updated",
-        );
-      },
-      () => {
-        setLocating(false);
-        toast.error("Couldn't get your location. Pick a store instead.");
-      },
-      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 },
-    );
+    try {
+      const coords = await getDeviceCoords();
+      const next = await locationFromCoords(
+        { lat: coords.latitude, lng: coords.longitude },
+        stores,
+        coords.accuracy,
+      );
+      setLocation(next);
+      toast.success(
+        coords.accuracy && coords.accuracy > 150
+          ? "Location saved, but accuracy is low — try again outdoors"
+          : "Location updated",
+      );
+      onDone?.();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Couldn't get your location. Pick a store or enter your pincode.");
+    } finally {
+      setLocating(false);
+    }
   }
 
   return (
     <div className="space-y-4 pb-6">
+      {location && (
+        <div className="rounded-2xl border border-border bg-secondary/30 p-3 text-sm">
+          <p className="font-semibold text-foreground">{location.label}</p>
+          {location.street && !location.label.startsWith(location.street) && (
+            <p className="mt-0.5 text-xs text-muted-foreground">{location.street}</p>
+          )}
+          <p className="mt-1 text-xs text-muted-foreground">{location.detail}</p>
+        </div>
+      )}
+
       <StoreMap
         stores={stores}
         center={point}
         activeId={near?.store.id ?? null}
         onSelect={(s) =>
           setLocation({
-            label: s.name.split("—").pop()?.trim() ?? s.name,
+            label: storeLabel(s.name),
             detail: s.address_text,
             lat: s.latitude,
             lng: s.longitude,
@@ -196,7 +199,7 @@ export function LocationPicker({ onDone }: { onDone?: () => void }) {
             if (pincode.length !== 6) return toast.error("Enter a valid 6-digit pincode");
             const match = stores.find((s) => s.pincode === pincode);
             setLocation({
-              label: match ? (match.name.split("—").pop()?.trim() ?? pincode) : `Pincode ${pincode}`,
+              label: match ? storeLabel(match.name) : `Pincode ${pincode}`,
               detail: match ? match.address_text : "We deliver to this pincode",
               lat: match?.latitude ?? null,
               lng: match?.longitude ?? null,
@@ -204,6 +207,7 @@ export function LocationPicker({ onDone }: { onDone?: () => void }) {
               source: "manual",
             });
             toast.success("Delivery pincode saved");
+            onDone?.();
           }}
         >
           Apply
@@ -224,7 +228,7 @@ export function LocationPicker({ onDone }: { onDone?: () => void }) {
                 type="button"
                 onClick={() => {
                   setLocation({
-                    label: s.name.split("—").pop()?.trim() ?? s.name,
+                    label: storeLabel(s.name),
                     detail: s.address_text,
                     lat: s.latitude,
                     lng: s.longitude,

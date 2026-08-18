@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -8,6 +9,12 @@ import { Button } from "@/components/ui/button";
 import { formatINR, formatDate } from "@/lib/format";
 import type { Order } from "@/lib/types";
 import { STATUS_STYLES } from "@/lib/order-status";
+import { cn } from "@/lib/utils";
+
+const TABS = [
+  { key: "active", label: "Active" },
+  { key: "past", label: "Past" },
+] as const;
 
 export const Route = createFileRoute("/_authenticated/orders/")({
   head: () => ({
@@ -25,17 +32,38 @@ export const Route = createFileRoute("/_authenticated/orders/")({
 
 function OrdersPage() {
   const fetchOrders = useServerFn(getOrders);
+  const [tab, setTab] = useState<(typeof TABS)[number]["key"]>("active");
   const { data, isLoading } = useQuery({
     queryKey: ["orders"],
     queryFn: () => fetchOrders() as Promise<Order[]>,
   });
-  const orders = data ?? [];
+  const all = data ?? [];
+  const orders = all.filter((o) =>
+    tab === "active"
+      ? ["pending", "confirmed", "packed"].includes(o.status)
+      : ["delivered", "cancelled"].includes(o.status),
+  );
 
   return (
     <PageShell>
       <header className="rounded-b-3xl bg-primary px-4 pb-6 pt-6 text-primary-foreground">
         <h1 className="text-xl font-bold">My Orders</h1>
         <p className="mt-1 text-sm text-primary-foreground/75">Track and re-order easily</p>
+        <div className="mt-4 flex gap-2">
+          {TABS.map((t) => (
+            <button
+              key={t.key}
+              type="button"
+              onClick={() => setTab(t.key)}
+              className={cn(
+                "rounded-full px-4 py-1.5 text-xs font-semibold",
+                tab === t.key ? "bg-primary-foreground text-primary" : "bg-primary-foreground/15",
+              )}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
       </header>
 
       {isLoading ? (

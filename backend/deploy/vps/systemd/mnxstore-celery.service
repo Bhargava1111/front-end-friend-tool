@@ -1,0 +1,19 @@
+[Unit]
+Description=Sri Mahalakshmi Stores Celery Worker
+After=network.target redis-server.service postgresql.service mnxstore-api.service
+Wants=redis-server.service
+
+[Service]
+Type=simple
+User=mnxstore
+Group=www-data
+WorkingDirectory=/var/www/mnxstore/backend
+EnvironmentFile=/var/www/mnxstore/.env
+ExecStart=/var/www/mnxstore/venv/bin/celery -A config worker --loglevel=info --concurrency 4
+Restart=on-failure
+RestartSec=10
+KillMode=mixed
+TimeoutStopSec=60
+
+[Install]
+WantedBy=multi-user.target

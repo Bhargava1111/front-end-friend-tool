@@ -9,11 +9,18 @@ import {
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
 import { Toaster } from "@/components/ui/sonner";
+import { ChatSupport } from "@/components/chat-support";
+import { AppUpdateDialog } from "@/components/app-update-dialog";
+import { CapacitorShell } from "@/components/capacitor-shell";
+import { IosInstallPrompt } from "@/components/ios-install-prompt";
+import { LanguageSync } from "@/components/language-sync";
+import { PushNotifications } from "@/components/push-notifications";
+import { AdminNotificationAlerts } from "@/components/admin-notification-alerts";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
-import { supabase } from "@/integrations/supabase/client";
 import { themeInitScript } from "@/lib/theme";
+import { env } from "@/lib/env";
 
 function NotFoundComponent() {
   return (
@@ -79,7 +86,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   head: () => ({
     meta: [
       { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1" },
+      {
+        name: "viewport",
+        content:
+          "width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no",
+      },
       { title: "Sri Mahalakshmi Stores — Grocery & Pooja Essentials" },
       {
         name: "description",
@@ -88,16 +99,21 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "apple-mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
+      { name: "apple-mobile-web-app-title", content: "SM Stores" },
+      { name: "mobile-web-app-capable", content: "yes" },
+      { name: "theme-color", content: "#2d5a45" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
-      { rel: "preconnect", href: "https://fonts.googleapis.com" },
-      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-      {
-        rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap",
-      },
-      { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+      { rel: "preconnect", href: env.googleFontsPreconnect },
+      { rel: "preconnect", href: env.googleFontsStaticPreconnect, crossOrigin: "anonymous" },
+      { rel: "stylesheet", href: env.googleFontsUrl },
+      { rel: "icon", href: "/icon-192.png", type: "image/png", sizes: "192x192" },
+      { rel: "shortcut icon", href: "/icon-192.png", type: "image/png" },
+      { rel: "manifest", href: "/manifest.webmanifest" },
+      { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
     ],
   }),
   shellComponent: RootShell,
@@ -123,20 +139,17 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
-  const router = useRouter();
-
-  useEffect(() => {
-    const { data } = supabase.auth.onAuthStateChange((event) => {
-      if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
-      router.invalidate();
-      if (event !== "SIGNED_OUT") queryClient.invalidateQueries();
-    });
-    return () => data.subscription.unsubscribe();
-  }, [router, queryClient]);
 
   return (
     <QueryClientProvider client={queryClient}>
+      <CapacitorShell />
+      <LanguageSync />
+      <PushNotifications />
+      <AdminNotificationAlerts />
+      <IosInstallPrompt />
       <Outlet />
+      <ChatSupport />
+      <AppUpdateDialog />
       <Toaster position="top-center" richColors />
     </QueryClientProvider>
   );

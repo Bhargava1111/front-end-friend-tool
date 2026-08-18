@@ -59,3 +59,15 @@ export function GridSkeleton({ count = 6 }: { count?: number }) {
     </div>
   );
 }
+
+export function ProductDetailSkeleton() {
+  return (
+    <div className="space-y-4 p-4">
+      <Skeleton className="aspect-square w-full rounded-3xl" />
+      <Skeleton className="h-6 w-3/4" />
+      <Skeleton className="h-4 w-1/2" />
+      <Skeleton className="h-10 w-full rounded-2xl" />
+      <Skeleton className="h-24 w-full rounded-2xl" />
+    </div>
+  );
+}

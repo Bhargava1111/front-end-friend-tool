@@ -1,14 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { MapPin, Navigation } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { env } from "@/lib/env";
 import { projectPoints, type LatLng, type StoreLocation } from "@/lib/geo";
 
-const BROWSER_KEY = import.meta.env.VITE_LOVABLE_CONNECTOR_GOOGLE_MAPS_BROWSER_KEY as
-  | string
-  | undefined;
-const TRACKING_ID = import.meta.env.VITE_LOVABLE_CONNECTOR_GOOGLE_MAPS_TRACKING_ID as
-  | string
-  | undefined;
+const BROWSER_KEY = env.googleMapsApiKey || undefined;
+const TRACKING_ID = env.googleMapsTrackingId || undefined;
+const MAPS_API_BASE = env.googleMapsApiKey
+  ? `https://maps.googleapis.com/maps/api/js?key=${env.googleMapsApiKey}`
+  : "";
 
 declare global {
   interface Window {
@@ -28,7 +28,7 @@ function loadGoogleMaps() {
     const script = document.createElement("script");
     script.dataset.smsMap = "true";
     script.async = true;
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${BROWSER_KEY}&loading=async&callback=__smsMapReady${
+    script.src = `${MAPS_API_BASE}&loading=async&callback=__smsMapReady${
       TRACKING_ID ? `&channel=${TRACKING_ID}` : ""
     }`;
     document.head.appendChild(script);

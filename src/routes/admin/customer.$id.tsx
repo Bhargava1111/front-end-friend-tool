@@ -62,7 +62,7 @@ function CustomerDetail() {
     );
   }
 
-  const { profile, orders, items, reviews, stats, addresses, returns, email, lastSignInAt } = data;
+  const { profile, orders = [], items = [], reviews = [], stats, addresses = [], returns = [], email, lastSignInAt } = data;
   const lastAddress = orders[0]?.address_text;
 
   const cards = [

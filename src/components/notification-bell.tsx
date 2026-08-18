@@ -3,8 +3,8 @@ import { Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Bell } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import { getNotifications, type AppNotification } from "@/lib/notifications.functions";
+import { AUTH_CLEARED_EVENT } from "@/lib/auth-store";
 import { useSession } from "@/hooks/use-shop";
 import { cn } from "@/lib/utils";
 
@@ -13,42 +13,43 @@ export function useNotifications() {
   const fetchNotifications = useServerFn(getNotifications);
   const queryClient = useQueryClient();
 
-  const query = useQuery({
+  const { data = [], isError, isLoading, refetch } = useQuery({
     queryKey: ["notifications"],
     queryFn: () => fetchNotifications() as Promise<AppNotification[]>,
     enabled: !!session,
+    refetchInterval: session?.user?.role === "admin" ? 5_000 : 15_000,
+    retry: 1,
   });
 
   useEffect(() => {
     if (!session) return;
-    const channel = supabase
-      .channel(`notifications-live-${Math.random().toString(36).slice(2)}`)
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "notifications" },
-        () => queryClient.invalidateQueries({ queryKey: ["notifications"] }),
-      )
-      .subscribe();
+    const id = setInterval(() => {
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+    }, 30_000);
+    const onCleared = () => queryClient.removeQueries({ queryKey: ["notifications"] });
+    window.addEventListener(AUTH_CLEARED_EVENT, onCleared);
     return () => {
-      supabase.removeChannel(channel);
+      clearInterval(id);
+      window.removeEventListener(AUTH_CLEARED_EVENT, onCleared);
     };
   }, [session, queryClient]);
 
-  return query;
+  return { data: isError ? [] : (data ?? []), isError, isLoading, refetch };
 }
 
 export function NotificationBell({ className }: { className?: string }) {
-  const { data = [] } = useNotifications();
+  const { session } = useSession();
+  const { data = [], isError } = useNotifications();
   const unread = data.filter((n) => !n.is_read).length;
 
   return (
     <Link
-      to="/notifications"
+      to={session ? "/notifications" : "/auth"}
       aria-label={unread ? `${unread} unread notifications` : "Notifications"}
       className={cn("relative grid h-9 w-9 place-items-center rounded-full", className)}
     >
       <Bell className="h-4.5 w-4.5" />
-      {unread > 0 && (
+      {session && !isError && unread > 0 && (
         <span className="absolute -right-0.5 -top-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-accent px-1 text-[10px] font-bold text-accent-foreground">
           {unread > 9 ? "9+" : unread}
         </span>

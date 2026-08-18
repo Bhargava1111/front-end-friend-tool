@@ -1,51 +1,52 @@
 import { createServerFn } from "@tanstack/react-start";
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireAuth } from "@/integrations/django/auth-middleware";
+import { apiFetch, toJsonBody } from "@/lib/api";
 
 export type AppNotification = {
   id: string;
   title: string;
   body: string | null;
+  image_url?: string | null;
   type: string;
   order_id: string | null;
+  link?: string | null;
   is_read: boolean;
   created_at: string;
 };
 
 export const getNotifications = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireAuth])
   .handler(async ({ context }) => {
-    const { data, error } = await context.supabase
-      .from("notifications")
-      .select("id, title, body, type, order_id, is_read, created_at")
-      .eq("user_id", context.userId)
-      .order("created_at", { ascending: false })
-      .limit(60);
-    if (error) throw new Error(error.message);
-    return (data ?? []) as AppNotification[];
+    return apiFetch<AppNotification[]>("/notifications/", { token: context.accessToken });
   });
 
 export const markNotificationsRead = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireAuth])
   .inputValidator((data: { id?: string }) => data)
   .handler(async ({ data, context }) => {
-    let query = context.supabase
-      .from("notifications")
-      .update({ is_read: true })
-      .eq("user_id", context.userId)
-      .eq("is_read", false);
-    if (data.id) query = query.eq("id", data.id);
-    const { error } = await query;
-    if (error) throw new Error(error.message);
+    if (data.id) {
+      await apiFetch(`/notifications/${data.id}/read/`, {
+        method: "POST",
+        token: context.accessToken,
+      });
+    } else {
+      await apiFetch("/notifications/read-all/", {
+        method: "POST",
+        token: context.accessToken,
+      });
+    }
     return { ok: true };
   });
 
 export const clearNotifications = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireAuth])
   .handler(async ({ context }) => {
-    const { error } = await context.supabase
-      .from("notifications")
-      .delete()
-      .eq("user_id", context.userId);
-    if (error) throw new Error(error.message);
+    const items = await apiFetch<AppNotification[]>("/notifications/", { token: context.accessToken });
+    for (const n of items) {
+      await apiFetch(`/notifications/${n.id}/`, {
+        method: "DELETE",
+        token: context.accessToken,
+      });
+    }
     return { ok: true };
   });

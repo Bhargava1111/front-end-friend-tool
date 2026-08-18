@@ -15,5 +15,18 @@ export function formatDate(value: string) {
   });
 }
 
+/** Date + time with seconds — used for notifications and activity feeds. */
+export function formatDateTime(value: string) {
+  return new Date(value).toLocaleString("en-IN", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: true,
+  });
+}
+
 export const DELIVERY_FEE = 40;
 export const FREE_DELIVERY_ABOVE = 499;

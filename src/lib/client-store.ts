@@ -1,6 +1,10 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
+import { normalizeLangCode } from "@/lib/i18n";
+import { createSafeStorage } from "@/lib/safe-storage";
 import type { Product } from "./types";
+
+const persistStorage = createJSONStorage(() => createSafeStorage());
 
 type RecentlyViewedState = {
   items: Product[];
@@ -20,7 +24,7 @@ export const useRecentlyViewed = create<RecentlyViewedState>()(
     }),
     {
       name: "sms-recently-viewed",
-      storage: createJSONStorage(() => localStorage),
+      storage: persistStorage,
     },
   ),
 );
@@ -47,13 +51,14 @@ export const useRecentSearches = create<RecentSearchState>()(
       remove: (term) => set((state) => ({ terms: state.terms.filter((t) => t !== term) })),
       clear: () => set({ terms: [] }),
     }),
-    { name: "sms-recent-searches", storage: createJSONStorage(() => localStorage) },
+    { name: "sms-recent-searches", storage: persistStorage },
   ),
 );
 
 export type DeliveryLocation = {
   label: string;
   detail: string;
+  street?: string;
   lat: number | null;
   lng: number | null;
   pincode?: string;
@@ -73,7 +78,15 @@ export const useDeliveryLocation = create<DeliveryLocationState>()(
       setLocation: (location) => set({ location }),
       clear: () => set({ location: null }),
     }),
-    { name: "sms-delivery-location", storage: createJSONStorage(() => localStorage) },
+    {
+      name: "sms-delivery-location",
+      storage: persistStorage,
+      version: 3,
+      migrate: (persisted, version) => {
+        if (version < 3) return { location: null };
+        return persisted as DeliveryLocationState;
+      },
+    },
   ),
 );
 
@@ -102,7 +115,7 @@ export const useSaveForLater = create<SaveForLaterState>()(
         ),
       remove: (id) => set((state) => ({ items: state.items.filter((p) => p.id !== id) })),
     }),
-    { name: "sms-save-for-later", storage: createJSONStorage(() => localStorage) },
+    { name: "sms-save-for-later", storage: persistStorage },
   ),
 );
 
@@ -122,7 +135,7 @@ export const useAppliedCoupon = create<AppliedCouponState>()(
       apply: (code) => set({ code: code.toUpperCase() }),
       clear: () => set({ code: null }),
     }),
-    { name: "sms-coupon", storage: createJSONStorage(() => localStorage) },
+    { name: "sms-coupon", storage: persistStorage },
   ),
 );
 
@@ -144,7 +157,7 @@ export const useFavouriteCategories = create<FavouriteCategoryState>()(
             : [...state.slugs, slug],
         })),
     }),
-    { name: "sms-favourite-categories", storage: createJSONStorage(() => localStorage) },
+    { name: "sms-favourite-categories", storage: persistStorage },
   ),
 );
 
@@ -154,8 +167,19 @@ type LanguageState = { code: string; setCode: (code: string) => void };
 
 export const useLanguage = create<LanguageState>()(
   persist(
-    (set) => ({ code: "en", setCode: (code) => set({ code }) }),
-    { name: "sms-language", storage: createJSONStorage(() => localStorage) },
+    (set) => ({
+      code: "en",
+      setCode: (code) => set({ code: normalizeLangCode(code) }),
+    }),
+    {
+      name: "sms-language",
+      storage: persistStorage,
+      version: 1,
+      migrate: (persisted) => {
+        const state = persisted as { code?: string };
+        return { code: normalizeLangCode(state?.code) };
+      },
+    },
   ),
 );
 
@@ -166,7 +190,7 @@ type AppUpdateState = { dismissedVersion: string | null; dismiss: (v: string) =>
 export const useAppUpdate = create<AppUpdateState>()(
   persist(
     (set) => ({ dismissedVersion: null, dismiss: (v) => set({ dismissedVersion: v }) }),
-    { name: "sms-app-update", storage: createJSONStorage(() => localStorage) },
+    { name: "sms-app-update", storage: persistStorage },
   ),
 );
 

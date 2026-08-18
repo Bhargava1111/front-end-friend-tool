@@ -1,8 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
+import { queryOptions, useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { Zap, Percent, IndianRupee } from "lucide-react";
-import { getHomeData } from "@/lib/catalog.functions";
+import { getDeals, getHomeData } from "@/lib/catalog.functions";
+import type { OfferSectionsMap } from "@/lib/offer-sections";
 import { PageShell, TopBar, EmptyState } from "@/components/page-shell";
 import { ProductCard } from "@/components/product-card";
 import { GridSkeleton } from "@/components/skeletons";
@@ -12,6 +13,12 @@ import { cn } from "@/lib/utils";
 import type { Product } from "@/lib/types";
 
 const dealsQuery = queryOptions({ queryKey: ["home"], queryFn: () => getHomeData() });
+
+const tabQuery = (tab: string) =>
+  queryOptions({
+    queryKey: ["deals", tab],
+    queryFn: () => getDeals({ data: { tab: tab === "all" ? undefined : tab, max_price: tab === "budget" ? 99 : undefined } }),
+  });
 
 const TABS = [
   { key: "all", label: "All deals" },
@@ -64,15 +71,20 @@ function discount(p: Product) {
 function DealsPage() {
   const { data } = useSuspenseQuery(dealsQuery);
   const [tab, setTab] = useState<(typeof TABS)[number]["key"]>("all");
+  const { data: tabData } = useQuery({
+    ...tabQuery(tab),
+    enabled: tab !== "all",
+  });
 
   const all = Array.from(
     new Map(
       [...(data.all ?? []), ...data.newest, ...data.featured, ...data.bestSelling].map((p) => [p.id, p]),
     ).values(),
   );
+  const sections = (data as { sections?: OfferSectionsMap }).sections ?? {};
   const discounted = all.filter((p) => discount(p) > 0).sort((a, b) => discount(b) - discount(a));
 
-  const list =
+  const fallback =
     tab === "flash"
       ? discounted.slice(0, 20)
       : tab === "today"
@@ -81,7 +93,23 @@ function DealsPage() {
           ? all.filter((p) => Number(p.price) <= 99)
           : discounted;
 
-  const best = discounted[0];
+  const sectionFallback =
+    tab === "flash"
+      ? sections.flash_sale
+      : tab === "today"
+        ? sections.todays_deals
+        : tab === "budget"
+          ? sections.under_99
+          : undefined;
+
+  const list =
+    (tabData as { results?: Product[] })?.results?.length
+      ? (tabData as { results: Product[] }).results
+      : sectionFallback?.length
+        ? sectionFallback
+        : fallback;
+
+  const best = (sections.flash_sale?.[0] ?? sections.todays_deals?.[0] ?? discounted[0]) as Product | undefined;
 
   return (
     <PageShell>

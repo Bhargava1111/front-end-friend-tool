@@ -44,9 +44,13 @@ notifications/Notification
 ```
 DJANGO_SECRET_KEY=
 DEBUG=False
-DATABASE_URL=postgres://user:pass@localhost:5432/mnx
+DATABASE_URL=postgresql://user:pass@localhost:5432/mnxstore
+POSTGRES_SSLMODE=require          # production
+DB_CONN_MAX_AGE=600               # connection pooling
 ALLOWED_HOSTS=api.example.com
 CORS_ALLOWED_ORIGINS=https://yourapp.com,http://localhost:8080
+PUBLIC_API_URL=https://api.example.com
+MEDIA_PUBLIC_BASE_URL=https://api.example.com/media
 EMAIL_HOST=smtp.sendgrid.net
 EMAIL_HOST_USER=apikey
 EMAIL_HOST_PASSWORD=
@@ -55,7 +59,20 @@ SMS_PROVIDER_KEY=            # MSG91 / Twilio / Fast2SMS
 OTP_TTL_SECONDS=300
 OTP_MAX_ATTEMPTS=5
 OTP_RESEND_COOLDOWN=30
+ENABLE_DEMO_OTP=False
 ```
+
+### Local PostgreSQL (Docker)
+
+```bash
+cd backend
+docker compose up -d
+cp .env.example .env
+python manage.py migrate
+python manage.py seed_demo
+```
+
+Or from the repo root: `npm run backend:db` then `npm run backend:migrate`.
 
 ---
 
@@ -67,7 +84,9 @@ OTP_RESEND_COOLDOWN=30
 | id | UUID pk | |
 | phone | char(15) unique null | E.164, primary login for customers |
 | email | email unique null | |
-| full_name | char(120) | |
+| full_name | char(120) | kept in sync from first_name + last_name |
+| first_name | char(60) | required for profile completion |
+| last_name | char(60) | required for profile completion |
 | is_phone_verified | bool | |
 | is_email_verified | bool | |
 | role | char choices `admin` \| `customer` | default `customer` |
@@ -78,7 +97,7 @@ OTP_RESEND_COOLDOWN=30
 Keep `role` here **only** for convenience; permission checks use `IsAdminRole` below.
 
 ### accounts.Profile — `OneToOne(User)`
-`avatar_url`, `alt_phone`, `dob`, `created_at`, `updated_at`.
+`avatar_url`, `gst_number` (optional — business owners), `alt_phone`, `dob`, `created_at`, `updated_at`.
 
 ### accounts.Address
 `user FK`, `label` (Home/Work/Other), `recipient_name`, `phone`, `line1`, `line2`,
@@ -229,7 +248,14 @@ GET  /stores?lat=&lng=           -> stores with distance_km, sorted
 
 ### Me / account
 ```
-GET    /me                       PATCH /me            { full_name, email, avatar_url }
+GET    /me                       -> profile with first_name, last_name, phone, email,
+                                   is_phone_verified, is_email_verified, avatar_url, gst_number
+PATCH  /me                       { first_name, last_name, gst_number?, avatar_url? }
+                                   # phone/email updated only via OTP verify endpoints
+                                   # requires verified phone + email before save
+POST   /me/avatar/               multipart file upload -> { url, avatar_url }
+POST   /me/otp/request/          { channel: "phone"|"email", phone?, email? }
+POST   /me/otp/verify/           { channel, phone|email, code } -> { ok, profile }
 GET    /me/addresses             POST /me/addresses
 PATCH  /me/addresses/{id}        DELETE /me/addresses/{id}
 POST   /me/addresses/{id}/default
@@ -734,7 +760,54 @@ PATCH/DELETE /api/v1/admin/blog/{id}/
 Public reads must exclude drafts. Admin reads include them. Cover images are
 uploaded through the existing media upload endpoint (section 11).
 
-### 12.6 Storefront landing content
+### 12.7 User profile module (update — Aug 2026)
+
+The `/profile` page collects mandatory **first name**, **last name**, **phone**
+and **email**, with optional **GST number** for business owners. Profile photos
+are uploaded via `POST /api/v1/me/avatar/` (authenticated customers).
+
+Phone and email changes require OTP verification before the profile can be saved:
+
+```
+POST /api/v1/me/otp/request/
+  { "channel": "phone" | "email", "phone": "9876543210", "email": "you@example.com" }
+  200 -> { "ok": true, "expires_at": iso8601, "cooldown_seconds": 30, "preview_code": "123456" }
+
+POST /api/v1/me/otp/verify/
+  { "channel": "phone" | "email", "phone"|"email", "code": "123456" }
+  200 -> { "ok": true, "profile": { ...updated profile with is_phone_verified / is_email_verified } }
+
+PATCH /api/v1/me/
+  { "first_name", "last_name", "gst_number?", "avatar_url?" }
+  400 if phone or email not verified
+```
+
+`Profile.gst_number` is optional (15-char GSTIN). `User.first_name` and
+`User.last_name` are required; `full_name` is kept in sync automatically.
+
+### 12.8 Environment variables (frontend)
+
+All configurable URLs live in `.env` (see `.env.example`). The client reads
+`VITE_*` keys via `src/lib/env.ts`; server functions use `API_URL`.
+
+| Variable | Purpose |
+|---|---|
+| `VITE_API_URL` | Browser API base (`/api/v1` in dev) |
+| `API_URL` | Server-side API base for TanStack server functions |
+| `VITE_API_PROXY_TARGET` | Vite dev proxy target for `/api/v1` |
+| `VITE_APP_URL` | Local dev web URL (mobile install page, LAN testing) |
+| `VITE_PUBLIC_WEB_URL` | Production web app URL |
+| `CAPACITOR_SERVER_URL` | Capacitor WebView server URL |
+| `VITE_MEDIA_BASE_URL` | Optional CDN base for media |
+| `VITE_GOOGLE_MAPS_API_KEY` | Google Maps JavaScript API |
+| `VITE_GEO_REVERSE_URL` | Client-side reverse geocode fallback |
+| `VITE_SUPPORT_PHONE` / `VITE_SUPPORT_EMAIL` | Support contact links |
+| `VITE_WHATSAPP_BASE_URL` | WhatsApp deep-link base (`https://wa.me`) |
+
+Mobile LAN testing: run `node scripts/mobile-config.mjs` to auto-write
+`.env.mobile.local` and `capacitor.config.json` with your LAN IP.
+
+### 12.9 Storefront landing content
 
 No API impact: the home page adds a store-story block with headline stats, a
 journal call-to-action, and every storefront page now ends with a shared footer

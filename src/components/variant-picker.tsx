@@ -1,4 +1,5 @@
 import { formatINR } from "@/lib/format";
+import { formatPackLabel, normalizeUnit, parsePackLabel } from "@/lib/pack-units";
 import { cn } from "@/lib/utils";
 import type { ProductVariant } from "@/lib/types";
 
@@ -7,6 +8,14 @@ export function pickDefaultVariant(variants: ProductVariant[] | undefined | null
   const list = (variants ?? []).filter((v) => v.is_active !== false);
   if (list.length === 0) return null;
   return list.find((v) => v.is_default) ?? list.find((v) => v.stock > 0) ?? list[0];
+}
+
+function variantUnit(v: ProductVariant) {
+  return normalizeUnit(v.unit, parsePackLabel(v.label)?.unit ?? "g");
+}
+
+function variantLabel(v: ProductVariant) {
+  return v.label || formatPackLabel(v.unit_value, variantUnit(v));
 }
 
 const UNIT_GROUPS: Array<{ key: string; label: string; units: string[] }> = [
@@ -29,7 +38,7 @@ export function VariantPicker({
 
   const groups = UNIT_GROUPS.map((g) => ({
     ...g,
-    items: active.filter((v) => g.units.includes(v.unit)),
+    items: active.filter((v) => g.units.includes(variantUnit(v))),
   })).filter((g) => g.items.length > 0);
   const grouped = groups.length > 0 ? groups : [{ key: "all", label: "Pack size", items: active }];
 
@@ -59,7 +68,7 @@ export function VariantPicker({
                     out && "opacity-45",
                   )}
                 >
-                  <span className="block text-xs font-semibold">{v.label}</span>
+                  <span className="block text-xs font-semibold">{variantLabel(v)}</span>
                   <span className="block text-[13px] font-bold">{formatINR(v.price)}</span>
                   {v.mrp && Number(v.mrp) > Number(v.price) && (
                     <span className="block text-[10px] text-muted-foreground line-through">

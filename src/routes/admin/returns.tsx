@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { PackageX } from "lucide-react";
 import { toast } from "sonner";
 import { adminListReturns, adminSetReturnStatus } from "@/lib/admin-extra.functions";
+import { processAdminRefund } from "@/lib/admin-platform.functions";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/skeletons";
 import { ErrorState } from "@/components/state-blocks";
@@ -19,7 +20,10 @@ type ReturnRow = {
   details: string | null;
   status: string;
   created_at: string;
-  order: { order_number: string; total: number; recipient_name: string } | null;
+  order_number?: string;
+  order_total?: number;
+  customer?: string;
+  order?: { order_number: string; total: number; recipient_name: string } | null;
 };
 
 const STATUS_TONE: Record<string, string> = {
@@ -32,11 +36,21 @@ const STATUS_TONE: Record<string, string> = {
 function AdminReturnsPage() {
   const list = useServerFn(adminListReturns);
   const setStatus = useServerFn(adminSetReturnStatus);
+  const refund = useServerFn(processAdminRefund);
   const queryClient = useQueryClient();
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["admin-returns"],
     queryFn: () => list() as Promise<ReturnRow[]>,
+  });
+
+  const refundMutation = useMutation({
+    mutationFn: (id: string) => refund({ data: { return_id: id } }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-returns"] });
+      toast.success("Refund processed to wallet");
+    },
+    onError: (e: Error) => toast.error(e.message),
   });
 
   const mutation = useMutation({
@@ -71,7 +85,7 @@ function AdminReturnsPage() {
           {(data ?? []).map((r) => (
             <div key={r.id} className="rounded-2xl border border-border bg-card p-4 card-elevated">
               <div className="flex flex-wrap items-center gap-2">
-                <p className="text-sm font-bold">{r.order?.order_number ?? "Order removed"}</p>
+                <p className="text-sm font-bold">{r.order_number ?? r.order?.order_number ?? "Order removed"}</p>
                 <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${STATUS_TONE[r.status] ?? "bg-secondary"}`}>
                   {r.status}
                 </span>
@@ -82,10 +96,15 @@ function AdminReturnsPage() {
               </p>
               {r.details && <p className="mt-1 text-xs text-muted-foreground">{r.details}</p>}
               <p className="mt-1 text-xs text-muted-foreground">
-                {r.order?.recipient_name} · {r.order ? formatINR(r.order.total) : "—"}
+                {r.customer ?? r.order?.recipient_name ?? "—"} ·{" "}
+                {r.order_total != null
+                  ? formatINR(r.order_total)
+                  : r.order
+                    ? formatINR(r.order.total)
+                    : "—"}
               </p>
               <div className="mt-3 flex flex-wrap gap-2">
-                {["approved", "rejected", "refunded"].map((s) => (
+                {["approved", "rejected"].map((s) => (
                   <Button
                     key={s}
                     size="sm"
@@ -97,6 +116,15 @@ function AdminReturnsPage() {
                     {s}
                   </Button>
                 ))}
+                <Button
+                  size="sm"
+                  variant={r.status === "refunded" ? "default" : "outline"}
+                  className="rounded-xl"
+                  disabled={r.status === "refunded" || refundMutation.isPending}
+                  onClick={() => refundMutation.mutate(r.id)}
+                >
+                  Refund to wallet
+                </Button>
               </div>
             </div>
           ))}

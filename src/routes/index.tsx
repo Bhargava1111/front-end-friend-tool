@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { Search, MapPin, Sparkles } from "lucide-react";
 import { getHomeData } from "@/lib/catalog.functions";
+import type { OfferSectionsMap } from "@/lib/offer-sections";
 import { PageShell } from "@/components/page-shell";
 import { BannerSlider } from "@/components/banner-slider";
 import { ProductRail } from "@/components/product-rail";
@@ -78,6 +79,7 @@ function Home() {
   );
   const trending = data.bestSelling.length ? data.bestSelling : data.newest;
   const categoryScrollRef = useAutoScroll<HTMLDivElement>(data.categories.length > 3);
+  const sections = (data as { sections?: OfferSectionsMap }).sections ?? {};
   // All home banners feed the hero carousel — it paginates cleanly past 10 slides.
   const heroBanners = data.banners;
   const offerBanners = data.banners.length > 3 ? data.banners.slice(3) : data.banners;
@@ -168,25 +170,34 @@ function Home() {
         </div>
       </Reveal>
 
-      <FlashSaleRail products={allProducts} />
+      <FlashSaleRail products={allProducts} curated={sections.flash_sale} />
       <OfferBannerCarousel banners={offerBanners} />
       <OfferCards />
 
-      <DealOfTheDay products={allProducts} />
+      <DealOfTheDay products={allProducts} curated={sections.todays_deals} />
 
       <Reveal>
-        <ProductRail title="Today's deals" products={data.featured} href={{ to: "/deals" }} />
+        <ProductRail
+          title="Today's deals"
+          products={sections.todays_deals?.length ? sections.todays_deals : data.featured}
+          href={{ to: "/deals" }}
+        />
       </Reveal>
 
       <CouponStrip />
 
-      <FestivalPicks categories={data.categories} products={allProducts} title="Pooja & festive store" />
+      <FestivalPicks
+        categories={data.categories}
+        products={allProducts}
+        curated={sections.festive_picks}
+        title="Pooja & festive store"
+      />
 
       <Reveal>
         <ProductRail title="Trending now" products={trending} href={{ to: "/deals" }} />
       </Reveal>
 
-      <BudgetRail products={allProducts} />
+      <BudgetRail products={allProducts} curated={sections.under_99} />
 
       <Reveal>
         <ProductRail title="Best sellers" products={data.bestSelling} href={{ to: "/search" }} />

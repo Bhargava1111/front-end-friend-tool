@@ -5,6 +5,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { addToCart, toggleWishlist } from "@/lib/shop.functions";
+import { formatShopError } from "@/lib/auth-session";
 import { useSession, useWishlist } from "@/hooks/use-shop";
 import { formatINR } from "@/lib/format";
 import { pickDefaultVariant } from "@/components/variant-picker";
@@ -56,13 +57,13 @@ export function ProductCard({ product, className }: { product: Product; classNam
       setTimeout(() => setAdded(false), 1400);
       toast.success(`${product.name} added to cart`);
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(formatShopError(e)),
   });
 
   const wishMutation = useMutation({
     mutationFn: () => toggle({ data: { productId: product.id } }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["wishlist"] }),
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(formatShopError(e)),
   });
 
   const requireAuth = () => {

@@ -1,137 +1,70 @@
 import { createServerFn } from "@tanstack/react-start";
-import {
-  attachGalleries,
-  attachVariants,
-  getPublicSupabase,
-  PRODUCT_COLUMNS,
-  VARIANT_COLUMNS,
-} from "./catalog.server";
+import { apiFetch } from "@/lib/api";
 
 export const getHomeData = createServerFn({ method: "GET" }).handler(async () => {
-  const supabase = getPublicSupabase();
-  const [banners, categories, products] = await Promise.all([
-    supabase
-      .from("banners")
-      .select("id, title, subtitle, image_url, link_slug, placement")
-      .eq("placement", "home")
-      .order("sort_order"),
-    supabase
-      .from("categories")
-      .select("id, name, slug, description, image_url")
-      .order("sort_order"),
-    supabase.from("products").select(PRODUCT_COLUMNS).order("created_at", { ascending: false }),
-  ]);
-
-  const all = await attachVariants(supabase, await attachGalleries(supabase, products.data ?? []));
-  return {
-    banners: banners.data ?? [],
-    categories: categories.data ?? [],
-    featured: all.filter((p) => p.is_featured).slice(0, 10),
-    bestSelling: all.filter((p) => p.is_best_seller).slice(0, 10),
-    newest: all.slice(0, 10),
-    recommended: all.filter((p) => p.is_recommended).slice(0, 10),
-    budget: all.filter((p) => Number(p.price) <= 99).slice(0, 12),
-    all: all.slice(0, 40),
-  };
+  return apiFetch("/home/");
 });
 
 export const getCategories = createServerFn({ method: "GET" }).handler(async () => {
-  const supabase = getPublicSupabase();
-  const { data } = await supabase
-    .from("categories")
-    .select("id, name, slug, description, image_url")
-    .order("sort_order");
-  return data ?? [];
+  return apiFetch("/categories/");
 });
 
 export const getCategoryWithProducts = createServerFn({ method: "GET" })
   .inputValidator((data: { slug: string }) => data)
   .handler(async ({ data }) => {
-    const supabase = getPublicSupabase();
-    const { data: category } = await supabase
-      .from("categories")
-      .select("id, name, slug, description, image_url")
-      .eq("slug", data.slug)
-      .maybeSingle();
-    if (!category) return { category: null, products: [], categories: [], brands: [] };
-
-    const [{ data: products }, { data: categories }, { data: brands }] = await Promise.all([
-      supabase
-        .from("products")
-        .select(PRODUCT_COLUMNS)
-        .eq("category_id", category.id)
-        .order("name"),
-      supabase.from("categories").select("id, name, slug, image_url").order("sort_order"),
-      supabase.from("brands").select("id, name, slug").eq("is_active", true).order("name"),
-    ]);
-
-    return {
-      category,
-      products: await attachVariants(supabase, await attachGalleries(supabase, products ?? [])),
-      categories: categories ?? [],
-      brands: brands ?? [],
-    };
+    return apiFetch(`/categories/${data.slug}/products/`);
   });
 
 export const getProductBySlug = createServerFn({ method: "GET" })
   .inputValidator((data: { slug: string }) => data)
   .handler(async ({ data }) => {
-    const supabase = getPublicSupabase();
-    const { data: product } = await supabase
-      .from("products")
-      .select(PRODUCT_COLUMNS)
-      .eq("slug", data.slug)
-      .maybeSingle();
-    if (!product) return { product: null, related: [], categoryName: null, images: [] };
-
-    const [{ data: related }, { data: category }, { data: gallery }, { data: variants }] =
-      await Promise.all([
-      product.category_id
-        ? supabase
-            .from("products")
-            .select(PRODUCT_COLUMNS)
-            .eq("category_id", product.category_id)
-            .neq("id", product.id)
-            .limit(8)
-        : Promise.resolve({ data: [] as typeof product[] }),
-      product.category_id
-        ? supabase.from("categories").select("name, slug").eq("id", product.category_id).maybeSingle()
-        : Promise.resolve({ data: null }),
-      supabase
-        .from("product_images")
-        .select("image_url, sort_order")
-        .eq("product_id", product.id)
-        .order("sort_order"),
-      supabase
-        .from("product_variants")
-        .select(VARIANT_COLUMNS)
-        .eq("product_id", product.id)
-        .eq("is_active", true)
-        .order("sort_order"),
-    ]);
-
-    const images = [
-      ...(product.image_url ? [product.image_url] : []),
-      ...(gallery ?? []).map((g) => g.image_url),
-    ].filter((v, i, arr) => arr.indexOf(v) === i);
-
-    return {
-      product: { ...product, images, variants: variants ?? [] },
-      related: await attachVariants(supabase, await attachGalleries(supabase, related ?? [])),
-      categoryName: category?.name ?? null,
-      images,
-    };
+    const res = await apiFetch<
+      import("@/lib/types").Product & {
+        related?: import("@/lib/types").Product[];
+        product?: import("@/lib/types").Product;
+      }
+    >(`/products/${data.slug}/`);
+    if (res.product) {
+      return { product: res.product, related: res.related ?? [] };
+    }
+    const { related = [], ...product } = res;
+    return { product, related };
   });
 
 export const searchProducts = createServerFn({ method: "GET" })
-  .inputValidator((data: { q: string; sort?: string }) => data)
+  .inputValidator((data: { q?: string; category?: string; sort?: string; page?: number }) => data)
   .handler(async ({ data }) => {
-    const supabase = getPublicSupabase();
-    let query = supabase.from("products").select(PRODUCT_COLUMNS);
-    if (data.q.trim()) query = query.ilike("name", `%${data.q.trim()}%`);
-    if (data.sort === "price_asc") query = query.order("price", { ascending: true });
-    else if (data.sort === "price_desc") query = query.order("price", { ascending: false });
-    else query = query.order("name");
-    const { data: products } = await query.limit(60);
-    return attachVariants(supabase, await attachGalleries(supabase, products ?? []));
+    const params = new URLSearchParams();
+    if (data.q) params.set("search", data.q);
+    if (data.category) params.set("category", data.category);
+    if (data.sort) params.set("sort", data.sort);
+    if (data.page) params.set("page", String(data.page));
+    const qs = params.toString();
+    const res = await apiFetch<{ count?: number; results?: import("@/lib/types").Product[] } | import("@/lib/types").Product[]>(
+      qs ? `/products/?${qs}` : "/products/",
+    );
+    if (Array.isArray(res)) return res;
+    return res.results ?? [];
   });
+
+export const getDeals = createServerFn({ method: "GET" })
+  .inputValidator((data: { tab?: string; max_price?: number }) => data)
+  .handler(async ({ data }) => {
+    const params = new URLSearchParams();
+    if (data.tab) params.set("tab", data.tab);
+    if (data.max_price) params.set("max_price", String(data.max_price));
+    const qs = params.toString();
+    return apiFetch(`/catalog/deals/${qs ? `?${qs}` : ""}`);
+  });
+
+export const getCombos = createServerFn({ method: "GET" }).handler(async () => {
+  return apiFetch<import("@/lib/types").Product[]>("/catalog/combos/");
+});
+
+export const getOffers = createServerFn({ method: "GET" }).handler(async () => {
+  return apiFetch("/catalog/offers/");
+});
+
+export const getCoupons = createServerFn({ method: "GET" }).handler(async () => {
+  return apiFetch("/coupons/");
+});

@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Sri Mahalakshmi Stores</string>
+    <string name="title_activity_main">Sri Mahalakshmi Stores</string>
+    <string name="package_name">in.srimahalakshmistores.app</string>
+    <string name="custom_url_scheme">in.srimahalakshmistores.app</string>
+</resources>

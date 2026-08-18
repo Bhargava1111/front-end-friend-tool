@@ -7,6 +7,7 @@ import { BackToTop, StickyCartBar } from "./cart-pill";
 import { SiteFooter } from "./site-footer";
 
 import { cn } from "@/lib/utils";
+import { isNativePlatform } from "@/lib/capacitor";
 
 export function PageShell({
   children,
@@ -26,8 +27,9 @@ export function PageShell({
       {withNav && <DesktopHeader />}
       <div
         className={cn(
-          "mx-auto w-full max-w-lg lg:max-w-7xl lg:px-6",
-          withNav && "pb-36 lg:pb-16",
+          "mx-auto w-full lg:px-6",
+          isNativePlatform() ? "max-w-lg" : "max-w-lg lg:max-w-7xl",
+          withNav && (isNativePlatform() ? "pb-36" : "pb-36 lg:pb-16"),
           className,
         )}
       >
@@ -42,7 +44,7 @@ export function PageShell({
         </>
       )}
       {withNav && (
-        <div className="lg:hidden">
+        <div className={isNativePlatform() ? "block" : "lg:hidden"}>
           <BottomNav />
         </div>
       )}

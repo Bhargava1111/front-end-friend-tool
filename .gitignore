@@ -15,6 +15,19 @@ dist-ssr
 .tanstack/**
 .nitro
 *.local
+.env
+.env.mobile
+mobile/capacitor.server.json
+mobile/releases/
+.env.development.local
+.env.mobile.local
+capacitor.config.json
+
+# Django
+backend/db.sqlite3
+backend/media/
+backend/staticfiles/
+backend/datadump.json
 
 # Wrangler / Cloudflare
 .wrangler/
@@ -30,3 +43,12 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Capacitor / mobile native build output
+android/.gradle/
+android/app/build/
+android/build/
+android/local.properties
+ios/App/Pods/
+ios/DerivedData/
+.gradle-cache/

@@ -5,6 +5,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { Megaphone, Send } from "lucide-react";
 import { toast } from "sonner";
 import { adminBroadcastNotification } from "@/lib/admin-extra.functions";
+import { ImageUploadField } from "@/components/image-upload";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -25,14 +26,24 @@ function AdminNotificationsPage() {
   const send = useServerFn(adminBroadcastNotification);
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
+  const [imageUrl, setImageUrl] = useState("");
   const [audience, setAudience] = useState<"all" | "admins">("all");
 
   const mutation = useMutation({
-    mutationFn: () => send({ data: { title: title.trim(), body: body.trim(), audience } }),
+    mutationFn: () =>
+      send({
+        data: {
+          title: title.trim(),
+          body: body.trim(),
+          audience,
+          image_url: imageUrl.trim() || undefined,
+        },
+      }),
     onSuccess: (res: { sent: number }) => {
       toast.success(`Sent to ${res.sent} ${res.sent === 1 ? "person" : "people"}`);
       setTitle("");
       setBody("");
+      setImageUrl("");
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -87,6 +98,15 @@ function AdminNotificationsPage() {
           />
         </div>
 
+        <ImageUploadField
+          label="Banner image (optional)"
+          folder="banners"
+          value={imageUrl}
+          onChange={setImageUrl}
+          aspect="aspect-[16/7]"
+          hint="Wide promo image shown at the top of the notification. Leave empty for text-only."
+        />
+
         <Button
           className="h-11 w-full rounded-xl"
           disabled={!title.trim() || !body.trim() || mutation.isPending}
@@ -107,6 +127,7 @@ function AdminNotificationsPage() {
             onClick={() => {
               setTitle(t.title);
               setBody(t.body);
+              setImageUrl("");
             }}
             className="block w-full rounded-2xl border border-border bg-card p-4 text-left card-elevated"
           >

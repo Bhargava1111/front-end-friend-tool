@@ -3,10 +3,16 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { ArrowLeft, KeyRound, Loader2, Mail, Smartphone, Sparkles } from "lucide-react";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable";
 import { useSession } from "@/hooks/use-shop";
-import { requestPhoneOtp, verifyPhoneOtp } from "@/lib/auth-otp.functions";
+import {
+  requestPhoneOtp,
+  verifyPhoneOtp,
+  requestEmailOtp,
+  verifyEmailOtp,
+  loginWithPassword,
+} from "@/lib/auth-otp.functions";
+import { getApiBase } from "@/lib/api";
+import { saveSession, type AuthUser } from "@/lib/auth-store";
 import { OtpInput } from "@/components/otp-input";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -57,9 +63,12 @@ function useCooldown() {
 
 function AuthPage() {
   const navigate = useNavigate();
-  const { session, loading } = useSession();
+  const { session, loading, signIn } = useSession();
   const askPhoneOtp = useServerFn(requestPhoneOtp);
   const confirmPhoneOtp = useServerFn(verifyPhoneOtp);
+  const askEmailOtp = useServerFn(requestEmailOtp);
+  const confirmEmailOtp = useServerFn(verifyEmailOtp);
+  const doPasswordLogin = useServerFn(loginWithPassword);
 
   const [mode, setMode] = useState<Mode>("login");
   const [method, setMethod] = useState<Method>("phone");
@@ -105,17 +114,24 @@ function AuthPage() {
         setStep("otp");
         toast.success("Code sent");
       } else {
-        const { error } = await supabase.auth.signInWithOtp({
-          email,
-          options: {
-            shouldCreateUser: mode === "signup",
-            emailRedirectTo: window.location.origin,
-            data: mode === "signup" ? { full_name: fullName, phone } : undefined,
-          },
-        });
-        if (error) throw error;
-        cooldown.start(45);
-        setNote(`We emailed a 6-digit code to ${email}. It expires in 10 minutes.`);
+        const res = await askEmailOtp({ data: { email, fullName } }) as {
+          ok?: boolean;
+          detail?: string;
+          preview_code?: string;
+          cooldown_seconds?: number;
+        };
+        if (res.ok === false) {
+          if (res.cooldown_seconds) cooldown.start(res.cooldown_seconds);
+          toast.error(res.detail ?? "Could not send code.");
+          return;
+        }
+        cooldown.start(30);
+        setNote(
+          res.preview_code
+            ? `Test mode: your code is ${res.preview_code}.`
+            : `We emailed a 6-digit code to ${email}. It expires in 5 minutes.`,
+        );
+        if (res.preview_code) setCode(res.preview_code);
         setStep("otp");
         toast.success("Code sent");
       }
@@ -137,14 +153,18 @@ function AuthPage() {
           setCode("");
           return;
         }
-        const { error } = await supabase.auth.verifyOtp({
-          type: "email",
-          token_hash: res.tokenHash,
+        signIn({
+          access: res.access,
+          refresh: res.refresh,
+          user: res.user as AuthUser,
         });
-        if (error) throw error;
       } else {
-        const { error } = await supabase.auth.verifyOtp({ type: "email", email, token: codeValue });
-        if (error) throw error;
+        const res = await confirmEmailOtp({ data: { email, code: codeValue, fullName } }) as {
+          access: string;
+          refresh: string;
+          user: AuthUser;
+        };
+        signIn({ access: res.access, refresh: res.refresh, user: res.user });
       }
       toast.success(mode === "signup" ? "Account ready. Welcome!" : "Signed in");
       navigate({ to: "/", replace: true });
@@ -161,50 +181,58 @@ function AuthPage() {
     setBusy(true);
     try {
       if (mode === "signup") {
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            emailRedirectTo: window.location.origin,
-            data: { full_name: fullName, phone },
-          },
-        });
-        if (error) throw error;
-        toast.success("Check your email to confirm your account.");
+        toast.error("Password signup is not available yet. Use OTP sign-in.");
         return;
       }
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) throw error;
+      const res = await doPasswordLogin({ data: { identifier: email, password } }) as {
+        access: string;
+        refresh: string;
+        user: AuthUser;
+      };
+      signIn({ access: res.access, refresh: res.refresh, user: res.user });
       toast.success("Signed in");
       navigate({ to: "/", replace: true });
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Something went wrong");
+      // Fallback: call Render API from the browser if the server function fetch fails.
+      try {
+        const r = await fetch(`${getApiBase()}/auth/login/`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ identifier: email, password }),
+        });
+        const data = await r.json().catch(() => ({}));
+        if (!r.ok) {
+          throw new Error(
+            typeof data?.detail === "string" ? data.detail : "Invalid credentials.",
+          );
+        }
+        signIn({
+          access: data.access,
+          refresh: data.refresh,
+          user: data.user as AuthUser,
+        });
+        toast.success("Signed in");
+        navigate({ to: "/", replace: true });
+      } catch (fallbackErr) {
+        toast.error(
+          fallbackErr instanceof Error
+            ? fallbackErr.message
+            : err instanceof Error
+              ? err.message
+              : "Something went wrong",
+        );
+      }
     } finally {
       setBusy(false);
     }
   }
 
   async function handleGoogle() {
-    setBusy(true);
-    const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin,
-    });
-    if (result?.error) {
-      toast.error(result.error.message ?? "Google sign-in failed");
-      setBusy(false);
-    }
+    toast.error("Google sign-in is not configured with the Django backend yet.");
   }
 
   async function handleForgotPassword() {
-    if (!email) {
-      toast.error("Enter your email first.");
-      return;
-    }
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/reset-password`,
-    });
-    if (error) toast.error(error.message);
-    else toast.success("Password reset link sent.");
+    toast.error("Use OTP sign-in or contact support to reset your password.");
   }
 
   return (

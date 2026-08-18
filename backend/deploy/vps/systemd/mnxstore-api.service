@@ -1,0 +1,25 @@
+[Unit]
+Description=Sri Mahalakshmi Stores Django API (Gunicorn)
+Requires=mnxstore-api.socket
+After=network.target postgresql.service
+
+[Service]
+Type=simple
+User=mnxstore
+Group=www-data
+WorkingDirectory=/var/www/mnxstore/backend
+EnvironmentFile=/var/www/mnxstore/.env
+ExecStart=/var/www/mnxstore/venv/bin/gunicorn config.wsgi:application \
+  --bind unix:/run/mnxstore/gunicorn.sock \
+  --workers 5 \
+  --timeout 120 \
+  --access-logfile - \
+  --error-logfile -
+ExecReload=/bin/kill -s HUP $MAINPID
+Restart=on-failure
+RestartSec=5
+KillMode=mixed
+TimeoutStopSec=30
+
+[Install]
+WantedBy=multi-user.target

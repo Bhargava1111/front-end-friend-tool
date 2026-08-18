@@ -4,6 +4,7 @@ import { NotificationBell } from "./notification-bell";
 import { ThemeToggle } from "./theme-toggle";
 import { useCartCount } from "@/hooks/use-shop";
 import { cn } from "@/lib/utils";
+import { isNativePlatform } from "@/lib/capacitor";
 
 const navLinks = [
   { to: "/", label: "Home", exact: true },
@@ -21,7 +22,12 @@ export function DesktopHeader() {
   const count = useCartCount();
 
   return (
-    <header className="sticky top-0 z-40 hidden border-b border-border bg-background/90 backdrop-blur-md lg:block">
+    <header
+      className={cn(
+        "sticky top-0 z-40 hidden border-b border-border bg-background/90 backdrop-blur-md",
+        !isNativePlatform() && "lg:block",
+      )}
+    >
       <div className="mx-auto flex max-w-7xl items-center gap-5 px-6 py-3">
         <Link to="/" className="flex shrink-0 items-center gap-2.5">
           <span className="grid h-10 w-10 place-items-center rounded-xl bg-primary text-sm font-bold text-primary-foreground">

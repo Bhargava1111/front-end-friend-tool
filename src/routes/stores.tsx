@@ -7,7 +7,8 @@ import { StoreMap } from "@/components/store-map";
 import { useStores } from "@/components/location-bar";
 import { Button } from "@/components/ui/button";
 import { useDeliveryLocation } from "@/lib/client-store";
-import { distanceKm, etaMinutes, formatKm, nearestStore, type LatLng } from "@/lib/geo";
+import { distanceKm, etaMinutes, formatKm, locationFromCoords, nearestStore, type LatLng } from "@/lib/geo";
+import { getDeviceCoords } from "@/lib/device-location";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/stores")({
@@ -41,17 +42,17 @@ function StoreLocator() {
 
   const near = useMemo(() => (me ? nearestStore(me, stores) : null), [me, stores]);
 
-  function detect() {
-    if (!navigator.geolocation) return toast.error("Location is not supported here");
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-        setMe(coords);
-        toast.success("Showing stores near you");
-      },
-      () => toast.error("Couldn't get your location"),
-      { enableHighAccuracy: true, timeout: 10000 },
-    );
+  async function detect() {
+    try {
+      const pos = await getDeviceCoords();
+      const coords = { lat: pos.latitude, lng: pos.longitude };
+      setMe(coords);
+      const next = await locationFromCoords(coords, stores, pos.accuracy);
+      setLocation(next);
+      toast.success("Showing stores near you");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Couldn't get your location");
+    }
   }
 
   return (

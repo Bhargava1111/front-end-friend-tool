@@ -55,13 +55,18 @@ function Dashboard() {
     );
   }
 
+  const days = data.days ?? [];
+  const statusCounts = data.statusCounts ?? [];
+  const topProducts = data.topProducts ?? [];
+  const recentOrders = data.recentOrders ?? [];
+
   const stats = [
-    { label: "Revenue", value: formatINR(data.revenue), icon: IndianRupee },
-    { label: "Orders", value: String(data.orderCount), icon: ShoppingBag },
-    { label: "Customers", value: String(data.customerCount), icon: Users },
-    { label: "Avg order", value: formatINR(data.avgOrderValue), icon: TrendingUp },
-    { label: "Products", value: String(data.productCount), icon: ShoppingBag },
-    { label: "Low stock", value: String(data.lowStock), icon: PackageX },
+    { label: "Revenue", value: formatINR(data.revenue ?? 0), icon: IndianRupee },
+    { label: "Orders", value: String(data.orderCount ?? 0), icon: ShoppingBag },
+    { label: "Customers", value: String(data.customerCount ?? 0), icon: Users },
+    { label: "Avg order", value: formatINR(data.avgOrderValue ?? 0), icon: TrendingUp },
+    { label: "Products", value: String(data.productCount ?? 0), icon: ShoppingBag },
+    { label: "Low stock", value: String(data.lowStock ?? 0), icon: PackageX },
   ];
 
   return (
@@ -83,7 +88,7 @@ function Dashboard() {
           <h2 className="text-sm font-semibold text-foreground">Revenue — last 14 days</h2>
           <div className="mt-3 h-64">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={data.days}>
+              <AreaChart data={days}>
                 <defs>
                   <linearGradient id="rev" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor="#F2A413" stopOpacity={0.7} />
@@ -112,14 +117,14 @@ function Dashboard() {
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
-                  data={data.statusCounts}
+                  data={statusCounts}
                   dataKey="count"
                   nameKey="status"
                   innerRadius={50}
                   outerRadius={85}
                   paddingAngle={3}
                 >
-                  {data.statusCounts.map((_, i) => (
+                  {statusCounts.map((_, i) => (
                     <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
                   ))}
                 </Pie>
@@ -135,7 +140,7 @@ function Dashboard() {
           <h2 className="text-sm font-semibold text-foreground">Top products by revenue</h2>
           <div className="mt-3 h-64">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={data.topProducts} layout="vertical" margin={{ left: 10 }}>
+              <BarChart data={topProducts} layout="vertical" margin={{ left: 10 }}>
                 <CartesianGrid strokeDasharray="3 3" opacity={0.3} horizontal={false} />
                 <XAxis type="number" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
                 <YAxis
@@ -156,10 +161,10 @@ function Dashboard() {
         <div className="rounded-2xl border border-border bg-card p-4">
           <h2 className="text-sm font-semibold text-foreground">Recent orders</h2>
           <div className="mt-3 divide-y divide-border">
-            {data.recentOrders.length === 0 && (
+            {recentOrders.length === 0 && (
               <p className="py-8 text-center text-sm text-muted-foreground">No orders yet.</p>
             )}
-            {data.recentOrders.map((o) => (
+            {recentOrders.map((o) => (
               <div key={o.id} className="flex items-center justify-between gap-3 py-2.5">
                 <div className="min-w-0">
                   <p className="truncate text-sm font-medium text-foreground">{o.order_number}</p>

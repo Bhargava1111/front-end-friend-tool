@@ -8,6 +8,9 @@ import { getMyVerification, submitVerification } from "@/lib/account.functions";
 import { useSession } from "@/hooks/use-shop";
 import { useStores } from "@/components/location-bar";
 import { StoreMap } from "@/components/store-map";
+import { addressFromCoords } from "@/lib/geo";
+import { getDeviceCoords } from "@/lib/device-location";
+import { toLocalPhoneDigits } from "@/lib/phone-utils";
 import { PageShell, TopBar } from "@/components/page-shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -57,7 +60,7 @@ function VerifyAccount() {
   useEffect(() => {
     if (!data) return;
     setName((v) => v || (data.full_name ?? ""));
-    setPhone((v) => v || (data.phone ?? ""));
+    setPhone((v) => v || toLocalPhoneDigits(data.phone ?? ""));
     setAddress((v) => v || (data.address_text ?? ""));
     setPincode((v) => v || (data.pincode ?? ""));
     if (data.latitude != null && data.longitude != null) {
@@ -87,28 +90,33 @@ function VerifyAccount() {
     onError: (e: Error) => toast.error(e.message),
   });
 
-  function detect() {
-    if (typeof navigator === "undefined" || !navigator.geolocation) {
-      toast.error("Location is not available on this device");
-      return;
-    }
+  async function detect() {
     setLocating(true);
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setCoords({
-          lat: pos.coords.latitude,
-          lng: pos.coords.longitude,
-          accuracy: pos.coords.accuracy ?? null,
-        });
-        setLocating(false);
-        toast.success("Location captured — check the pin on the map");
-      },
-      () => {
-        setLocating(false);
-        toast.error("Couldn't read your location. Enable GPS and try again.");
-      },
-      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 },
-    );
+    try {
+      const pos = await getDeviceCoords();
+      setCoords({
+        lat: pos.latitude,
+        lng: pos.longitude,
+        accuracy: pos.accuracy ?? null,
+      });
+
+      const place = await addressFromCoords(pos.latitude, pos.longitude);
+      const fullAddress = [place.line1, place.line2, place.city, place.state]
+        .filter(Boolean)
+        .join(", ");
+      setAddress((current) => current || fullAddress);
+      setPincode((current) => current || place.pincode);
+
+      toast.success(
+        pos.accuracy && pos.accuracy > 150
+          ? "Location saved — accuracy is low, try again outdoors"
+          : "Location captured and address filled from GPS",
+      );
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Couldn't read your location. Enable GPS and try again.");
+    } finally {
+      setLocating(false);
+    }
   }
 
   const status = data?.verification_status ?? "pending";

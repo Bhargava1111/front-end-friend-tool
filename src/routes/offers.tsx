@@ -9,6 +9,8 @@ import { GridSkeleton } from "@/components/skeletons";
 import { Reveal } from "@/components/motion";
 import { FestivalPicks, OfferCards } from "@/components/home-sections";
 import { CouponStrip } from "@/components/home-sections";
+import { ProductRail } from "@/components/product-rail";
+import type { OfferSectionsMap } from "@/lib/offer-sections";
 
 const offersQuery = queryOptions({ queryKey: ["home"], queryFn: () => getHomeData() });
 
@@ -62,6 +64,7 @@ function OffersPage() {
       [...(data.all ?? []), ...data.newest, ...data.featured, ...data.bestSelling].map((p) => [p.id, p]),
     ).values(),
   );
+  const sections = (data as { sections?: OfferSectionsMap }).sections ?? {};
 
   return (
     <PageShell>
@@ -100,7 +103,18 @@ function OffersPage() {
 
       <OfferCards />
       <CouponStrip />
-      <FestivalPicks categories={data.categories} products={all} title="Festive collections" />
+      {sections.combo_packs && sections.combo_packs.length > 0 && (
+        <ProductRail title="Combo packs" products={sections.combo_packs} href={{ to: "/deals" }} />
+      )}
+      {sections.custom_offers && sections.custom_offers.length > 0 && (
+        <ProductRail title="Custom offers" products={sections.custom_offers} href={{ to: "/deals" }} />
+      )}
+      <FestivalPicks
+        categories={data.categories}
+        products={all}
+        curated={sections.festive_picks}
+        title="Festive collections"
+      />
     </PageShell>
   );
 }

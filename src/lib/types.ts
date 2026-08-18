@@ -39,6 +39,20 @@ export type Product = {
   images?: string[];
   /** Active pack sizes, cheapest-first by sort order. */
   variants?: ProductVariant[];
+  /** Admin qty price breaks: [{ min_qty, max_qty, unit_price }, ...] */
+  price_tiers?: Array<{
+    min_qty: number;
+    max_qty: number;
+    unit_price: number;
+  }> | null;
+  is_combo?: boolean;
+  combo_items?: Array<{
+    product_id: string;
+    quantity: number;
+    name?: string;
+    image_url?: string | null;
+    price?: number;
+  }>;
 };
 
 
@@ -48,6 +62,7 @@ export type Category = {
   slug: string;
   description: string | null;
   image_url: string | null;
+  parent_id?: string | null;
 };
 
 export type Banner = {
@@ -56,6 +71,11 @@ export type Banner = {
   subtitle: string | null;
   image_url: string;
   link_slug: string | null;
+  placement?: string;
+  sort_order?: number;
+  is_active?: boolean;
+  product_id?: string | null;
+  product?: Product | null;
 };
 
 export type CartLine = {
@@ -73,9 +93,12 @@ export type Address = {
   phone: string;
   line1: string;
   line2: string | null;
+  landmark?: string | null;
   city: string;
   state: string;
   pincode: string;
+  latitude?: number | null;
+  longitude?: number | null;
   is_default: boolean;
 };
 
@@ -114,7 +137,13 @@ export type Order = {
 
 export type Profile = {
   id: string;
+  first_name: string | null;
+  last_name: string | null;
   full_name: string | null;
   phone: string | null;
+  email: string | null;
+  is_phone_verified: boolean;
+  is_email_verified: boolean;
   avatar_url: string | null;
+  gst_number: string | null;
 };

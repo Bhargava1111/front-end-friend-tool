@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { MessageCircle, Send, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { SUPPORT_PHONE_DISPLAY } from "@/lib/support-contact";
 
 type Message = { id: number; from: "bot" | "you"; text: string };
 
@@ -24,7 +25,7 @@ function reply(text: string): string {
     return "Cash on delivery is live now. UPI, cards and net banking appear at checkout and go live shortly.";
   if (t.includes("coupon") || t.includes("offer"))
     return "Try FIRST100 for ₹100 off above ₹399, POOJA15 for 15% off, or FREESHIP for free delivery above ₹249.";
-  return "Thanks for writing in — a support agent will pick this up shortly. You can also call us on +91 98400 12345.";
+  return `Thanks for writing in — a support agent will pick this up shortly. You can also call us on ${SUPPORT_PHONE_DISPLAY} or raise a ticket from Help → Raise ticket.`;
 }
 
 export function ChatSupport() {

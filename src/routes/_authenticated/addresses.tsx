@@ -1,11 +1,12 @@
 import { useSession } from "@/hooks/use-shop";
-import { useState } from "react";
+import { useEffect, useRef, useState, type Dispatch, type SetStateAction } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { MapPin, Pencil, Plus, Trash2 } from "lucide-react";
+import { LocateFixed, MapPin, Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { getAddresses, saveAddress, deleteAddress } from "@/lib/shop.functions";
+import { detectCurrentAddress } from "@/lib/geo";
 import { PageShell, TopBar, EmptyState } from "@/components/page-shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -37,28 +38,34 @@ type FormState = {
   city: string;
   state: string;
   pincode: string;
+  landmark?: string;
+  latitude?: number | null;
+  longitude?: number | null;
   is_default: boolean;
 };
 
-const emptyForm: FormState = {
-  label: "Home",
-  recipient_name: "",
-  phone: "",
-  line1: "",
-  line2: "",
-  city: "",
-  state: "",
-  pincode: "",
-  is_default: false,
-};
+function newAddressForm(user?: { full_name?: string | null; phone?: string | null } | null): FormState {
+  return {
+    label: "Home",
+    recipient_name: user?.full_name ?? "",
+    phone: user?.phone ?? "",
+    line1: "",
+    line2: "",
+    city: "",
+    state: "",
+    pincode: "",
+    is_default: false,
+  };
+}
 
 function AddressesPage() {
   const queryClient = useQueryClient();
-  const { session } = useSession();
+  const { session, user } = useSession();
   const fetchAddresses = useServerFn(getAddresses);
   const save = useServerFn(saveAddress);
   const remove = useServerFn(deleteAddress);
   const [form, setForm] = useState<FormState | null>(null);
+  const autoFilled = useRef(false);
 
   const { data, isLoading } = useQuery({
     queryKey: ["addresses"],
@@ -89,6 +96,11 @@ function AddressesPage() {
 
   const addresses = data ?? [];
 
+  function openNewForm() {
+    autoFilled.current = false;
+    setForm(newAddressForm(user));
+  }
+
   return (
     <PageShell>
       <TopBar
@@ -98,7 +110,7 @@ function AddressesPage() {
           <button
             type="button"
             aria-label="Add address"
-            onClick={() => setForm(emptyForm)}
+            onClick={openNewForm}
             className="grid h-9 w-9 place-items-center rounded-full bg-primary text-primary-foreground"
           >
             <Plus className="h-4 w-4" />
@@ -107,77 +119,17 @@ function AddressesPage() {
       />
 
       {form && (
-        <form
-          className="m-4 space-y-3 rounded-2xl border border-border bg-card p-4 card-elevated"
-          onSubmit={(e) => {
-            e.preventDefault();
-            saveMutation.mutate(form);
+        <AddressForm
+          form={form}
+          setForm={setForm}
+          autoFillOnMount={!form.id && !autoFilled.current}
+          onAutoFilled={() => {
+            autoFilled.current = true;
           }}
-        >
-          <h2 className="text-sm font-semibold">{form.id ? "Edit address" : "New address"}</h2>
-          <div className="grid grid-cols-2 gap-3">
-            <Field label="Label" value={form.label} onChange={(v) => setForm({ ...form, label: v })} />
-            <Field
-              label="Recipient"
-              value={form.recipient_name}
-              onChange={(v) => setForm({ ...form, recipient_name: v })}
-              required
-            />
-          </div>
-          <Field
-            label="Phone"
-            value={form.phone}
-            onChange={(v) => setForm({ ...form, phone: v })}
-            required
-          />
-          <Field
-            label="Address line 1"
-            value={form.line1}
-            onChange={(v) => setForm({ ...form, line1: v })}
-            required
-          />
-          <Field
-            label="Address line 2"
-            value={form.line2}
-            onChange={(v) => setForm({ ...form, line2: v })}
-          />
-          <div className="grid grid-cols-2 gap-3">
-            <Field label="City" value={form.city} onChange={(v) => setForm({ ...form, city: v })} required />
-            <Field
-              label="State"
-              value={form.state}
-              onChange={(v) => setForm({ ...form, state: v })}
-              required
-            />
-          </div>
-          <Field
-            label="Pincode"
-            value={form.pincode}
-            onChange={(v) => setForm({ ...form, pincode: v })}
-            required
-          />
-          <div className="flex items-center justify-between pt-1">
-            <Label htmlFor="default">Set as default</Label>
-            <Switch
-              id="default"
-              checked={form.is_default}
-              onCheckedChange={(v) => setForm({ ...form, is_default: v })}
-            />
-          </div>
-          <div className="flex gap-2 pt-1">
-            <Button type="submit" className="flex-1 rounded-xl" disabled={saveMutation.isPending}>
-              Save
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              className="flex-1 rounded-xl"
-              onClick={() => setForm(null)}
-            >
-              Cancel
-            </Button>
-          </div>
-        </form>
+          onCancel={() => setForm(null)}
+          onSave={(values) => saveMutation.mutate(values)}
+          saving={saveMutation.isPending}
+        />
       )}
 
       {isLoading ? (
@@ -192,7 +144,7 @@ function AddressesPage() {
           title="No addresses yet"
           description="Add a delivery address for faster checkout."
           action={
-            <Button className="rounded-xl" onClick={() => setForm(emptyForm)}>
+            <Button className="rounded-xl" onClick={openNewForm}>
               Add address
             </Button>
           }
@@ -214,7 +166,15 @@ function AddressesPage() {
                   <button
                     type="button"
                     aria-label="Edit address"
-                    onClick={() => setForm({ ...a, line2: a.line2 ?? "" })}
+                    onClick={() =>
+                      setForm({
+                        ...a,
+                        line2: a.line2 ?? "",
+                        landmark: a.landmark ?? "",
+                        latitude: a.latitude ?? null,
+                        longitude: a.longitude ?? null,
+                      })
+                    }
                     className="text-muted-foreground hover:text-primary"
                   >
                     <Pencil className="h-4 w-4" />
@@ -239,6 +199,139 @@ function AddressesPage() {
         </div>
       )}
     </PageShell>
+  );
+}
+
+function AddressForm({
+  form,
+  setForm,
+  autoFillOnMount,
+  onAutoFilled,
+  onCancel,
+  onSave,
+  saving,
+}: {
+  form: FormState;
+  setForm: Dispatch<SetStateAction<FormState>>;
+  autoFillOnMount: boolean;
+  onAutoFilled: () => void;
+  onCancel: () => void;
+  onSave: (values: FormState) => void;
+  saving: boolean;
+}) {
+  const [locating, setLocating] = useState(false);
+
+  async function fillFromGps() {
+    setLocating(true);
+    try {
+      const parsed = await detectCurrentAddress();
+      setForm((current) => ({
+        ...current,
+        line1: parsed.line1,
+        line2: parsed.line2 || parsed.landmark || current.line2,
+        city: parsed.city || current.city,
+        state: parsed.state || current.state,
+        pincode: parsed.pincode || current.pincode,
+        landmark: parsed.landmark,
+        latitude: parsed.latitude,
+        longitude: parsed.longitude,
+      }));
+      onAutoFilled();
+      toast.success("Address filled from your location");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Couldn't detect address");
+    } finally {
+      setLocating(false);
+    }
+  }
+
+  useEffect(() => {
+    if (!autoFillOnMount) return;
+    void fillFromGps();
+  }, [autoFillOnMount]);
+
+  return (
+    <form
+      className="m-4 space-y-3 rounded-2xl border border-border bg-card p-4 card-elevated"
+      onSubmit={(e) => {
+        e.preventDefault();
+        onSave(form);
+      }}
+    >
+      <div className="flex items-center justify-between gap-2">
+        <h2 className="text-sm font-semibold">{form.id ? "Edit address" : "New address"}</h2>
+        <Button
+          type="button"
+          size="sm"
+          variant="secondary"
+          className="h-8 gap-1.5 text-xs"
+          disabled={locating}
+          onClick={() => void fillFromGps()}
+        >
+          <LocateFixed className="h-3.5 w-3.5" />
+          {locating ? "Detecting…" : "Use my location"}
+        </Button>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        <Field label="Label" value={form.label} onChange={(v) => setForm({ ...form, label: v })} />
+        <Field
+          label="Recipient"
+          value={form.recipient_name}
+          onChange={(v) => setForm({ ...form, recipient_name: v })}
+          required
+        />
+      </div>
+      <Field
+        label="Phone"
+        value={form.phone}
+        onChange={(v) => setForm({ ...form, phone: v })}
+        required
+      />
+      <Field
+        label="Address line 1"
+        value={form.line1}
+        onChange={(v) => setForm({ ...form, line1: v })}
+        required
+      />
+      <Field
+        label="Address line 2"
+        value={form.line2}
+        onChange={(v) => setForm({ ...form, line2: v })}
+        placeholder="Area, landmark"
+      />
+      <div className="grid grid-cols-2 gap-3">
+        <Field label="City" value={form.city} onChange={(v) => setForm({ ...form, city: v })} required />
+        <Field
+          label="State"
+          value={form.state}
+          onChange={(v) => setForm({ ...form, state: v })}
+          required
+        />
+      </div>
+      <Field
+        label="Pincode"
+        value={form.pincode}
+        onChange={(v) => setForm({ ...form, pincode: v.replace(/\D/g, "").slice(0, 6) })}
+        required
+      />
+      <div className="flex items-center justify-between pt-1">
+        <Label htmlFor="default">Set as default</Label>
+        <Switch
+          id="default"
+          checked={form.is_default}
+          onCheckedChange={(v) => setForm({ ...form, is_default: v })}
+        />
+      </div>
+      <div className="flex gap-2 pt-1">
+        <Button type="submit" className="flex-1 rounded-xl" disabled={saving || locating}>
+          Save
+        </Button>
+        <Button type="button" variant="outline" className="flex-1 rounded-xl" onClick={onCancel}>
+          Cancel
+        </Button>
+      </div>
+    </form>
   );
 }
 

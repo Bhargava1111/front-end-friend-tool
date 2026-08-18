@@ -2,7 +2,11 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { ChevronRight, LifeBuoy, Mail, MessageCircle, Phone } from "lucide-react";
 import { PageShell, TopBar } from "@/components/page-shell";
 import { HELP_TOPICS } from "@/lib/content";
-import { useStorefront } from "@/hooks/use-storefront";
+import {
+  SUPPORT_MAILTO_HREF,
+  SUPPORT_TEL_HREF,
+  SUPPORT_WHATSAPP_HREF,
+} from "@/lib/support-contact";
 
 export const Route = createFileRoute("/help")({
   head: () => ({
@@ -22,7 +26,6 @@ export const Route = createFileRoute("/help")({
 });
 
 function HelpPage() {
-  const { settings } = useStorefront();
   return (
     <PageShell>
       <TopBar title="Help center" backTo="/" />
@@ -53,27 +56,43 @@ function HelpPage() {
         ))}
       </section>
 
-      <section className="grid grid-cols-2 gap-3 px-4 pb-8">
+      <section className="grid grid-cols-3 gap-3 px-4">
         <a
-          href={`tel:${settings.support_phone}`}
-          className="rounded-2xl border border-border bg-card p-4 text-center card-elevated"
+          href={SUPPORT_TEL_HREF}
+          className="rounded-2xl border border-border bg-card p-4 text-center card-elevated active:scale-[0.98]"
         >
           <Phone className="mx-auto h-5 w-5 text-primary" />
           <p className="mt-2 text-xs font-semibold">Call support</p>
         </a>
         <a
-          href={`mailto:${settings.support_email}`}
-          className="rounded-2xl border border-border bg-card p-4 text-center card-elevated"
+          href={SUPPORT_MAILTO_HREF}
+          className="rounded-2xl border border-border bg-card p-4 text-center card-elevated active:scale-[0.98]"
         >
           <Mail className="mx-auto h-5 w-5 text-primary" />
           <p className="mt-2 text-xs font-semibold">Email us</p>
         </a>
+        <a
+          href={SUPPORT_WHATSAPP_HREF}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="rounded-2xl border border-border bg-card p-4 text-center card-elevated active:scale-[0.98]"
+        >
+          <MessageCircle className="mx-auto h-5 w-5 text-primary" />
+          <p className="mt-2 text-xs font-semibold">WhatsApp</p>
+        </a>
+      </section>
+
+      <section className="grid grid-cols-2 gap-3 px-4 pb-8">
+        <Link to="/support" className="rounded-2xl border border-border bg-card p-4 text-center card-elevated">
+          <LifeBuoy className="mx-auto h-5 w-5 text-primary" />
+          <p className="mt-2 text-xs font-semibold">Raise a ticket</p>
+        </Link>
         <Link to="/feedback" className="rounded-2xl border border-border bg-card p-4 text-center card-elevated">
           <MessageCircle className="mx-auto h-5 w-5 text-primary" />
           <p className="mt-2 text-xs font-semibold">Share feedback</p>
         </Link>
-        <Link to="/contact" className="rounded-2xl border border-border bg-card p-4 text-center card-elevated">
-          <LifeBuoy className="mx-auto h-5 w-5 text-primary" />
+        <Link to="/contact" className="col-span-2 rounded-2xl border border-border bg-card p-4 text-center card-elevated">
+          <Mail className="mx-auto h-5 w-5 text-primary" />
           <p className="mt-2 text-xs font-semibold">Contact form</p>
         </Link>
       </section>

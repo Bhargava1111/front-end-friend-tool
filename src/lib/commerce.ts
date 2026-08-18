@@ -29,7 +29,7 @@ export const DEFAULT_SETTINGS: StoreSettings = {
   free_delivery_above: 499,
   tax_rate: 5,
   maintenance_mode: false,
-  support_phone: "+91 98400 12345",
+  support_phone: "+91 93908 72628",
   support_email: "care@srimahalakshmistores.in",
 };
 
@@ -141,10 +141,10 @@ export type PaymentMethod = {
 
 export const PAYMENT_METHODS: PaymentMethod[] = [
   { id: "cod", label: "Cash on delivery", hint: "Pay the delivery partner", available: true },
-  { id: "upi", label: "UPI", hint: "GPay, PhonePe, Paytm", available: false },
-  { id: "card", label: "Credit / Debit card", hint: "Visa, Mastercard, RuPay", available: false },
-  { id: "netbanking", label: "Net banking", hint: "All major banks", available: false },
-  { id: "wallet", label: "Store wallet", hint: "Use your balance", available: false },
+  { id: "upi", label: "UPI", hint: "GPay, PhonePe, Paytm", available: true },
+  { id: "card", label: "Credit / Debit card", hint: "Visa, Mastercard, RuPay", available: true },
+  { id: "netbanking", label: "Net banking", hint: "All major banks", available: true },
+  { id: "wallet", label: "Store wallet", hint: "Use your balance", available: true },
 ];
 
 /** Short badge text for a coupon, e.g. "15% OFF", "₹100 OFF", "FREE SHIP". */

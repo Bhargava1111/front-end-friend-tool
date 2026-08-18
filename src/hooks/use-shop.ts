@@ -1,39 +1,80 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import type { Session } from "@supabase/supabase-js";
-import { supabase } from "@/integrations/supabase/client";
 import { getCart, getWishlist } from "@/lib/shop.functions";
 import type { CartLine, Product } from "@/lib/types";
+import { ensureValidAccessToken, isAuthError } from "@/lib/auth-session";
+import {
+  AUTH_CHANGED_EVENT,
+  AUTH_CLEARED_EVENT,
+  clearSession,
+  getStoredSession,
+  hasValidSession,
+  notifyAuthCleared,
+  saveSession,
+  type AuthSession,
+  type AuthUser,
+} from "@/lib/auth-store";
 
 export function useSession() {
-  const [session, setSession] = useState<Session | null>(null);
+  const [session, setSession] = useState<AuthSession | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    let mounted = true;
-    supabase.auth.getSession().then(({ data }) => {
-      if (!mounted) return;
-      setSession(data.session);
+    void (async () => {
+      const stored = getStoredSession();
+      if (!stored) {
+        setSession(null);
+        setLoading(false);
+        return;
+      }
+      const token = await ensureValidAccessToken();
+      setSession(token ? getStoredSession() : null);
+      if (!token) clearSession();
       setLoading(false);
-    });
-    const { data } = supabase.auth.onAuthStateChange((_e, s) => setSession(s));
+    })();
+
+    const sync = () => setSession(getStoredSession());
+    const onCleared = () => setSession(null);
+
+    window.addEventListener(AUTH_CHANGED_EVENT, sync);
+    window.addEventListener(AUTH_CLEARED_EVENT, onCleared);
+    window.addEventListener("storage", sync);
     return () => {
-      mounted = false;
-      data.subscription.unsubscribe();
+      window.removeEventListener(AUTH_CHANGED_EVENT, sync);
+      window.removeEventListener(AUTH_CLEARED_EVENT, onCleared);
+      window.removeEventListener("storage", sync);
     };
   }, []);
 
-  return { session, user: session?.user ?? null, loading };
+  const signIn = useCallback((s: AuthSession) => {
+    saveSession(s);
+    setSession(s);
+  }, []);
+
+  const signOut = useCallback(() => {
+    clearSession();
+    notifyAuthCleared();
+    setSession(null);
+  }, []);
+
+  return {
+    session,
+    user: session?.user ?? null,
+    loading,
+    signIn,
+    signOut,
+  };
 }
 
 export function useCart() {
-  const { session } = useSession();
   const fetchCart = useServerFn(getCart);
   return useQuery({
     queryKey: ["cart"],
     queryFn: () => fetchCart() as Promise<CartLine[]>,
-    enabled: !!session,
+    enabled: hasValidSession(),
+    retry: (count, error) =>
+      !(error instanceof Error && isAuthError(error.message)) && count < 1,
   });
 }
 
@@ -43,12 +84,13 @@ export function useCartCount() {
 }
 
 export function useWishlist() {
-  const { session } = useSession();
   const fetchWishlist = useServerFn(getWishlist);
   return useQuery({
     queryKey: ["wishlist"],
     queryFn: () => fetchWishlist() as Promise<{ id: string; product: Product }[]>,
-    enabled: !!session,
+    enabled: hasValidSession(),
+    retry: (count, error) =>
+      !(error instanceof Error && isAuthError(error.message)) && count < 1,
   });
 }
 
@@ -60,4 +102,5 @@ export function useInvalidateShop() {
   };
 }
 
+export type { AuthUser, AuthSession };
 export { useMutation };

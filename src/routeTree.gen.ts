@@ -9,146 +9,102 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as TestimonialsRouteImport } from './routes/testimonials'
-import { Route as TermsRouteImport } from './routes/terms'
-import { Route as StoresRouteImport } from './routes/stores'
-import { Route as SearchRouteImport } from './routes/search'
-import { Route as ResetPasswordRouteImport } from './routes/reset-password'
-import { Route as PrivacyRouteImport } from './routes/privacy'
-import { Route as OffersRouteImport } from './routes/offers'
-import { Route as MaintenanceRouteImport } from './routes/maintenance'
-import { Route as HelpRouteImport } from './routes/help'
-import { Route as FeedbackRouteImport } from './routes/feedback'
-import { Route as FaqRouteImport } from './routes/faq'
-import { Route as DealsRouteImport } from './routes/deals'
-import { Route as CouponsRouteImport } from './routes/coupons'
-import { Route as ContactRouteImport } from './routes/contact'
-import { Route as CategoriesRouteImport } from './routes/categories'
-import { Route as BrandsRouteImport } from './routes/brands'
-import { Route as AuthRouteImport } from './routes/auth'
+import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as AdminRouteRouteImport } from './routes/admin/route'
-import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
-import { Route as IndexRouteImport } from './routes/index'
-import { Route as BlogsIndexRouteImport } from './routes/blogs.index'
-import { Route as AdminIndexRouteImport } from './routes/admin/index'
-import { Route as ProductSlugRouteImport } from './routes/product.$slug'
-import { Route as DevLoginTestRouteImport } from './routes/dev/login-test'
-import { Route as CategorySlugRouteImport } from './routes/category.$slug'
-import { Route as BlogsSlugRouteImport } from './routes/blogs.$slug'
-import { Route as AdminUsersRouteImport } from './routes/admin/users'
-import { Route as AdminStoresRouteImport } from './routes/admin/stores'
-import { Route as AdminSettingsRouteImport } from './routes/admin/settings'
-import { Route as AdminReviewsRouteImport } from './routes/admin/reviews'
-import { Route as AdminReturnsRouteImport } from './routes/admin/returns'
-import { Route as AdminReportsRouteImport } from './routes/admin/reports'
-import { Route as AdminProductsRouteImport } from './routes/admin/products'
-import { Route as AdminOrdersRouteImport } from './routes/admin/orders'
-import { Route as AdminNotificationsRouteImport } from './routes/admin/notifications'
-import { Route as AdminCustomersRouteImport } from './routes/admin/customers'
-import { Route as AdminCouponsRouteImport } from './routes/admin/coupons'
-import { Route as AdminCategoriesRouteImport } from './routes/admin/categories'
-import { Route as AdminBrandsRouteImport } from './routes/admin/brands'
-import { Route as AdminBlogRouteImport } from './routes/admin/blog'
-import { Route as AdminBannersRouteImport } from './routes/admin/banners'
-import { Route as AuthenticatedWishlistRouteImport } from './routes/_authenticated/wishlist'
-import { Route as AuthenticatedWalletRouteImport } from './routes/_authenticated/wallet'
-import { Route as AuthenticatedVerifyAccountRouteImport } from './routes/_authenticated/verify-account'
-import { Route as AuthenticatedRewardsRouteImport } from './routes/_authenticated/rewards'
-import { Route as AuthenticatedReferralRouteImport } from './routes/_authenticated/referral'
-import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
-import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated/notifications'
-import { Route as AuthenticatedLanguageRouteImport } from './routes/_authenticated/language'
-import { Route as AuthenticatedCheckoutRouteImport } from './routes/_authenticated/checkout'
-import { Route as AuthenticatedCartRouteImport } from './routes/_authenticated/cart'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as BrandsRouteImport } from './routes/brands'
+import { Route as CategoriesRouteImport } from './routes/categories'
+import { Route as ContactRouteImport } from './routes/contact'
+import { Route as CouponsRouteImport } from './routes/coupons'
+import { Route as DealsRouteImport } from './routes/deals'
+import { Route as FaqRouteImport } from './routes/faq'
+import { Route as FeedbackRouteImport } from './routes/feedback'
+import { Route as HelpRouteImport } from './routes/help'
+import { Route as InstallIosRouteImport } from './routes/install-ios'
+import { Route as MaintenanceRouteImport } from './routes/maintenance'
+import { Route as OffersRouteImport } from './routes/offers'
+import { Route as OnboardingRouteImport } from './routes/onboarding'
+import { Route as PaymentFailureRouteImport } from './routes/payment-failure'
+import { Route as PaymentSuccessRouteImport } from './routes/payment-success'
+import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as SearchRouteImport } from './routes/search'
+import { Route as SplashRouteImport } from './routes/splash'
+import { Route as StoresRouteImport } from './routes/stores'
+import { Route as SupportRouteImport } from './routes/support'
+import { Route as TermsRouteImport } from './routes/terms'
+import { Route as TestimonialsRouteImport } from './routes/testimonials'
 import { Route as AuthenticatedAddressesRouteImport } from './routes/_authenticated/addresses'
+import { Route as AuthenticatedCartRouteImport } from './routes/_authenticated/cart'
+import { Route as AuthenticatedCheckoutRouteImport } from './routes/_authenticated/checkout'
+import { Route as AuthenticatedLanguageRouteImport } from './routes/_authenticated/language'
+import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated/notifications'
+import { Route as AuthenticatedReferralRouteImport } from './routes/_authenticated/referral'
+import { Route as AuthenticatedRewardsRouteImport } from './routes/_authenticated/rewards'
+import { Route as AuthenticatedVerifyAccountRouteImport } from './routes/_authenticated/verify-account'
+import { Route as AuthenticatedWalletRouteImport } from './routes/_authenticated/wallet'
+import { Route as AuthenticatedWishlistRouteImport } from './routes/_authenticated/wishlist'
+import { Route as AdminIndexRouteImport } from './routes/admin/index'
+import { Route as AdminAuditLogsRouteImport } from './routes/admin/audit-logs'
+import { Route as AdminCustomersRouteImport } from './routes/admin/customers'
+import { Route as AdminNotificationsRouteImport } from './routes/admin/notifications'
+import { Route as AdminPaymentsRouteImport } from './routes/admin/payments'
+import { Route as AdminPromotionsRouteImport } from './routes/admin/promotions'
+import { Route as AdminReportsRouteImport } from './routes/admin/reports'
+import { Route as AdminReturnsRouteImport } from './routes/admin/returns'
+import { Route as AdminReviewsRouteImport } from './routes/admin/reviews'
+import { Route as AdminSettingsRouteImport } from './routes/admin/settings'
+import { Route as AdminTicketsRouteImport } from './routes/admin/tickets'
+import { Route as BlogsIndexRouteImport } from './routes/blogs.index'
+import { Route as BlogsSlugRouteImport } from './routes/blogs.$slug'
+import { Route as CategorySlugRouteImport } from './routes/category.$slug'
+import { Route as DevLoginTestRouteImport } from './routes/dev/login-test'
+import { Route as ProductSlugRouteImport } from './routes/product.$slug'
 import { Route as AuthenticatedOrdersIndexRouteImport } from './routes/_authenticated/orders/index'
-import { Route as AdminCustomerIdRouteImport } from './routes/admin/customer.$id'
 import { Route as AuthenticatedOrdersIdRouteImport } from './routes/_authenticated/orders/$id'
+import { Route as AuthenticatedProfileIndexRouteImport } from './routes/_authenticated/profile/index'
+import { Route as AuthenticatedProfileDetailsRouteImport } from './routes/_authenticated/profile/details'
+import { Route as AuthenticatedProfilePhotoRouteImport } from './routes/_authenticated/profile/photo'
+import { Route as AdminBannersIndexRouteImport } from './routes/admin/banners/index'
+import { Route as AdminBannersIdRouteImport } from './routes/admin/banners/$id'
+import { Route as AdminBannersNewRouteImport } from './routes/admin/banners/new'
+import { Route as AdminBlogIndexRouteImport } from './routes/admin/blog/index'
+import { Route as AdminBlogIdRouteImport } from './routes/admin/blog/$id'
+import { Route as AdminBlogNewRouteImport } from './routes/admin/blog/new'
+import { Route as AdminBrandsIndexRouteImport } from './routes/admin/brands/index'
+import { Route as AdminBrandsIdRouteImport } from './routes/admin/brands/$id'
+import { Route as AdminBrandsNewRouteImport } from './routes/admin/brands/new'
+import { Route as AdminCategoriesIndexRouteImport } from './routes/admin/categories/index'
+import { Route as AdminCategoriesIdRouteImport } from './routes/admin/categories/$id'
+import { Route as AdminCategoriesNewRouteImport } from './routes/admin/categories/new'
+import { Route as AdminCouponsIndexRouteImport } from './routes/admin/coupons/index'
+import { Route as AdminCouponsIdRouteImport } from './routes/admin/coupons/$id'
+import { Route as AdminCouponsNewRouteImport } from './routes/admin/coupons/new'
+import { Route as AdminCustomerIdRouteImport } from './routes/admin/customer.$id'
+import { Route as AdminDeliveryIndexRouteImport } from './routes/admin/delivery/index'
+import { Route as AdminDeliveryNewRouteImport } from './routes/admin/delivery/new'
+import { Route as AdminOrdersIndexRouteImport } from './routes/admin/orders/index'
+import { Route as AdminOrdersIdRouteImport } from './routes/admin/orders/$id'
+import { Route as AdminOrdersNewRouteImport } from './routes/admin/orders/new'
+import { Route as AdminProductsIndexRouteImport } from './routes/admin/products/index'
+import { Route as AdminProductsIdRouteImport } from './routes/admin/products/$id'
+import { Route as AdminProductsNewRouteImport } from './routes/admin/products/new'
+import { Route as AdminStoresIndexRouteImport } from './routes/admin/stores/index'
+import { Route as AdminStoresIdRouteImport } from './routes/admin/stores/$id'
+import { Route as AdminStoresNewRouteImport } from './routes/admin/stores/new'
+import { Route as AdminUsersIndexRouteImport } from './routes/admin/users/index'
+import { Route as AdminUsersIdRouteImport } from './routes/admin/users/$id'
+import { Route as AdminUsersNewRouteImport } from './routes/admin/users/new'
 
-const TestimonialsRoute = TestimonialsRouteImport.update({
-  id: '/testimonials',
-  path: '/testimonials',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const TermsRoute = TermsRouteImport.update({
-  id: '/terms',
-  path: '/terms',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const StoresRoute = StoresRouteImport.update({
-  id: '/stores',
-  path: '/stores',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SearchRoute = SearchRouteImport.update({
-  id: '/search',
-  path: '/search',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ResetPasswordRoute = ResetPasswordRouteImport.update({
-  id: '/reset-password',
-  path: '/reset-password',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PrivacyRoute = PrivacyRouteImport.update({
-  id: '/privacy',
-  path: '/privacy',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const OffersRoute = OffersRouteImport.update({
-  id: '/offers',
-  path: '/offers',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const MaintenanceRoute = MaintenanceRouteImport.update({
-  id: '/maintenance',
-  path: '/maintenance',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const HelpRoute = HelpRouteImport.update({
-  id: '/help',
-  path: '/help',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const FeedbackRoute = FeedbackRouteImport.update({
-  id: '/feedback',
-  path: '/feedback',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const FaqRoute = FaqRouteImport.update({
-  id: '/faq',
-  path: '/faq',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DealsRoute = DealsRouteImport.update({
-  id: '/deals',
-  path: '/deals',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CouponsRoute = CouponsRouteImport.update({
-  id: '/coupons',
-  path: '/coupons',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ContactRoute = ContactRouteImport.update({
-  id: '/contact',
-  path: '/contact',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CategoriesRoute = CategoriesRouteImport.update({
-  id: '/categories',
-  path: '/categories',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const BrandsRoute = BrandsRouteImport.update({
-  id: '/brands',
-  path: '/brands',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthRoute = AuthRouteImport.update({
-  id: '/auth',
-  path: '/auth',
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AboutRoute = AboutRouteImport.update({
@@ -161,149 +117,139 @@ const AdminRouteRoute = AdminRouteRouteImport.update({
   path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
-  id: '/_authenticated',
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const BlogsIndexRoute = BlogsIndexRouteImport.update({
-  id: '/blogs/',
-  path: '/blogs/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AdminIndexRoute = AdminIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => AdminRouteRoute,
-} as any)
-const ProductSlugRoute = ProductSlugRouteImport.update({
-  id: '/product/$slug',
-  path: '/product/$slug',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DevLoginTestRoute = DevLoginTestRouteImport.update({
-  id: '/dev/login-test',
-  path: '/dev/login-test',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CategorySlugRoute = CategorySlugRouteImport.update({
-  id: '/category/$slug',
-  path: '/category/$slug',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const BlogsSlugRoute = BlogsSlugRouteImport.update({
-  id: '/blogs/$slug',
-  path: '/blogs/$slug',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AdminUsersRoute = AdminUsersRouteImport.update({
-  id: '/users',
-  path: '/users',
-  getParentRoute: () => AdminRouteRoute,
-} as any)
-const AdminStoresRoute = AdminStoresRouteImport.update({
-  id: '/stores',
-  path: '/stores',
-  getParentRoute: () => AdminRouteRoute,
-} as any)
-const AdminSettingsRoute = AdminSettingsRouteImport.update({
-  id: '/settings',
-  path: '/settings',
-  getParentRoute: () => AdminRouteRoute,
-} as any)
-const AdminReviewsRoute = AdminReviewsRouteImport.update({
-  id: '/reviews',
-  path: '/reviews',
-  getParentRoute: () => AdminRouteRoute,
-} as any)
-const AdminReturnsRoute = AdminReturnsRouteImport.update({
-  id: '/returns',
-  path: '/returns',
-  getParentRoute: () => AdminRouteRoute,
-} as any)
-const AdminReportsRoute = AdminReportsRouteImport.update({
-  id: '/reports',
-  path: '/reports',
-  getParentRoute: () => AdminRouteRoute,
-} as any)
-const AdminProductsRoute = AdminProductsRouteImport.update({
-  id: '/products',
-  path: '/products',
-  getParentRoute: () => AdminRouteRoute,
-} as any)
-const AdminOrdersRoute = AdminOrdersRouteImport.update({
-  id: '/orders',
-  path: '/orders',
-  getParentRoute: () => AdminRouteRoute,
-} as any)
-const AdminNotificationsRoute = AdminNotificationsRouteImport.update({
-  id: '/notifications',
-  path: '/notifications',
-  getParentRoute: () => AdminRouteRoute,
-} as any)
-const AdminCustomersRoute = AdminCustomersRouteImport.update({
-  id: '/customers',
-  path: '/customers',
-  getParentRoute: () => AdminRouteRoute,
-} as any)
-const AdminCouponsRoute = AdminCouponsRouteImport.update({
-  id: '/coupons',
-  path: '/coupons',
-  getParentRoute: () => AdminRouteRoute,
-} as any)
-const AdminCategoriesRoute = AdminCategoriesRouteImport.update({
-  id: '/categories',
-  path: '/categories',
-  getParentRoute: () => AdminRouteRoute,
-} as any)
-const AdminBrandsRoute = AdminBrandsRouteImport.update({
+const BrandsRoute = BrandsRouteImport.update({
   id: '/brands',
   path: '/brands',
-  getParentRoute: () => AdminRouteRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-const AdminBlogRoute = AdminBlogRouteImport.update({
-  id: '/blog',
-  path: '/blog',
-  getParentRoute: () => AdminRouteRoute,
+const CategoriesRoute = CategoriesRouteImport.update({
+  id: '/categories',
+  path: '/categories',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const AdminBannersRoute = AdminBannersRouteImport.update({
-  id: '/banners',
-  path: '/banners',
-  getParentRoute: () => AdminRouteRoute,
+const ContactRoute = ContactRouteImport.update({
+  id: '/contact',
+  path: '/contact',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedWishlistRoute = AuthenticatedWishlistRouteImport.update({
-  id: '/wishlist',
-  path: '/wishlist',
+const CouponsRoute = CouponsRouteImport.update({
+  id: '/coupons',
+  path: '/coupons',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DealsRoute = DealsRouteImport.update({
+  id: '/deals',
+  path: '/deals',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FaqRoute = FaqRouteImport.update({
+  id: '/faq',
+  path: '/faq',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FeedbackRoute = FeedbackRouteImport.update({
+  id: '/feedback',
+  path: '/feedback',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HelpRoute = HelpRouteImport.update({
+  id: '/help',
+  path: '/help',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InstallIosRoute = InstallIosRouteImport.update({
+  id: '/install-ios',
+  path: '/install-ios',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MaintenanceRoute = MaintenanceRouteImport.update({
+  id: '/maintenance',
+  path: '/maintenance',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OffersRoute = OffersRouteImport.update({
+  id: '/offers',
+  path: '/offers',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OnboardingRoute = OnboardingRouteImport.update({
+  id: '/onboarding',
+  path: '/onboarding',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PaymentFailureRoute = PaymentFailureRouteImport.update({
+  id: '/payment-failure',
+  path: '/payment-failure',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PaymentSuccessRoute = PaymentSuccessRouteImport.update({
+  id: '/payment-success',
+  path: '/payment-success',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SearchRoute = SearchRouteImport.update({
+  id: '/search',
+  path: '/search',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SplashRoute = SplashRouteImport.update({
+  id: '/splash',
+  path: '/splash',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StoresRoute = StoresRouteImport.update({
+  id: '/stores',
+  path: '/stores',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SupportRoute = SupportRouteImport.update({
+  id: '/support',
+  path: '/support',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TestimonialsRoute = TestimonialsRouteImport.update({
+  id: '/testimonials',
+  path: '/testimonials',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedAddressesRoute = AuthenticatedAddressesRouteImport.update({
+  id: '/addresses',
+  path: '/addresses',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedWalletRoute = AuthenticatedWalletRouteImport.update({
-  id: '/wallet',
-  path: '/wallet',
+const AuthenticatedCartRoute = AuthenticatedCartRouteImport.update({
+  id: '/cart',
+  path: '/cart',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedVerifyAccountRoute =
-  AuthenticatedVerifyAccountRouteImport.update({
-    id: '/verify-account',
-    path: '/verify-account',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedRewardsRoute = AuthenticatedRewardsRouteImport.update({
-  id: '/rewards',
-  path: '/rewards',
+const AuthenticatedCheckoutRoute = AuthenticatedCheckoutRouteImport.update({
+  id: '/checkout',
+  path: '/checkout',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedReferralRoute = AuthenticatedReferralRouteImport.update({
-  id: '/referral',
-  path: '/referral',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
-  id: '/profile',
-  path: '/profile',
+const AuthenticatedLanguageRoute = AuthenticatedLanguageRouteImport.update({
+  id: '/language',
+  path: '/language',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedNotificationsRoute =
@@ -312,25 +258,111 @@ const AuthenticatedNotificationsRoute =
     path: '/notifications',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedLanguageRoute = AuthenticatedLanguageRouteImport.update({
-  id: '/language',
-  path: '/language',
+const AuthenticatedReferralRoute = AuthenticatedReferralRouteImport.update({
+  id: '/referral',
+  path: '/referral',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedCheckoutRoute = AuthenticatedCheckoutRouteImport.update({
-  id: '/checkout',
-  path: '/checkout',
+const AuthenticatedRewardsRoute = AuthenticatedRewardsRouteImport.update({
+  id: '/rewards',
+  path: '/rewards',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedCartRoute = AuthenticatedCartRouteImport.update({
-  id: '/cart',
-  path: '/cart',
+const AuthenticatedVerifyAccountRoute =
+  AuthenticatedVerifyAccountRouteImport.update({
+    id: '/verify-account',
+    path: '/verify-account',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedWalletRoute = AuthenticatedWalletRouteImport.update({
+  id: '/wallet',
+  path: '/wallet',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedAddressesRoute = AuthenticatedAddressesRouteImport.update({
-  id: '/addresses',
-  path: '/addresses',
+const AuthenticatedWishlistRoute = AuthenticatedWishlistRouteImport.update({
+  id: '/wishlist',
+  path: '/wishlist',
   getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminAuditLogsRoute = AdminAuditLogsRouteImport.update({
+  id: '/audit-logs',
+  path: '/audit-logs',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminCustomersRoute = AdminCustomersRouteImport.update({
+  id: '/customers',
+  path: '/customers',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminNotificationsRoute = AdminNotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminPaymentsRoute = AdminPaymentsRouteImport.update({
+  id: '/payments',
+  path: '/payments',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminPromotionsRoute = AdminPromotionsRouteImport.update({
+  id: '/promotions',
+  path: '/promotions',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminReportsRoute = AdminReportsRouteImport.update({
+  id: '/reports',
+  path: '/reports',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminReturnsRoute = AdminReturnsRouteImport.update({
+  id: '/returns',
+  path: '/returns',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminReviewsRoute = AdminReviewsRouteImport.update({
+  id: '/reviews',
+  path: '/reviews',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminSettingsRoute = AdminSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminTicketsRoute = AdminTicketsRouteImport.update({
+  id: '/tickets',
+  path: '/tickets',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const BlogsIndexRoute = BlogsIndexRouteImport.update({
+  id: '/blogs/',
+  path: '/blogs/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BlogsSlugRoute = BlogsSlugRouteImport.update({
+  id: '/blogs/$slug',
+  path: '/blogs/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CategorySlugRoute = CategorySlugRouteImport.update({
+  id: '/category/$slug',
+  path: '/category/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DevLoginTestRoute = DevLoginTestRouteImport.update({
+  id: '/dev/login-test',
+  path: '/dev/login-test',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProductSlugRoute = ProductSlugRouteImport.update({
+  id: '/product/$slug',
+  path: '/product/$slug',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedOrdersIndexRoute =
   AuthenticatedOrdersIndexRouteImport.update({
@@ -338,15 +370,178 @@ const AuthenticatedOrdersIndexRoute =
     path: '/orders/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedOrdersIdRoute = AuthenticatedOrdersIdRouteImport.update({
+  id: '/orders/$id',
+  path: '/orders/$id',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedProfileIndexRoute =
+  AuthenticatedProfileIndexRouteImport.update({
+    id: '/profile/',
+    path: '/profile/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedProfileDetailsRoute =
+  AuthenticatedProfileDetailsRouteImport.update({
+    id: '/profile/details',
+    path: '/profile/details',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedProfilePhotoRoute =
+  AuthenticatedProfilePhotoRouteImport.update({
+    id: '/profile/photo',
+    path: '/profile/photo',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AdminBannersIndexRoute = AdminBannersIndexRouteImport.update({
+  id: '/banners/',
+  path: '/banners/',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminBannersIdRoute = AdminBannersIdRouteImport.update({
+  id: '/banners/$id',
+  path: '/banners/$id',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminBannersNewRoute = AdminBannersNewRouteImport.update({
+  id: '/banners/new',
+  path: '/banners/new',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminBlogIndexRoute = AdminBlogIndexRouteImport.update({
+  id: '/blog/',
+  path: '/blog/',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminBlogIdRoute = AdminBlogIdRouteImport.update({
+  id: '/blog/$id',
+  path: '/blog/$id',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminBlogNewRoute = AdminBlogNewRouteImport.update({
+  id: '/blog/new',
+  path: '/blog/new',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminBrandsIndexRoute = AdminBrandsIndexRouteImport.update({
+  id: '/brands/',
+  path: '/brands/',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminBrandsIdRoute = AdminBrandsIdRouteImport.update({
+  id: '/brands/$id',
+  path: '/brands/$id',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminBrandsNewRoute = AdminBrandsNewRouteImport.update({
+  id: '/brands/new',
+  path: '/brands/new',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminCategoriesIndexRoute = AdminCategoriesIndexRouteImport.update({
+  id: '/categories/',
+  path: '/categories/',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminCategoriesIdRoute = AdminCategoriesIdRouteImport.update({
+  id: '/categories/$id',
+  path: '/categories/$id',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminCategoriesNewRoute = AdminCategoriesNewRouteImport.update({
+  id: '/categories/new',
+  path: '/categories/new',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminCouponsIndexRoute = AdminCouponsIndexRouteImport.update({
+  id: '/coupons/',
+  path: '/coupons/',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminCouponsIdRoute = AdminCouponsIdRouteImport.update({
+  id: '/coupons/$id',
+  path: '/coupons/$id',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminCouponsNewRoute = AdminCouponsNewRouteImport.update({
+  id: '/coupons/new',
+  path: '/coupons/new',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
 const AdminCustomerIdRoute = AdminCustomerIdRouteImport.update({
   id: '/customer/$id',
   path: '/customer/$id',
   getParentRoute: () => AdminRouteRoute,
 } as any)
-const AuthenticatedOrdersIdRoute = AuthenticatedOrdersIdRouteImport.update({
+const AdminDeliveryIndexRoute = AdminDeliveryIndexRouteImport.update({
+  id: '/delivery/',
+  path: '/delivery/',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminDeliveryNewRoute = AdminDeliveryNewRouteImport.update({
+  id: '/delivery/new',
+  path: '/delivery/new',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminOrdersIndexRoute = AdminOrdersIndexRouteImport.update({
+  id: '/orders/',
+  path: '/orders/',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminOrdersIdRoute = AdminOrdersIdRouteImport.update({
   id: '/orders/$id',
   path: '/orders/$id',
-  getParentRoute: () => AuthenticatedRouteRoute,
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminOrdersNewRoute = AdminOrdersNewRouteImport.update({
+  id: '/orders/new',
+  path: '/orders/new',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminProductsIndexRoute = AdminProductsIndexRouteImport.update({
+  id: '/products/',
+  path: '/products/',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminProductsIdRoute = AdminProductsIdRouteImport.update({
+  id: '/products/$id',
+  path: '/products/$id',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminProductsNewRoute = AdminProductsNewRouteImport.update({
+  id: '/products/new',
+  path: '/products/new',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminStoresIndexRoute = AdminStoresIndexRouteImport.update({
+  id: '/stores/',
+  path: '/stores/',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminStoresIdRoute = AdminStoresIdRouteImport.update({
+  id: '/stores/$id',
+  path: '/stores/$id',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminStoresNewRoute = AdminStoresNewRouteImport.update({
+  id: '/stores/new',
+  path: '/stores/new',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminUsersIndexRoute = AdminUsersIndexRouteImport.update({
+  id: '/users/',
+  path: '/users/',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminUsersIdRoute = AdminUsersIdRouteImport.update({
+  id: '/users/$id',
+  path: '/users/$id',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminUsersNewRoute = AdminUsersNewRouteImport.update({
+  id: '/users/new',
+  path: '/users/new',
+  getParentRoute: () => AdminRouteRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -362,12 +557,18 @@ export interface FileRoutesByFullPath {
   '/faq': typeof FaqRoute
   '/feedback': typeof FeedbackRoute
   '/help': typeof HelpRoute
+  '/install-ios': typeof InstallIosRoute
   '/maintenance': typeof MaintenanceRoute
   '/offers': typeof OffersRoute
+  '/onboarding': typeof OnboardingRoute
+  '/payment-failure': typeof PaymentFailureRoute
+  '/payment-success': typeof PaymentSuccessRoute
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/search': typeof SearchRoute
+  '/splash': typeof SplashRoute
   '/stores': typeof StoresRoute
+  '/support': typeof SupportRoute
   '/terms': typeof TermsRoute
   '/testimonials': typeof TestimonialsRoute
   '/addresses': typeof AuthenticatedAddressesRoute
@@ -375,27 +576,21 @@ export interface FileRoutesByFullPath {
   '/checkout': typeof AuthenticatedCheckoutRoute
   '/language': typeof AuthenticatedLanguageRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
-  '/profile': typeof AuthenticatedProfileRoute
   '/referral': typeof AuthenticatedReferralRoute
   '/rewards': typeof AuthenticatedRewardsRoute
   '/verify-account': typeof AuthenticatedVerifyAccountRoute
   '/wallet': typeof AuthenticatedWalletRoute
   '/wishlist': typeof AuthenticatedWishlistRoute
-  '/admin/banners': typeof AdminBannersRoute
-  '/admin/blog': typeof AdminBlogRoute
-  '/admin/brands': typeof AdminBrandsRoute
-  '/admin/categories': typeof AdminCategoriesRoute
-  '/admin/coupons': typeof AdminCouponsRoute
+  '/admin/audit-logs': typeof AdminAuditLogsRoute
   '/admin/customers': typeof AdminCustomersRoute
   '/admin/notifications': typeof AdminNotificationsRoute
-  '/admin/orders': typeof AdminOrdersRoute
-  '/admin/products': typeof AdminProductsRoute
+  '/admin/payments': typeof AdminPaymentsRoute
+  '/admin/promotions': typeof AdminPromotionsRoute
   '/admin/reports': typeof AdminReportsRoute
   '/admin/returns': typeof AdminReturnsRoute
   '/admin/reviews': typeof AdminReviewsRoute
   '/admin/settings': typeof AdminSettingsRoute
-  '/admin/stores': typeof AdminStoresRoute
-  '/admin/users': typeof AdminUsersRoute
+  '/admin/tickets': typeof AdminTicketsRoute
   '/blogs/$slug': typeof BlogsSlugRoute
   '/category/$slug': typeof CategorySlugRoute
   '/dev/login-test': typeof DevLoginTestRoute
@@ -403,8 +598,40 @@ export interface FileRoutesByFullPath {
   '/admin/': typeof AdminIndexRoute
   '/blogs/': typeof BlogsIndexRoute
   '/orders/$id': typeof AuthenticatedOrdersIdRoute
+  '/profile/details': typeof AuthenticatedProfileDetailsRoute
+  '/profile/photo': typeof AuthenticatedProfilePhotoRoute
+  '/admin/banners/$id': typeof AdminBannersIdRoute
+  '/admin/banners/new': typeof AdminBannersNewRoute
+  '/admin/blog/$id': typeof AdminBlogIdRoute
+  '/admin/blog/new': typeof AdminBlogNewRoute
+  '/admin/brands/$id': typeof AdminBrandsIdRoute
+  '/admin/brands/new': typeof AdminBrandsNewRoute
+  '/admin/categories/$id': typeof AdminCategoriesIdRoute
+  '/admin/categories/new': typeof AdminCategoriesNewRoute
+  '/admin/coupons/$id': typeof AdminCouponsIdRoute
+  '/admin/coupons/new': typeof AdminCouponsNewRoute
   '/admin/customer/$id': typeof AdminCustomerIdRoute
+  '/admin/delivery/new': typeof AdminDeliveryNewRoute
+  '/admin/orders/$id': typeof AdminOrdersIdRoute
+  '/admin/orders/new': typeof AdminOrdersNewRoute
+  '/admin/products/$id': typeof AdminProductsIdRoute
+  '/admin/products/new': typeof AdminProductsNewRoute
+  '/admin/stores/$id': typeof AdminStoresIdRoute
+  '/admin/stores/new': typeof AdminStoresNewRoute
+  '/admin/users/$id': typeof AdminUsersIdRoute
+  '/admin/users/new': typeof AdminUsersNewRoute
   '/orders/': typeof AuthenticatedOrdersIndexRoute
+  '/profile/': typeof AuthenticatedProfileIndexRoute
+  '/admin/banners/': typeof AdminBannersIndexRoute
+  '/admin/blog/': typeof AdminBlogIndexRoute
+  '/admin/brands/': typeof AdminBrandsIndexRoute
+  '/admin/categories/': typeof AdminCategoriesIndexRoute
+  '/admin/coupons/': typeof AdminCouponsIndexRoute
+  '/admin/delivery/': typeof AdminDeliveryIndexRoute
+  '/admin/orders/': typeof AdminOrdersIndexRoute
+  '/admin/products/': typeof AdminProductsIndexRoute
+  '/admin/stores/': typeof AdminStoresIndexRoute
+  '/admin/users/': typeof AdminUsersIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -418,12 +645,18 @@ export interface FileRoutesByTo {
   '/faq': typeof FaqRoute
   '/feedback': typeof FeedbackRoute
   '/help': typeof HelpRoute
+  '/install-ios': typeof InstallIosRoute
   '/maintenance': typeof MaintenanceRoute
   '/offers': typeof OffersRoute
+  '/onboarding': typeof OnboardingRoute
+  '/payment-failure': typeof PaymentFailureRoute
+  '/payment-success': typeof PaymentSuccessRoute
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/search': typeof SearchRoute
+  '/splash': typeof SplashRoute
   '/stores': typeof StoresRoute
+  '/support': typeof SupportRoute
   '/terms': typeof TermsRoute
   '/testimonials': typeof TestimonialsRoute
   '/addresses': typeof AuthenticatedAddressesRoute
@@ -431,27 +664,21 @@ export interface FileRoutesByTo {
   '/checkout': typeof AuthenticatedCheckoutRoute
   '/language': typeof AuthenticatedLanguageRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
-  '/profile': typeof AuthenticatedProfileRoute
   '/referral': typeof AuthenticatedReferralRoute
   '/rewards': typeof AuthenticatedRewardsRoute
   '/verify-account': typeof AuthenticatedVerifyAccountRoute
   '/wallet': typeof AuthenticatedWalletRoute
   '/wishlist': typeof AuthenticatedWishlistRoute
-  '/admin/banners': typeof AdminBannersRoute
-  '/admin/blog': typeof AdminBlogRoute
-  '/admin/brands': typeof AdminBrandsRoute
-  '/admin/categories': typeof AdminCategoriesRoute
-  '/admin/coupons': typeof AdminCouponsRoute
+  '/admin/audit-logs': typeof AdminAuditLogsRoute
   '/admin/customers': typeof AdminCustomersRoute
   '/admin/notifications': typeof AdminNotificationsRoute
-  '/admin/orders': typeof AdminOrdersRoute
-  '/admin/products': typeof AdminProductsRoute
+  '/admin/payments': typeof AdminPaymentsRoute
+  '/admin/promotions': typeof AdminPromotionsRoute
   '/admin/reports': typeof AdminReportsRoute
   '/admin/returns': typeof AdminReturnsRoute
   '/admin/reviews': typeof AdminReviewsRoute
   '/admin/settings': typeof AdminSettingsRoute
-  '/admin/stores': typeof AdminStoresRoute
-  '/admin/users': typeof AdminUsersRoute
+  '/admin/tickets': typeof AdminTicketsRoute
   '/blogs/$slug': typeof BlogsSlugRoute
   '/category/$slug': typeof CategorySlugRoute
   '/dev/login-test': typeof DevLoginTestRoute
@@ -459,8 +686,40 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminIndexRoute
   '/blogs': typeof BlogsIndexRoute
   '/orders/$id': typeof AuthenticatedOrdersIdRoute
+  '/profile/details': typeof AuthenticatedProfileDetailsRoute
+  '/profile/photo': typeof AuthenticatedProfilePhotoRoute
+  '/admin/banners/$id': typeof AdminBannersIdRoute
+  '/admin/banners/new': typeof AdminBannersNewRoute
+  '/admin/blog/$id': typeof AdminBlogIdRoute
+  '/admin/blog/new': typeof AdminBlogNewRoute
+  '/admin/brands/$id': typeof AdminBrandsIdRoute
+  '/admin/brands/new': typeof AdminBrandsNewRoute
+  '/admin/categories/$id': typeof AdminCategoriesIdRoute
+  '/admin/categories/new': typeof AdminCategoriesNewRoute
+  '/admin/coupons/$id': typeof AdminCouponsIdRoute
+  '/admin/coupons/new': typeof AdminCouponsNewRoute
   '/admin/customer/$id': typeof AdminCustomerIdRoute
+  '/admin/delivery/new': typeof AdminDeliveryNewRoute
+  '/admin/orders/$id': typeof AdminOrdersIdRoute
+  '/admin/orders/new': typeof AdminOrdersNewRoute
+  '/admin/products/$id': typeof AdminProductsIdRoute
+  '/admin/products/new': typeof AdminProductsNewRoute
+  '/admin/stores/$id': typeof AdminStoresIdRoute
+  '/admin/stores/new': typeof AdminStoresNewRoute
+  '/admin/users/$id': typeof AdminUsersIdRoute
+  '/admin/users/new': typeof AdminUsersNewRoute
   '/orders': typeof AuthenticatedOrdersIndexRoute
+  '/profile': typeof AuthenticatedProfileIndexRoute
+  '/admin/banners': typeof AdminBannersIndexRoute
+  '/admin/blog': typeof AdminBlogIndexRoute
+  '/admin/brands': typeof AdminBrandsIndexRoute
+  '/admin/categories': typeof AdminCategoriesIndexRoute
+  '/admin/coupons': typeof AdminCouponsIndexRoute
+  '/admin/delivery': typeof AdminDeliveryIndexRoute
+  '/admin/orders': typeof AdminOrdersIndexRoute
+  '/admin/products': typeof AdminProductsIndexRoute
+  '/admin/stores': typeof AdminStoresIndexRoute
+  '/admin/users': typeof AdminUsersIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -477,12 +736,18 @@ export interface FileRoutesById {
   '/faq': typeof FaqRoute
   '/feedback': typeof FeedbackRoute
   '/help': typeof HelpRoute
+  '/install-ios': typeof InstallIosRoute
   '/maintenance': typeof MaintenanceRoute
   '/offers': typeof OffersRoute
+  '/onboarding': typeof OnboardingRoute
+  '/payment-failure': typeof PaymentFailureRoute
+  '/payment-success': typeof PaymentSuccessRoute
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/search': typeof SearchRoute
+  '/splash': typeof SplashRoute
   '/stores': typeof StoresRoute
+  '/support': typeof SupportRoute
   '/terms': typeof TermsRoute
   '/testimonials': typeof TestimonialsRoute
   '/_authenticated/addresses': typeof AuthenticatedAddressesRoute
@@ -490,27 +755,21 @@ export interface FileRoutesById {
   '/_authenticated/checkout': typeof AuthenticatedCheckoutRoute
   '/_authenticated/language': typeof AuthenticatedLanguageRoute
   '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
-  '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/referral': typeof AuthenticatedReferralRoute
   '/_authenticated/rewards': typeof AuthenticatedRewardsRoute
   '/_authenticated/verify-account': typeof AuthenticatedVerifyAccountRoute
   '/_authenticated/wallet': typeof AuthenticatedWalletRoute
   '/_authenticated/wishlist': typeof AuthenticatedWishlistRoute
-  '/admin/banners': typeof AdminBannersRoute
-  '/admin/blog': typeof AdminBlogRoute
-  '/admin/brands': typeof AdminBrandsRoute
-  '/admin/categories': typeof AdminCategoriesRoute
-  '/admin/coupons': typeof AdminCouponsRoute
+  '/admin/audit-logs': typeof AdminAuditLogsRoute
   '/admin/customers': typeof AdminCustomersRoute
   '/admin/notifications': typeof AdminNotificationsRoute
-  '/admin/orders': typeof AdminOrdersRoute
-  '/admin/products': typeof AdminProductsRoute
+  '/admin/payments': typeof AdminPaymentsRoute
+  '/admin/promotions': typeof AdminPromotionsRoute
   '/admin/reports': typeof AdminReportsRoute
   '/admin/returns': typeof AdminReturnsRoute
   '/admin/reviews': typeof AdminReviewsRoute
   '/admin/settings': typeof AdminSettingsRoute
-  '/admin/stores': typeof AdminStoresRoute
-  '/admin/users': typeof AdminUsersRoute
+  '/admin/tickets': typeof AdminTicketsRoute
   '/blogs/$slug': typeof BlogsSlugRoute
   '/category/$slug': typeof CategorySlugRoute
   '/dev/login-test': typeof DevLoginTestRoute
@@ -518,8 +777,40 @@ export interface FileRoutesById {
   '/admin/': typeof AdminIndexRoute
   '/blogs/': typeof BlogsIndexRoute
   '/_authenticated/orders/$id': typeof AuthenticatedOrdersIdRoute
+  '/_authenticated/profile/details': typeof AuthenticatedProfileDetailsRoute
+  '/_authenticated/profile/photo': typeof AuthenticatedProfilePhotoRoute
+  '/admin/banners/$id': typeof AdminBannersIdRoute
+  '/admin/banners/new': typeof AdminBannersNewRoute
+  '/admin/blog/$id': typeof AdminBlogIdRoute
+  '/admin/blog/new': typeof AdminBlogNewRoute
+  '/admin/brands/$id': typeof AdminBrandsIdRoute
+  '/admin/brands/new': typeof AdminBrandsNewRoute
+  '/admin/categories/$id': typeof AdminCategoriesIdRoute
+  '/admin/categories/new': typeof AdminCategoriesNewRoute
+  '/admin/coupons/$id': typeof AdminCouponsIdRoute
+  '/admin/coupons/new': typeof AdminCouponsNewRoute
   '/admin/customer/$id': typeof AdminCustomerIdRoute
+  '/admin/delivery/new': typeof AdminDeliveryNewRoute
+  '/admin/orders/$id': typeof AdminOrdersIdRoute
+  '/admin/orders/new': typeof AdminOrdersNewRoute
+  '/admin/products/$id': typeof AdminProductsIdRoute
+  '/admin/products/new': typeof AdminProductsNewRoute
+  '/admin/stores/$id': typeof AdminStoresIdRoute
+  '/admin/stores/new': typeof AdminStoresNewRoute
+  '/admin/users/$id': typeof AdminUsersIdRoute
+  '/admin/users/new': typeof AdminUsersNewRoute
   '/_authenticated/orders/': typeof AuthenticatedOrdersIndexRoute
+  '/_authenticated/profile/': typeof AuthenticatedProfileIndexRoute
+  '/admin/banners/': typeof AdminBannersIndexRoute
+  '/admin/blog/': typeof AdminBlogIndexRoute
+  '/admin/brands/': typeof AdminBrandsIndexRoute
+  '/admin/categories/': typeof AdminCategoriesIndexRoute
+  '/admin/coupons/': typeof AdminCouponsIndexRoute
+  '/admin/delivery/': typeof AdminDeliveryIndexRoute
+  '/admin/orders/': typeof AdminOrdersIndexRoute
+  '/admin/products/': typeof AdminProductsIndexRoute
+  '/admin/stores/': typeof AdminStoresIndexRoute
+  '/admin/users/': typeof AdminUsersIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -536,12 +827,18 @@ export interface FileRouteTypes {
     | '/faq'
     | '/feedback'
     | '/help'
+    | '/install-ios'
     | '/maintenance'
     | '/offers'
+    | '/onboarding'
+    | '/payment-failure'
+    | '/payment-success'
     | '/privacy'
     | '/reset-password'
     | '/search'
+    | '/splash'
     | '/stores'
+    | '/support'
     | '/terms'
     | '/testimonials'
     | '/addresses'
@@ -549,27 +846,21 @@ export interface FileRouteTypes {
     | '/checkout'
     | '/language'
     | '/notifications'
-    | '/profile'
     | '/referral'
     | '/rewards'
     | '/verify-account'
     | '/wallet'
     | '/wishlist'
-    | '/admin/banners'
-    | '/admin/blog'
-    | '/admin/brands'
-    | '/admin/categories'
-    | '/admin/coupons'
+    | '/admin/audit-logs'
     | '/admin/customers'
     | '/admin/notifications'
-    | '/admin/orders'
-    | '/admin/products'
+    | '/admin/payments'
+    | '/admin/promotions'
     | '/admin/reports'
     | '/admin/returns'
     | '/admin/reviews'
     | '/admin/settings'
-    | '/admin/stores'
-    | '/admin/users'
+    | '/admin/tickets'
     | '/blogs/$slug'
     | '/category/$slug'
     | '/dev/login-test'
@@ -577,8 +868,40 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/blogs/'
     | '/orders/$id'
+    | '/profile/details'
+    | '/profile/photo'
+    | '/admin/banners/$id'
+    | '/admin/banners/new'
+    | '/admin/blog/$id'
+    | '/admin/blog/new'
+    | '/admin/brands/$id'
+    | '/admin/brands/new'
+    | '/admin/categories/$id'
+    | '/admin/categories/new'
+    | '/admin/coupons/$id'
+    | '/admin/coupons/new'
     | '/admin/customer/$id'
+    | '/admin/delivery/new'
+    | '/admin/orders/$id'
+    | '/admin/orders/new'
+    | '/admin/products/$id'
+    | '/admin/products/new'
+    | '/admin/stores/$id'
+    | '/admin/stores/new'
+    | '/admin/users/$id'
+    | '/admin/users/new'
     | '/orders/'
+    | '/profile/'
+    | '/admin/banners/'
+    | '/admin/blog/'
+    | '/admin/brands/'
+    | '/admin/categories/'
+    | '/admin/coupons/'
+    | '/admin/delivery/'
+    | '/admin/orders/'
+    | '/admin/products/'
+    | '/admin/stores/'
+    | '/admin/users/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -592,12 +915,18 @@ export interface FileRouteTypes {
     | '/faq'
     | '/feedback'
     | '/help'
+    | '/install-ios'
     | '/maintenance'
     | '/offers'
+    | '/onboarding'
+    | '/payment-failure'
+    | '/payment-success'
     | '/privacy'
     | '/reset-password'
     | '/search'
+    | '/splash'
     | '/stores'
+    | '/support'
     | '/terms'
     | '/testimonials'
     | '/addresses'
@@ -605,27 +934,21 @@ export interface FileRouteTypes {
     | '/checkout'
     | '/language'
     | '/notifications'
-    | '/profile'
     | '/referral'
     | '/rewards'
     | '/verify-account'
     | '/wallet'
     | '/wishlist'
-    | '/admin/banners'
-    | '/admin/blog'
-    | '/admin/brands'
-    | '/admin/categories'
-    | '/admin/coupons'
+    | '/admin/audit-logs'
     | '/admin/customers'
     | '/admin/notifications'
-    | '/admin/orders'
-    | '/admin/products'
+    | '/admin/payments'
+    | '/admin/promotions'
     | '/admin/reports'
     | '/admin/returns'
     | '/admin/reviews'
     | '/admin/settings'
-    | '/admin/stores'
-    | '/admin/users'
+    | '/admin/tickets'
     | '/blogs/$slug'
     | '/category/$slug'
     | '/dev/login-test'
@@ -633,8 +956,40 @@ export interface FileRouteTypes {
     | '/admin'
     | '/blogs'
     | '/orders/$id'
+    | '/profile/details'
+    | '/profile/photo'
+    | '/admin/banners/$id'
+    | '/admin/banners/new'
+    | '/admin/blog/$id'
+    | '/admin/blog/new'
+    | '/admin/brands/$id'
+    | '/admin/brands/new'
+    | '/admin/categories/$id'
+    | '/admin/categories/new'
+    | '/admin/coupons/$id'
+    | '/admin/coupons/new'
     | '/admin/customer/$id'
+    | '/admin/delivery/new'
+    | '/admin/orders/$id'
+    | '/admin/orders/new'
+    | '/admin/products/$id'
+    | '/admin/products/new'
+    | '/admin/stores/$id'
+    | '/admin/stores/new'
+    | '/admin/users/$id'
+    | '/admin/users/new'
     | '/orders'
+    | '/profile'
+    | '/admin/banners'
+    | '/admin/blog'
+    | '/admin/brands'
+    | '/admin/categories'
+    | '/admin/coupons'
+    | '/admin/delivery'
+    | '/admin/orders'
+    | '/admin/products'
+    | '/admin/stores'
+    | '/admin/users'
   id:
     | '__root__'
     | '/'
@@ -650,12 +1005,18 @@ export interface FileRouteTypes {
     | '/faq'
     | '/feedback'
     | '/help'
+    | '/install-ios'
     | '/maintenance'
     | '/offers'
+    | '/onboarding'
+    | '/payment-failure'
+    | '/payment-success'
     | '/privacy'
     | '/reset-password'
     | '/search'
+    | '/splash'
     | '/stores'
+    | '/support'
     | '/terms'
     | '/testimonials'
     | '/_authenticated/addresses'
@@ -663,27 +1024,21 @@ export interface FileRouteTypes {
     | '/_authenticated/checkout'
     | '/_authenticated/language'
     | '/_authenticated/notifications'
-    | '/_authenticated/profile'
     | '/_authenticated/referral'
     | '/_authenticated/rewards'
     | '/_authenticated/verify-account'
     | '/_authenticated/wallet'
     | '/_authenticated/wishlist'
-    | '/admin/banners'
-    | '/admin/blog'
-    | '/admin/brands'
-    | '/admin/categories'
-    | '/admin/coupons'
+    | '/admin/audit-logs'
     | '/admin/customers'
     | '/admin/notifications'
-    | '/admin/orders'
-    | '/admin/products'
+    | '/admin/payments'
+    | '/admin/promotions'
     | '/admin/reports'
     | '/admin/returns'
     | '/admin/reviews'
     | '/admin/settings'
-    | '/admin/stores'
-    | '/admin/users'
+    | '/admin/tickets'
     | '/blogs/$slug'
     | '/category/$slug'
     | '/dev/login-test'
@@ -691,8 +1046,40 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/blogs/'
     | '/_authenticated/orders/$id'
+    | '/_authenticated/profile/details'
+    | '/_authenticated/profile/photo'
+    | '/admin/banners/$id'
+    | '/admin/banners/new'
+    | '/admin/blog/$id'
+    | '/admin/blog/new'
+    | '/admin/brands/$id'
+    | '/admin/brands/new'
+    | '/admin/categories/$id'
+    | '/admin/categories/new'
+    | '/admin/coupons/$id'
+    | '/admin/coupons/new'
     | '/admin/customer/$id'
+    | '/admin/delivery/new'
+    | '/admin/orders/$id'
+    | '/admin/orders/new'
+    | '/admin/products/$id'
+    | '/admin/products/new'
+    | '/admin/stores/$id'
+    | '/admin/stores/new'
+    | '/admin/users/$id'
+    | '/admin/users/new'
     | '/_authenticated/orders/'
+    | '/_authenticated/profile/'
+    | '/admin/banners/'
+    | '/admin/blog/'
+    | '/admin/brands/'
+    | '/admin/categories/'
+    | '/admin/coupons/'
+    | '/admin/delivery/'
+    | '/admin/orders/'
+    | '/admin/products/'
+    | '/admin/stores/'
+    | '/admin/users/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -709,12 +1096,18 @@ export interface RootRouteChildren {
   FaqRoute: typeof FaqRoute
   FeedbackRoute: typeof FeedbackRoute
   HelpRoute: typeof HelpRoute
+  InstallIosRoute: typeof InstallIosRoute
   MaintenanceRoute: typeof MaintenanceRoute
   OffersRoute: typeof OffersRoute
+  OnboardingRoute: typeof OnboardingRoute
+  PaymentFailureRoute: typeof PaymentFailureRoute
+  PaymentSuccessRoute: typeof PaymentSuccessRoute
   PrivacyRoute: typeof PrivacyRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SearchRoute: typeof SearchRoute
+  SplashRoute: typeof SplashRoute
   StoresRoute: typeof StoresRoute
+  SupportRoute: typeof SupportRoute
   TermsRoute: typeof TermsRoute
   TestimonialsRoute: typeof TestimonialsRoute
   BlogsSlugRoute: typeof BlogsSlugRoute
@@ -726,123 +1119,18 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/testimonials': {
-      id: '/testimonials'
-      path: '/testimonials'
-      fullPath: '/testimonials'
-      preLoaderRoute: typeof TestimonialsRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/terms': {
-      id: '/terms'
-      path: '/terms'
-      fullPath: '/terms'
-      preLoaderRoute: typeof TermsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/stores': {
-      id: '/stores'
-      path: '/stores'
-      fullPath: '/stores'
-      preLoaderRoute: typeof StoresRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/search': {
-      id: '/search'
-      path: '/search'
-      fullPath: '/search'
-      preLoaderRoute: typeof SearchRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/reset-password': {
-      id: '/reset-password'
-      path: '/reset-password'
-      fullPath: '/reset-password'
-      preLoaderRoute: typeof ResetPasswordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/privacy': {
-      id: '/privacy'
-      path: '/privacy'
-      fullPath: '/privacy'
-      preLoaderRoute: typeof PrivacyRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/offers': {
-      id: '/offers'
-      path: '/offers'
-      fullPath: '/offers'
-      preLoaderRoute: typeof OffersRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/maintenance': {
-      id: '/maintenance'
-      path: '/maintenance'
-      fullPath: '/maintenance'
-      preLoaderRoute: typeof MaintenanceRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/help': {
-      id: '/help'
-      path: '/help'
-      fullPath: '/help'
-      preLoaderRoute: typeof HelpRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/feedback': {
-      id: '/feedback'
-      path: '/feedback'
-      fullPath: '/feedback'
-      preLoaderRoute: typeof FeedbackRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/faq': {
-      id: '/faq'
-      path: '/faq'
-      fullPath: '/faq'
-      preLoaderRoute: typeof FaqRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/deals': {
-      id: '/deals'
-      path: '/deals'
-      fullPath: '/deals'
-      preLoaderRoute: typeof DealsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/coupons': {
-      id: '/coupons'
-      path: '/coupons'
-      fullPath: '/coupons'
-      preLoaderRoute: typeof CouponsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/contact': {
-      id: '/contact'
-      path: '/contact'
-      fullPath: '/contact'
-      preLoaderRoute: typeof ContactRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/categories': {
-      id: '/categories'
-      path: '/categories'
-      fullPath: '/categories'
-      preLoaderRoute: typeof CategoriesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/brands': {
-      id: '/brands'
-      path: '/brands'
-      fullPath: '/brands'
-      preLoaderRoute: typeof BrandsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/auth': {
-      id: '/auth'
-      path: '/auth'
-      fullPath: '/auth'
-      preLoaderRoute: typeof AuthRouteImport
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/about': {
@@ -859,228 +1147,172 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated': {
-      id: '/_authenticated'
-      path: ''
-      fullPath: '/'
-      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/blogs/': {
-      id: '/blogs/'
-      path: '/blogs'
-      fullPath: '/blogs/'
-      preLoaderRoute: typeof BlogsIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin/': {
-      id: '/admin/'
-      path: '/'
-      fullPath: '/admin/'
-      preLoaderRoute: typeof AdminIndexRouteImport
-      parentRoute: typeof AdminRouteRoute
-    }
-    '/product/$slug': {
-      id: '/product/$slug'
-      path: '/product/$slug'
-      fullPath: '/product/$slug'
-      preLoaderRoute: typeof ProductSlugRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/dev/login-test': {
-      id: '/dev/login-test'
-      path: '/dev/login-test'
-      fullPath: '/dev/login-test'
-      preLoaderRoute: typeof DevLoginTestRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/category/$slug': {
-      id: '/category/$slug'
-      path: '/category/$slug'
-      fullPath: '/category/$slug'
-      preLoaderRoute: typeof CategorySlugRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/blogs/$slug': {
-      id: '/blogs/$slug'
-      path: '/blogs/$slug'
-      fullPath: '/blogs/$slug'
-      preLoaderRoute: typeof BlogsSlugRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin/users': {
-      id: '/admin/users'
-      path: '/users'
-      fullPath: '/admin/users'
-      preLoaderRoute: typeof AdminUsersRouteImport
-      parentRoute: typeof AdminRouteRoute
-    }
-    '/admin/stores': {
-      id: '/admin/stores'
-      path: '/stores'
-      fullPath: '/admin/stores'
-      preLoaderRoute: typeof AdminStoresRouteImport
-      parentRoute: typeof AdminRouteRoute
-    }
-    '/admin/settings': {
-      id: '/admin/settings'
-      path: '/settings'
-      fullPath: '/admin/settings'
-      preLoaderRoute: typeof AdminSettingsRouteImport
-      parentRoute: typeof AdminRouteRoute
-    }
-    '/admin/reviews': {
-      id: '/admin/reviews'
-      path: '/reviews'
-      fullPath: '/admin/reviews'
-      preLoaderRoute: typeof AdminReviewsRouteImport
-      parentRoute: typeof AdminRouteRoute
-    }
-    '/admin/returns': {
-      id: '/admin/returns'
-      path: '/returns'
-      fullPath: '/admin/returns'
-      preLoaderRoute: typeof AdminReturnsRouteImport
-      parentRoute: typeof AdminRouteRoute
-    }
-    '/admin/reports': {
-      id: '/admin/reports'
-      path: '/reports'
-      fullPath: '/admin/reports'
-      preLoaderRoute: typeof AdminReportsRouteImport
-      parentRoute: typeof AdminRouteRoute
-    }
-    '/admin/products': {
-      id: '/admin/products'
-      path: '/products'
-      fullPath: '/admin/products'
-      preLoaderRoute: typeof AdminProductsRouteImport
-      parentRoute: typeof AdminRouteRoute
-    }
-    '/admin/orders': {
-      id: '/admin/orders'
-      path: '/orders'
-      fullPath: '/admin/orders'
-      preLoaderRoute: typeof AdminOrdersRouteImport
-      parentRoute: typeof AdminRouteRoute
-    }
-    '/admin/notifications': {
-      id: '/admin/notifications'
-      path: '/notifications'
-      fullPath: '/admin/notifications'
-      preLoaderRoute: typeof AdminNotificationsRouteImport
-      parentRoute: typeof AdminRouteRoute
-    }
-    '/admin/customers': {
-      id: '/admin/customers'
-      path: '/customers'
-      fullPath: '/admin/customers'
-      preLoaderRoute: typeof AdminCustomersRouteImport
-      parentRoute: typeof AdminRouteRoute
-    }
-    '/admin/coupons': {
-      id: '/admin/coupons'
-      path: '/coupons'
-      fullPath: '/admin/coupons'
-      preLoaderRoute: typeof AdminCouponsRouteImport
-      parentRoute: typeof AdminRouteRoute
-    }
-    '/admin/categories': {
-      id: '/admin/categories'
-      path: '/categories'
-      fullPath: '/admin/categories'
-      preLoaderRoute: typeof AdminCategoriesRouteImport
-      parentRoute: typeof AdminRouteRoute
-    }
-    '/admin/brands': {
-      id: '/admin/brands'
+    '/brands': {
+      id: '/brands'
       path: '/brands'
-      fullPath: '/admin/brands'
-      preLoaderRoute: typeof AdminBrandsRouteImport
-      parentRoute: typeof AdminRouteRoute
+      fullPath: '/brands'
+      preLoaderRoute: typeof BrandsRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/admin/blog': {
-      id: '/admin/blog'
-      path: '/blog'
-      fullPath: '/admin/blog'
-      preLoaderRoute: typeof AdminBlogRouteImport
-      parentRoute: typeof AdminRouteRoute
+    '/categories': {
+      id: '/categories'
+      path: '/categories'
+      fullPath: '/categories'
+      preLoaderRoute: typeof CategoriesRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/admin/banners': {
-      id: '/admin/banners'
-      path: '/banners'
-      fullPath: '/admin/banners'
-      preLoaderRoute: typeof AdminBannersRouteImport
-      parentRoute: typeof AdminRouteRoute
+    '/contact': {
+      id: '/contact'
+      path: '/contact'
+      fullPath: '/contact'
+      preLoaderRoute: typeof ContactRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/wishlist': {
-      id: '/_authenticated/wishlist'
-      path: '/wishlist'
-      fullPath: '/wishlist'
-      preLoaderRoute: typeof AuthenticatedWishlistRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+    '/coupons': {
+      id: '/coupons'
+      path: '/coupons'
+      fullPath: '/coupons'
+      preLoaderRoute: typeof CouponsRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/wallet': {
-      id: '/_authenticated/wallet'
-      path: '/wallet'
-      fullPath: '/wallet'
-      preLoaderRoute: typeof AuthenticatedWalletRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+    '/deals': {
+      id: '/deals'
+      path: '/deals'
+      fullPath: '/deals'
+      preLoaderRoute: typeof DealsRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/verify-account': {
-      id: '/_authenticated/verify-account'
-      path: '/verify-account'
-      fullPath: '/verify-account'
-      preLoaderRoute: typeof AuthenticatedVerifyAccountRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+    '/faq': {
+      id: '/faq'
+      path: '/faq'
+      fullPath: '/faq'
+      preLoaderRoute: typeof FaqRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/rewards': {
-      id: '/_authenticated/rewards'
-      path: '/rewards'
-      fullPath: '/rewards'
-      preLoaderRoute: typeof AuthenticatedRewardsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+    '/feedback': {
+      id: '/feedback'
+      path: '/feedback'
+      fullPath: '/feedback'
+      preLoaderRoute: typeof FeedbackRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/referral': {
-      id: '/_authenticated/referral'
-      path: '/referral'
-      fullPath: '/referral'
-      preLoaderRoute: typeof AuthenticatedReferralRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+    '/help': {
+      id: '/help'
+      path: '/help'
+      fullPath: '/help'
+      preLoaderRoute: typeof HelpRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/profile': {
-      id: '/_authenticated/profile'
-      path: '/profile'
-      fullPath: '/profile'
-      preLoaderRoute: typeof AuthenticatedProfileRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+    '/install-ios': {
+      id: '/install-ios'
+      path: '/install-ios'
+      fullPath: '/install-ios'
+      preLoaderRoute: typeof InstallIosRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/notifications': {
-      id: '/_authenticated/notifications'
-      path: '/notifications'
-      fullPath: '/notifications'
-      preLoaderRoute: typeof AuthenticatedNotificationsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+    '/maintenance': {
+      id: '/maintenance'
+      path: '/maintenance'
+      fullPath: '/maintenance'
+      preLoaderRoute: typeof MaintenanceRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/language': {
-      id: '/_authenticated/language'
-      path: '/language'
-      fullPath: '/language'
-      preLoaderRoute: typeof AuthenticatedLanguageRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+    '/offers': {
+      id: '/offers'
+      path: '/offers'
+      fullPath: '/offers'
+      preLoaderRoute: typeof OffersRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/checkout': {
-      id: '/_authenticated/checkout'
-      path: '/checkout'
-      fullPath: '/checkout'
-      preLoaderRoute: typeof AuthenticatedCheckoutRouteImport
+    '/onboarding': {
+      id: '/onboarding'
+      path: '/onboarding'
+      fullPath: '/onboarding'
+      preLoaderRoute: typeof OnboardingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/payment-failure': {
+      id: '/payment-failure'
+      path: '/payment-failure'
+      fullPath: '/payment-failure'
+      preLoaderRoute: typeof PaymentFailureRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/payment-success': {
+      id: '/payment-success'
+      path: '/payment-success'
+      fullPath: '/payment-success'
+      preLoaderRoute: typeof PaymentSuccessRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/search': {
+      id: '/search'
+      path: '/search'
+      fullPath: '/search'
+      preLoaderRoute: typeof SearchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/splash': {
+      id: '/splash'
+      path: '/splash'
+      fullPath: '/splash'
+      preLoaderRoute: typeof SplashRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/stores': {
+      id: '/stores'
+      path: '/stores'
+      fullPath: '/stores'
+      preLoaderRoute: typeof StoresRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/support': {
+      id: '/support'
+      path: '/support'
+      fullPath: '/support'
+      preLoaderRoute: typeof SupportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/testimonials': {
+      id: '/testimonials'
+      path: '/testimonials'
+      fullPath: '/testimonials'
+      preLoaderRoute: typeof TestimonialsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/addresses': {
+      id: '/_authenticated/addresses'
+      path: '/addresses'
+      fullPath: '/addresses'
+      preLoaderRoute: typeof AuthenticatedAddressesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/cart': {
@@ -1090,12 +1322,173 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCartRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/addresses': {
-      id: '/_authenticated/addresses'
-      path: '/addresses'
-      fullPath: '/addresses'
-      preLoaderRoute: typeof AuthenticatedAddressesRouteImport
+    '/_authenticated/checkout': {
+      id: '/_authenticated/checkout'
+      path: '/checkout'
+      fullPath: '/checkout'
+      preLoaderRoute: typeof AuthenticatedCheckoutRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/language': {
+      id: '/_authenticated/language'
+      path: '/language'
+      fullPath: '/language'
+      preLoaderRoute: typeof AuthenticatedLanguageRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/notifications': {
+      id: '/_authenticated/notifications'
+      path: '/notifications'
+      fullPath: '/notifications'
+      preLoaderRoute: typeof AuthenticatedNotificationsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/referral': {
+      id: '/_authenticated/referral'
+      path: '/referral'
+      fullPath: '/referral'
+      preLoaderRoute: typeof AuthenticatedReferralRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/rewards': {
+      id: '/_authenticated/rewards'
+      path: '/rewards'
+      fullPath: '/rewards'
+      preLoaderRoute: typeof AuthenticatedRewardsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/verify-account': {
+      id: '/_authenticated/verify-account'
+      path: '/verify-account'
+      fullPath: '/verify-account'
+      preLoaderRoute: typeof AuthenticatedVerifyAccountRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/wallet': {
+      id: '/_authenticated/wallet'
+      path: '/wallet'
+      fullPath: '/wallet'
+      preLoaderRoute: typeof AuthenticatedWalletRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/wishlist': {
+      id: '/_authenticated/wishlist'
+      path: '/wishlist'
+      fullPath: '/wishlist'
+      preLoaderRoute: typeof AuthenticatedWishlistRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/admin/': {
+      id: '/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/audit-logs': {
+      id: '/admin/audit-logs'
+      path: '/audit-logs'
+      fullPath: '/admin/audit-logs'
+      preLoaderRoute: typeof AdminAuditLogsRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/customers': {
+      id: '/admin/customers'
+      path: '/customers'
+      fullPath: '/admin/customers'
+      preLoaderRoute: typeof AdminCustomersRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/notifications': {
+      id: '/admin/notifications'
+      path: '/notifications'
+      fullPath: '/admin/notifications'
+      preLoaderRoute: typeof AdminNotificationsRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/payments': {
+      id: '/admin/payments'
+      path: '/payments'
+      fullPath: '/admin/payments'
+      preLoaderRoute: typeof AdminPaymentsRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/promotions': {
+      id: '/admin/promotions'
+      path: '/promotions'
+      fullPath: '/admin/promotions'
+      preLoaderRoute: typeof AdminPromotionsRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/reports': {
+      id: '/admin/reports'
+      path: '/reports'
+      fullPath: '/admin/reports'
+      preLoaderRoute: typeof AdminReportsRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/returns': {
+      id: '/admin/returns'
+      path: '/returns'
+      fullPath: '/admin/returns'
+      preLoaderRoute: typeof AdminReturnsRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/reviews': {
+      id: '/admin/reviews'
+      path: '/reviews'
+      fullPath: '/admin/reviews'
+      preLoaderRoute: typeof AdminReviewsRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/settings': {
+      id: '/admin/settings'
+      path: '/settings'
+      fullPath: '/admin/settings'
+      preLoaderRoute: typeof AdminSettingsRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/tickets': {
+      id: '/admin/tickets'
+      path: '/tickets'
+      fullPath: '/admin/tickets'
+      preLoaderRoute: typeof AdminTicketsRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/blogs/': {
+      id: '/blogs/'
+      path: '/blogs'
+      fullPath: '/blogs/'
+      preLoaderRoute: typeof BlogsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/blogs/$slug': {
+      id: '/blogs/$slug'
+      path: '/blogs/$slug'
+      fullPath: '/blogs/$slug'
+      preLoaderRoute: typeof BlogsSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/category/$slug': {
+      id: '/category/$slug'
+      path: '/category/$slug'
+      fullPath: '/category/$slug'
+      preLoaderRoute: typeof CategorySlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dev/login-test': {
+      id: '/dev/login-test'
+      path: '/dev/login-test'
+      fullPath: '/dev/login-test'
+      preLoaderRoute: typeof DevLoginTestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/product/$slug': {
+      id: '/product/$slug'
+      path: '/product/$slug'
+      fullPath: '/product/$slug'
+      preLoaderRoute: typeof ProductSlugRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/orders/': {
       id: '/_authenticated/orders/'
@@ -1104,6 +1497,139 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOrdersIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/orders/$id': {
+      id: '/_authenticated/orders/$id'
+      path: '/orders/$id'
+      fullPath: '/orders/$id'
+      preLoaderRoute: typeof AuthenticatedOrdersIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/profile/': {
+      id: '/_authenticated/profile/'
+      path: '/profile'
+      fullPath: '/profile/'
+      preLoaderRoute: typeof AuthenticatedProfileIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/profile/details': {
+      id: '/_authenticated/profile/details'
+      path: '/profile/details'
+      fullPath: '/profile/details'
+      preLoaderRoute: typeof AuthenticatedProfileDetailsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/profile/photo': {
+      id: '/_authenticated/profile/photo'
+      path: '/profile/photo'
+      fullPath: '/profile/photo'
+      preLoaderRoute: typeof AuthenticatedProfilePhotoRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/admin/banners/': {
+      id: '/admin/banners/'
+      path: '/banners'
+      fullPath: '/admin/banners/'
+      preLoaderRoute: typeof AdminBannersIndexRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/banners/$id': {
+      id: '/admin/banners/$id'
+      path: '/banners/$id'
+      fullPath: '/admin/banners/$id'
+      preLoaderRoute: typeof AdminBannersIdRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/banners/new': {
+      id: '/admin/banners/new'
+      path: '/banners/new'
+      fullPath: '/admin/banners/new'
+      preLoaderRoute: typeof AdminBannersNewRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/blog/': {
+      id: '/admin/blog/'
+      path: '/blog'
+      fullPath: '/admin/blog/'
+      preLoaderRoute: typeof AdminBlogIndexRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/blog/$id': {
+      id: '/admin/blog/$id'
+      path: '/blog/$id'
+      fullPath: '/admin/blog/$id'
+      preLoaderRoute: typeof AdminBlogIdRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/blog/new': {
+      id: '/admin/blog/new'
+      path: '/blog/new'
+      fullPath: '/admin/blog/new'
+      preLoaderRoute: typeof AdminBlogNewRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/brands/': {
+      id: '/admin/brands/'
+      path: '/brands'
+      fullPath: '/admin/brands/'
+      preLoaderRoute: typeof AdminBrandsIndexRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/brands/$id': {
+      id: '/admin/brands/$id'
+      path: '/brands/$id'
+      fullPath: '/admin/brands/$id'
+      preLoaderRoute: typeof AdminBrandsIdRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/brands/new': {
+      id: '/admin/brands/new'
+      path: '/brands/new'
+      fullPath: '/admin/brands/new'
+      preLoaderRoute: typeof AdminBrandsNewRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/categories/': {
+      id: '/admin/categories/'
+      path: '/categories'
+      fullPath: '/admin/categories/'
+      preLoaderRoute: typeof AdminCategoriesIndexRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/categories/$id': {
+      id: '/admin/categories/$id'
+      path: '/categories/$id'
+      fullPath: '/admin/categories/$id'
+      preLoaderRoute: typeof AdminCategoriesIdRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/categories/new': {
+      id: '/admin/categories/new'
+      path: '/categories/new'
+      fullPath: '/admin/categories/new'
+      preLoaderRoute: typeof AdminCategoriesNewRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/coupons/': {
+      id: '/admin/coupons/'
+      path: '/coupons'
+      fullPath: '/admin/coupons/'
+      preLoaderRoute: typeof AdminCouponsIndexRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/coupons/$id': {
+      id: '/admin/coupons/$id'
+      path: '/coupons/$id'
+      fullPath: '/admin/coupons/$id'
+      preLoaderRoute: typeof AdminCouponsIdRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/coupons/new': {
+      id: '/admin/coupons/new'
+      path: '/coupons/new'
+      fullPath: '/admin/coupons/new'
+      preLoaderRoute: typeof AdminCouponsNewRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
     '/admin/customer/$id': {
       id: '/admin/customer/$id'
       path: '/customer/$id'
@@ -1111,12 +1637,103 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminCustomerIdRouteImport
       parentRoute: typeof AdminRouteRoute
     }
-    '/_authenticated/orders/$id': {
-      id: '/_authenticated/orders/$id'
+    '/admin/delivery/': {
+      id: '/admin/delivery/'
+      path: '/delivery'
+      fullPath: '/admin/delivery/'
+      preLoaderRoute: typeof AdminDeliveryIndexRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/delivery/new': {
+      id: '/admin/delivery/new'
+      path: '/delivery/new'
+      fullPath: '/admin/delivery/new'
+      preLoaderRoute: typeof AdminDeliveryNewRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/orders/': {
+      id: '/admin/orders/'
+      path: '/orders'
+      fullPath: '/admin/orders/'
+      preLoaderRoute: typeof AdminOrdersIndexRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/orders/$id': {
+      id: '/admin/orders/$id'
       path: '/orders/$id'
-      fullPath: '/orders/$id'
-      preLoaderRoute: typeof AuthenticatedOrdersIdRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+      fullPath: '/admin/orders/$id'
+      preLoaderRoute: typeof AdminOrdersIdRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/orders/new': {
+      id: '/admin/orders/new'
+      path: '/orders/new'
+      fullPath: '/admin/orders/new'
+      preLoaderRoute: typeof AdminOrdersNewRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/products/': {
+      id: '/admin/products/'
+      path: '/products'
+      fullPath: '/admin/products/'
+      preLoaderRoute: typeof AdminProductsIndexRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/products/$id': {
+      id: '/admin/products/$id'
+      path: '/products/$id'
+      fullPath: '/admin/products/$id'
+      preLoaderRoute: typeof AdminProductsIdRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/products/new': {
+      id: '/admin/products/new'
+      path: '/products/new'
+      fullPath: '/admin/products/new'
+      preLoaderRoute: typeof AdminProductsNewRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/stores/': {
+      id: '/admin/stores/'
+      path: '/stores'
+      fullPath: '/admin/stores/'
+      preLoaderRoute: typeof AdminStoresIndexRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/stores/$id': {
+      id: '/admin/stores/$id'
+      path: '/stores/$id'
+      fullPath: '/admin/stores/$id'
+      preLoaderRoute: typeof AdminStoresIdRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/stores/new': {
+      id: '/admin/stores/new'
+      path: '/stores/new'
+      fullPath: '/admin/stores/new'
+      preLoaderRoute: typeof AdminStoresNewRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/users/': {
+      id: '/admin/users/'
+      path: '/users'
+      fullPath: '/admin/users/'
+      preLoaderRoute: typeof AdminUsersIndexRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/users/$id': {
+      id: '/admin/users/$id'
+      path: '/users/$id'
+      fullPath: '/admin/users/$id'
+      preLoaderRoute: typeof AdminUsersIdRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/users/new': {
+      id: '/admin/users/new'
+      path: '/users/new'
+      fullPath: '/admin/users/new'
+      preLoaderRoute: typeof AdminUsersNewRouteImport
+      parentRoute: typeof AdminRouteRoute
     }
   }
 }
@@ -1127,14 +1744,16 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedCheckoutRoute: typeof AuthenticatedCheckoutRoute
   AuthenticatedLanguageRoute: typeof AuthenticatedLanguageRoute
   AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRoute
-  AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedReferralRoute: typeof AuthenticatedReferralRoute
   AuthenticatedRewardsRoute: typeof AuthenticatedRewardsRoute
   AuthenticatedVerifyAccountRoute: typeof AuthenticatedVerifyAccountRoute
   AuthenticatedWalletRoute: typeof AuthenticatedWalletRoute
   AuthenticatedWishlistRoute: typeof AuthenticatedWishlistRoute
   AuthenticatedOrdersIdRoute: typeof AuthenticatedOrdersIdRoute
+  AuthenticatedProfileDetailsRoute: typeof AuthenticatedProfileDetailsRoute
+  AuthenticatedProfilePhotoRoute: typeof AuthenticatedProfilePhotoRoute
   AuthenticatedOrdersIndexRoute: typeof AuthenticatedOrdersIndexRoute
+  AuthenticatedProfileIndexRoute: typeof AuthenticatedProfileIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -1143,57 +1762,107 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedCheckoutRoute: AuthenticatedCheckoutRoute,
   AuthenticatedLanguageRoute: AuthenticatedLanguageRoute,
   AuthenticatedNotificationsRoute: AuthenticatedNotificationsRoute,
-  AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedReferralRoute: AuthenticatedReferralRoute,
   AuthenticatedRewardsRoute: AuthenticatedRewardsRoute,
   AuthenticatedVerifyAccountRoute: AuthenticatedVerifyAccountRoute,
   AuthenticatedWalletRoute: AuthenticatedWalletRoute,
   AuthenticatedWishlistRoute: AuthenticatedWishlistRoute,
   AuthenticatedOrdersIdRoute: AuthenticatedOrdersIdRoute,
+  AuthenticatedProfileDetailsRoute: AuthenticatedProfileDetailsRoute,
+  AuthenticatedProfilePhotoRoute: AuthenticatedProfilePhotoRoute,
   AuthenticatedOrdersIndexRoute: AuthenticatedOrdersIndexRoute,
+  AuthenticatedProfileIndexRoute: AuthenticatedProfileIndexRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
 interface AdminRouteRouteChildren {
-  AdminBannersRoute: typeof AdminBannersRoute
-  AdminBlogRoute: typeof AdminBlogRoute
-  AdminBrandsRoute: typeof AdminBrandsRoute
-  AdminCategoriesRoute: typeof AdminCategoriesRoute
-  AdminCouponsRoute: typeof AdminCouponsRoute
+  AdminAuditLogsRoute: typeof AdminAuditLogsRoute
   AdminCustomersRoute: typeof AdminCustomersRoute
   AdminNotificationsRoute: typeof AdminNotificationsRoute
-  AdminOrdersRoute: typeof AdminOrdersRoute
-  AdminProductsRoute: typeof AdminProductsRoute
+  AdminPaymentsRoute: typeof AdminPaymentsRoute
+  AdminPromotionsRoute: typeof AdminPromotionsRoute
   AdminReportsRoute: typeof AdminReportsRoute
   AdminReturnsRoute: typeof AdminReturnsRoute
   AdminReviewsRoute: typeof AdminReviewsRoute
   AdminSettingsRoute: typeof AdminSettingsRoute
-  AdminStoresRoute: typeof AdminStoresRoute
-  AdminUsersRoute: typeof AdminUsersRoute
+  AdminTicketsRoute: typeof AdminTicketsRoute
   AdminIndexRoute: typeof AdminIndexRoute
+  AdminBannersIdRoute: typeof AdminBannersIdRoute
+  AdminBannersNewRoute: typeof AdminBannersNewRoute
+  AdminBlogIdRoute: typeof AdminBlogIdRoute
+  AdminBlogNewRoute: typeof AdminBlogNewRoute
+  AdminBrandsIdRoute: typeof AdminBrandsIdRoute
+  AdminBrandsNewRoute: typeof AdminBrandsNewRoute
+  AdminCategoriesIdRoute: typeof AdminCategoriesIdRoute
+  AdminCategoriesNewRoute: typeof AdminCategoriesNewRoute
+  AdminCouponsIdRoute: typeof AdminCouponsIdRoute
+  AdminCouponsNewRoute: typeof AdminCouponsNewRoute
   AdminCustomerIdRoute: typeof AdminCustomerIdRoute
+  AdminDeliveryNewRoute: typeof AdminDeliveryNewRoute
+  AdminOrdersIdRoute: typeof AdminOrdersIdRoute
+  AdminOrdersNewRoute: typeof AdminOrdersNewRoute
+  AdminProductsIdRoute: typeof AdminProductsIdRoute
+  AdminProductsNewRoute: typeof AdminProductsNewRoute
+  AdminStoresIdRoute: typeof AdminStoresIdRoute
+  AdminStoresNewRoute: typeof AdminStoresNewRoute
+  AdminUsersIdRoute: typeof AdminUsersIdRoute
+  AdminUsersNewRoute: typeof AdminUsersNewRoute
+  AdminBannersIndexRoute: typeof AdminBannersIndexRoute
+  AdminBlogIndexRoute: typeof AdminBlogIndexRoute
+  AdminBrandsIndexRoute: typeof AdminBrandsIndexRoute
+  AdminCategoriesIndexRoute: typeof AdminCategoriesIndexRoute
+  AdminCouponsIndexRoute: typeof AdminCouponsIndexRoute
+  AdminDeliveryIndexRoute: typeof AdminDeliveryIndexRoute
+  AdminOrdersIndexRoute: typeof AdminOrdersIndexRoute
+  AdminProductsIndexRoute: typeof AdminProductsIndexRoute
+  AdminStoresIndexRoute: typeof AdminStoresIndexRoute
+  AdminUsersIndexRoute: typeof AdminUsersIndexRoute
 }
 
 const AdminRouteRouteChildren: AdminRouteRouteChildren = {
-  AdminBannersRoute: AdminBannersRoute,
-  AdminBlogRoute: AdminBlogRoute,
-  AdminBrandsRoute: AdminBrandsRoute,
-  AdminCategoriesRoute: AdminCategoriesRoute,
-  AdminCouponsRoute: AdminCouponsRoute,
+  AdminAuditLogsRoute: AdminAuditLogsRoute,
   AdminCustomersRoute: AdminCustomersRoute,
   AdminNotificationsRoute: AdminNotificationsRoute,
-  AdminOrdersRoute: AdminOrdersRoute,
-  AdminProductsRoute: AdminProductsRoute,
+  AdminPaymentsRoute: AdminPaymentsRoute,
+  AdminPromotionsRoute: AdminPromotionsRoute,
   AdminReportsRoute: AdminReportsRoute,
   AdminReturnsRoute: AdminReturnsRoute,
   AdminReviewsRoute: AdminReviewsRoute,
   AdminSettingsRoute: AdminSettingsRoute,
-  AdminStoresRoute: AdminStoresRoute,
-  AdminUsersRoute: AdminUsersRoute,
+  AdminTicketsRoute: AdminTicketsRoute,
   AdminIndexRoute: AdminIndexRoute,
+  AdminBannersIdRoute: AdminBannersIdRoute,
+  AdminBannersNewRoute: AdminBannersNewRoute,
+  AdminBlogIdRoute: AdminBlogIdRoute,
+  AdminBlogNewRoute: AdminBlogNewRoute,
+  AdminBrandsIdRoute: AdminBrandsIdRoute,
+  AdminBrandsNewRoute: AdminBrandsNewRoute,
+  AdminCategoriesIdRoute: AdminCategoriesIdRoute,
+  AdminCategoriesNewRoute: AdminCategoriesNewRoute,
+  AdminCouponsIdRoute: AdminCouponsIdRoute,
+  AdminCouponsNewRoute: AdminCouponsNewRoute,
   AdminCustomerIdRoute: AdminCustomerIdRoute,
+  AdminDeliveryNewRoute: AdminDeliveryNewRoute,
+  AdminOrdersIdRoute: AdminOrdersIdRoute,
+  AdminOrdersNewRoute: AdminOrdersNewRoute,
+  AdminProductsIdRoute: AdminProductsIdRoute,
+  AdminProductsNewRoute: AdminProductsNewRoute,
+  AdminStoresIdRoute: AdminStoresIdRoute,
+  AdminStoresNewRoute: AdminStoresNewRoute,
+  AdminUsersIdRoute: AdminUsersIdRoute,
+  AdminUsersNewRoute: AdminUsersNewRoute,
+  AdminBannersIndexRoute: AdminBannersIndexRoute,
+  AdminBlogIndexRoute: AdminBlogIndexRoute,
+  AdminBrandsIndexRoute: AdminBrandsIndexRoute,
+  AdminCategoriesIndexRoute: AdminCategoriesIndexRoute,
+  AdminCouponsIndexRoute: AdminCouponsIndexRoute,
+  AdminDeliveryIndexRoute: AdminDeliveryIndexRoute,
+  AdminOrdersIndexRoute: AdminOrdersIndexRoute,
+  AdminProductsIndexRoute: AdminProductsIndexRoute,
+  AdminStoresIndexRoute: AdminStoresIndexRoute,
+  AdminUsersIndexRoute: AdminUsersIndexRoute,
 }
 
 const AdminRouteRouteWithChildren = AdminRouteRoute._addFileChildren(
@@ -1214,12 +1883,18 @@ const rootRouteChildren: RootRouteChildren = {
   FaqRoute: FaqRoute,
   FeedbackRoute: FeedbackRoute,
   HelpRoute: HelpRoute,
+  InstallIosRoute: InstallIosRoute,
   MaintenanceRoute: MaintenanceRoute,
   OffersRoute: OffersRoute,
+  OnboardingRoute: OnboardingRoute,
+  PaymentFailureRoute: PaymentFailureRoute,
+  PaymentSuccessRoute: PaymentSuccessRoute,
   PrivacyRoute: PrivacyRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SearchRoute: SearchRoute,
+  SplashRoute: SplashRoute,
   StoresRoute: StoresRoute,
+  SupportRoute: SupportRoute,
   TermsRoute: TermsRoute,
   TestimonialsRoute: TestimonialsRoute,
   BlogsSlugRoute: BlogsSlugRoute,
@@ -1231,3 +1906,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

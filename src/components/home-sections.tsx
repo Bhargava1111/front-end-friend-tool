@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getPlacementBanners } from "@/lib/storefront.functions";
+import { getCombos } from "@/lib/catalog.functions";
 import { Zap, Ticket, Check, Copy, ChevronRight, Clock, Truck, ShieldCheck, RefreshCcw, Leaf } from "lucide-react";
 import { toast } from "sonner";
 import { ProductCard } from "./product-card";
@@ -56,15 +57,24 @@ function CountdownPill() {
   );
 }
 
-export function FlashSaleRail({ products }: { products: Product[] }) {
-  const deals = products
-    .filter((p) => p.mrp && Number(p.mrp) > Number(p.price))
-    .sort(
-      (a, b) =>
-        (Number(b.mrp) - Number(b.price)) / Number(b.mrp) -
-        (Number(a.mrp) - Number(a.price)) / Number(a.mrp),
-    )
-    .slice(0, 10);
+export function FlashSaleRail({
+  products,
+  curated,
+}: {
+  products: Product[];
+  curated?: Product[];
+}) {
+  const deals =
+    curated && curated.length > 0
+      ? curated
+      : products
+          .filter((p) => p.mrp && Number(p.mrp) > Number(p.price))
+          .sort(
+            (a, b) =>
+              (Number(b.mrp) - Number(b.price)) / Number(b.mrp) -
+              (Number(a.mrp) - Number(a.price)) / Number(a.mrp),
+          )
+          .slice(0, 10);
   const dealsScrollRef = useAutoScroll<HTMLDivElement>(deals.length > 3);
 
   if (deals.length === 0) return null;
@@ -168,18 +178,50 @@ export function CouponStrip() {
 
 export function OfferCards() {
   const fetchBanners = useServerFn(getPlacementBanners);
-  const { data } = useQuery({
+  const { data: combos = [], isLoading } = useQuery({
+    queryKey: ["combo-packs"],
+    queryFn: () => getCombos(),
+    staleTime: 5 * 60 * 1000,
+  });
+  const { data: banners = [] } = useQuery({
     queryKey: ["placement-banners", "combos"],
     queryFn: () => fetchBanners({ data: { placement: "combos" } }),
     staleTime: 5 * 60 * 1000,
   });
 
-  const combos = (data ?? []).map((b, i) => ({
+  if (isLoading) {
+    return (
+      <Reveal className="mt-7 grid grid-cols-2 gap-3 px-4 lg:grid-cols-4 lg:gap-4">
+        {[0, 1, 2, 3].map((i) => (
+          <div key={i} className="h-40 animate-pulse rounded-3xl bg-secondary" />
+        ))}
+      </Reveal>
+    );
+  }
+
+  if (combos.length > 0) {
+    return (
+      <Reveal className="mt-7">
+        <div className="flex items-center justify-between px-4">
+          <h2 className="text-base font-bold text-foreground">Combo packs</h2>
+          <SeeAll to="/offers" />
+        </div>
+        <div className="no-scrollbar mt-3 flex gap-3 overflow-x-auto px-4 pb-1">
+          {combos.map((product) => (
+            <ProductCard key={product.id} product={product} className="w-[168px] shrink-0" />
+          ))}
+        </div>
+      </Reveal>
+    );
+  }
+
+  const bannerCombos = banners.map((b, i) => ({
     key: b.id,
     title: b.title,
     subtitle: b.subtitle ?? "",
     image: b.image_url || null,
-    slug: b.link_slug ?? "",
+    slug: b.product?.slug ?? b.link_slug ?? "",
+    product: b.product ?? null,
     tone: i % 2 === 0 ? ("accent" as const) : ("primary" as const),
     cta: "Shop now",
   }));
@@ -190,15 +232,21 @@ export function OfferCards() {
     subtitle: o.subtitle,
     image: null as string | null,
     slug: o.slug,
+    product: null,
     tone: o.tone,
     cta: o.cta,
   }));
 
-  const list = combos.length ? combos : fallback;
+  const list = bannerCombos.length ? bannerCombos : fallback;
 
   return (
     <Reveal className="mt-7 grid grid-cols-2 gap-3 px-4 lg:grid-cols-4 lg:gap-4">
       {list.map((o) => {
+        const price = o.product ? Number(o.product.price) : null;
+        const mrp = o.product?.mrp ? Number(o.product.mrp) : null;
+        const discount =
+          price && mrp && mrp > price ? Math.round(((mrp - price) / mrp) * 100) : 0;
+
         const inner = (
           <>
             {o.image && (
@@ -213,17 +261,32 @@ export function OfferCards() {
               </>
             )}
             <div className="relative">
+              {discount > 0 && (
+                <span className="mb-1 inline-flex rounded-full bg-accent px-2 py-0.5 text-[10px] font-bold text-accent-foreground">
+                  {discount}% OFF
+                </span>
+              )}
               <p className="text-sm font-bold leading-tight">{o.title}</p>
               {o.subtitle && <p className="mt-1 text-[11px] opacity-80">{o.subtitle}</p>}
+              {price !== null && (
+                <p className="mt-2 text-sm font-bold">
+                  {formatINR(price)}
+                  {mrp && mrp > price && (
+                    <span className="ml-1 text-[11px] font-normal line-through opacity-70">
+                      {formatINR(mrp)}
+                    </span>
+                  )}
+                </p>
+              )}
             </div>
-            <span className="relative mt-5 flex items-center gap-0.5 text-[11px] font-semibold">
+            <span className="relative mt-3 flex items-center gap-0.5 text-[11px] font-semibold">
               {o.cta} <ChevronRight className="h-3.5 w-3.5" />
             </span>
           </>
         );
 
         const className = cn(
-          "relative flex min-h-[128px] flex-col justify-between overflow-hidden rounded-3xl p-4 transition-transform active:scale-[0.98]",
+          "relative flex min-h-[148px] flex-col justify-between overflow-hidden rounded-3xl p-4 transition-transform active:scale-[0.98]",
           o.image
             ? "text-white"
             : o.tone === "accent"
@@ -231,7 +294,8 @@ export function OfferCards() {
               : "bg-gradient-to-br from-primary to-primary/75 text-primary-foreground",
         );
 
-        if (!o.slug) {
+        const targetSlug = o.product?.slug ?? o.slug;
+        if (!targetSlug) {
           return (
             <div key={o.key} className={className}>
               {inner}
@@ -240,7 +304,12 @@ export function OfferCards() {
         }
 
         return (
-          <Link key={o.key} to="/category/$slug" params={{ slug: o.slug }} className={className}>
+          <Link
+            key={o.key}
+            to={o.product ? "/product/$slug" : "/category/$slug"}
+            params={{ slug: targetSlug }}
+            className={className}
+          >
             {inner}
           </Link>
         );
@@ -381,16 +450,24 @@ export function OfferBannerCarousel({ banners }: { banners: Banner[] }) {
 }
 
 /** Single hero deal with a live countdown. */
-export function DealOfTheDay({ products }: { products: Product[] }) {
+export function DealOfTheDay({
+  products,
+  curated,
+}: {
+  products: Product[];
+  curated?: Product[];
+}) {
   const hydrated = useHydrated();
   const [h, m, s] = useCountdown(flashSaleEndsAt());
-  const deal = [...products]
-    .filter((p) => p.mrp && Number(p.mrp) > Number(p.price) && p.stock > 0)
-    .sort(
-      (a, b) =>
-        (Number(b.mrp) - Number(b.price)) / Number(b.mrp) -
-        (Number(a.mrp) - Number(a.price)) / Number(a.mrp),
-    )[0];
+  const deal =
+    curated?.[0] ??
+    [...products]
+      .filter((p) => p.mrp && Number(p.mrp) > Number(p.price) && p.stock > 0)
+      .sort(
+        (a, b) =>
+          (Number(b.mrp) - Number(b.price)) / Number(b.mrp) -
+          (Number(a.mrp) - Number(a.price)) / Number(a.mrp),
+      )[0];
   if (!deal) return null;
   const off = Math.round(((Number(deal.mrp) - Number(deal.price)) / Number(deal.mrp)) * 100);
 
@@ -437,17 +514,21 @@ export function DealOfTheDay({ products }: { products: Product[] }) {
 export function FestivalPicks({
   categories,
   products,
+  curated,
   title = "Festive store",
 }: {
   categories: Array<{ id: string; name: string; slug: string }>;
   products: Product[];
+  curated?: Product[];
   title?: string;
 }) {
   const tabs = categories.slice(0, 6);
   const [active, setActive] = useState(tabs[0]?.id ?? "");
-  const ref = useAutoScroll<HTMLDivElement>(false);
-  if (tabs.length === 0) return null;
-  const list = products.filter((p) => p.category_id === (active || tabs[0].id)).slice(0, 10);
+  const categoryList = products.filter((p) => p.category_id === (active || tabs[0]?.id)).slice(0, 10);
+  const list = curated && curated.length > 0 ? curated : categoryList;
+  const ref = useAutoScroll<HTMLDivElement>(list.length > 3);
+
+  if (tabs.length === 0 && list.length === 0) return null;
 
   return (
     <Reveal className="mt-7">
@@ -455,24 +536,26 @@ export function FestivalPicks({
         <h2 className="text-base font-bold text-foreground">{title}</h2>
         <SeeAll to="/offers" />
       </div>
-      <div className="no-scrollbar mt-3 flex gap-2 overflow-x-auto px-4">
-        {tabs.map((t) => (
-          <button
-            key={t.id}
-            type="button"
-            onClick={() => setActive(t.id)}
-            aria-pressed={active === t.id}
-            className={cn(
-              "h-9 shrink-0 rounded-full border px-4 text-xs font-semibold transition-colors",
-              active === t.id
-                ? "border-primary bg-primary text-primary-foreground"
-                : "border-border bg-card text-foreground",
-            )}
-          >
-            {t.name}
-          </button>
-        ))}
-      </div>
+      {!curated?.length && tabs.length > 0 && (
+        <div className="no-scrollbar mt-3 flex gap-2 overflow-x-auto px-4">
+          {tabs.map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              onClick={() => setActive(t.id)}
+              aria-pressed={active === t.id}
+              className={cn(
+                "h-9 shrink-0 rounded-full border px-4 text-xs font-semibold transition-colors",
+                active === t.id
+                  ? "border-primary bg-primary text-primary-foreground"
+                  : "border-border bg-card text-foreground",
+              )}
+            >
+              {t.name}
+            </button>
+          ))}
+        </div>
+      )}
       {list.length === 0 ? (
         <p className="px-4 pt-3 text-xs text-muted-foreground">More items coming soon.</p>
       ) : (
@@ -487,8 +570,19 @@ export function FestivalPicks({
 }
 
 /** Budget store rail — everything under a price ceiling. */
-export function BudgetRail({ products, ceiling = 99 }: { products: Product[]; ceiling?: number }) {
-  const items = products.filter((p) => Number(p.price) <= ceiling).slice(0, 12);
+export function BudgetRail({
+  products,
+  curated,
+  ceiling = 99,
+}: {
+  products: Product[];
+  curated?: Product[];
+  ceiling?: number;
+}) {
+  const items =
+    curated && curated.length > 0
+      ? curated.slice(0, 12)
+      : products.filter((p) => Number(p.price) <= ceiling).slice(0, 12);
   const ref = useAutoScroll<HTMLDivElement>(items.length > 3);
   if (items.length === 0) return null;
   return (

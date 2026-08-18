@@ -6,6 +6,19 @@ This project was built with [Lovable](https://lovable.dev).
 
 **Live app**: https://front-end-friend-tool.lovable.app
 
+## Mobile apps (Android & iOS)
+
+Native Android and iOS apps ship in this repo via **Capacitor** — they load the same UI as the web app.
+
+```sh
+npm install
+npm run cap:sync
+npm run cap:android   # Android Studio
+npm run cap:ios       # Xcode (macOS only)
+```
+
+See **[docs/MOBILE_APPS.md](docs/MOBILE_APPS.md)** for device testing, store publishing, and custom domain setup.
+
 ## Build with Lovable
 
 Continue developing this project in the [Lovable editor](https://lovable.dev/projects/83aeca62-857b-46ab-a13f-97c10eba967f).

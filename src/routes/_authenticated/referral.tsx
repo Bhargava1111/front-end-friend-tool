@@ -1,9 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { Copy, Share2, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 import { PageShell, TopBar } from "@/components/page-shell";
 import { Button } from "@/components/ui/button";
-import { REFERRAL_DEMO } from "@/lib/content";
+import { getReferral } from "@/lib/platform.functions";
 import { formatINR } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/referral")({
@@ -21,7 +23,17 @@ export const Route = createFileRoute("/_authenticated/referral")({
 });
 
 function ReferralPage() {
-  const { code, friendReward, yourReward, invited, joined, earned } = REFERRAL_DEMO;
+  const fetch = useServerFn(getReferral);
+  const { data } = useQuery({
+    queryKey: ["referral"],
+    queryFn: () => fetch() as Promise<{ code: string; total_referrals: number; total_earned: number }>,
+  });
+  const code = data?.code ?? "…";
+  const friendReward = 150;
+  const yourReward = 50;
+  const invited = data?.total_referrals ?? 0;
+  const joined = invited;
+  const earned = data?.total_earned ?? 0;
 
   async function share() {
     const text = `Use my code ${code} on Sri Mahalakshmi Stores and get ₹${friendReward} off your first grocery order.`;

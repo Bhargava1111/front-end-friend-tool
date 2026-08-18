@@ -1,0 +1,29 @@
+# Local / staging PostgreSQL for Sri Mahalakshmi Stores API.
+# Usage (from backend/):
+#   docker compose up -d
+#   cp .env.example .env   # set DATABASE_URL
+#   python manage.py migrate
+#   python manage.py seed_demo
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: mnx-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-mnxstore}
+      POSTGRES_USER: ${POSTGRES_USER:-mnx}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-mnx_dev_password}
+    ports:
+      - "${POSTGRES_PORT:-5433}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-mnx} -d ${POSTGRES_DB:-mnxstore}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+volumes:
+  postgres_data:
