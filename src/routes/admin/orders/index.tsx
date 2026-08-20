@@ -9,7 +9,7 @@ import { CalendarClock, Check, Eye, Plus, X } from "lucide-react";
 import { setOrderDelivery } from "@/lib/admin-ops.functions";
 import { getAdminOrders, setOrderStatus } from "@/lib/admin.functions";
 import { formatINR, formatDate } from "@/lib/format";
-import { STATUS_STYLES } from "@/lib/order-status";
+import { STATUS_STYLES, STATUS_LABEL, OPEN_ORDER_STATUSES } from "@/lib/order-status";
 import type { OrderStatus } from "@/lib/types";
 import {
   Select,
@@ -23,6 +23,10 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/admin/orders/")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    customer: typeof search.customer === "string" ? search.customer : undefined,
+    open: search.open === "1" || search.open === 1 || search.open === true,
+  }),
   head: () => ({
     meta: [
       { title: "Order Management — Admin | Sri Mahalakshmi Stores" },
@@ -36,10 +40,18 @@ export const Route = createFileRoute("/admin/orders/")({
   component: AdminOrders,
 });
 
-const STATUSES: OrderStatus[] = ["pending", "confirmed", "packed", "delivered", "cancelled"];
+const STATUSES: OrderStatus[] = [
+  "pending",
+  "confirmed",
+  "packed",
+  "out_for_delivery",
+  "delivered",
+  "cancelled",
+];
 
 function AdminOrders() {
   const qc = useQueryClient();
+  const { customer, open } = Route.useSearch();
   const fetchOrders = useAdminFn(getAdminOrders, getAdminOrdersClient);
   const updateStatus = useAdminFn(setOrderStatus, setOrderStatusClient);
   const [filter, setFilter] = useState<"all" | OrderStatus>("all");
@@ -47,8 +59,9 @@ function AdminOrders() {
   const scheduleFn = useAdminFn(setOrderDelivery, setOrderDeliveryClient);
 
   const { data = [], isLoading, isError, error, refetch } = useQuery({
-    queryKey: ["admin-orders"],
-    queryFn: () => fetchOrders(),
+    queryKey: ["admin-orders", customer, open],
+    queryFn: () => fetchOrders({ data: { customer, open } }),
+    staleTime: 30_000,
   });
 
   const mutation = useMutation({
@@ -73,11 +86,25 @@ function AdminOrders() {
     onError: (e: Error) => toast.error(e.message),
   });
 
-  const orders = filter === "all" ? data : data.filter((o) => o.status === filter);
+  let orders = filter === "all" ? data : data.filter((o) => o.status === filter);
+  if (customer) {
+    orders = orders.filter((o) => String(o.user_id ?? "") === String(customer));
+  }
+  if (open) orders = orders.filter((o) => OPEN_ORDER_STATUSES.includes(o.status));
   const pendingCount = data.filter((o) => o.status === "pending").length;
 
   return (
     <div className="space-y-4">
+      {(customer || open) && (
+        <div className="rounded-2xl border border-primary/20 bg-primary-soft/40 px-4 py-3 text-sm">
+          <p className="font-semibold text-foreground">
+            Filtered view
+            {customer && " · Customer orders"}
+            {open && " · Open orders only"}
+          </p>
+          <p className="text-xs text-muted-foreground">{orders.length} order(s) shown</p>
+        </div>
+      )}
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
           <h1 className="text-base font-semibold text-foreground">Orders</h1>
@@ -107,7 +134,7 @@ function AdminOrders() {
                 : "border-border bg-card text-muted-foreground",
             )}
           >
-            {s}
+            {STATUS_LABEL[s as OrderStatus] ?? s}
           </button>
         ))}
       </div>
@@ -150,7 +177,7 @@ function AdminOrders() {
                     STATUS_STYLES[o.status],
                   )}
                 >
-                  {o.status}
+                  {STATUS_LABEL[o.status]}
                 </span>
                 <span className="text-sm font-bold">{formatINR(o.total)}</span>
               </div>
@@ -220,8 +247,8 @@ function AdminOrders() {
                 </SelectTrigger>
                 <SelectContent>
                   {STATUSES.map((s) => (
-                    <SelectItem key={s} value={s} className="capitalize">
-                      {s}
+                    <SelectItem key={s} value={s}>
+                      {STATUS_LABEL[s]}
                     </SelectItem>
                   ))}
                 </SelectContent>

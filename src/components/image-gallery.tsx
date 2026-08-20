@@ -37,7 +37,7 @@ export function ImageGallery({
           src={list[active]}
           alt={alt}
           style={{ transformOrigin: origin }}
-          className="h-full w-full object-cover transition-transform duration-300 md:hover:scale-[1.8]"
+          className="h-full w-full object-contain transition-transform duration-300 md:hover:scale-[1.15]"
         />
         {badge}
         <button
@@ -64,7 +64,7 @@ export function ImageGallery({
                 i === active ? "border-primary" : "border-transparent",
               )}
             >
-              <img src={src} alt="" className="h-full w-full object-cover" />
+              <img src={src} alt="" className="h-full w-full object-contain" />
             </button>
           ))}
         </div>

@@ -27,7 +27,14 @@ export const Route = createFileRoute("/admin/orders/$id")({
   component: OrderDetail,
 });
 
-const STATUSES: OrderStatus[] = ["pending", "confirmed", "packed", "delivered", "cancelled"];
+const STATUSES: OrderStatus[] = [
+  "pending",
+  "confirmed",
+  "packed",
+  "out_for_delivery",
+  "delivered",
+  "cancelled",
+];
 
 function OrderDetail() {
   const { id } = useParams({ from: "/admin/orders/$id" });

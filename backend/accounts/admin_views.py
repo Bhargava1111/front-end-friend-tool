@@ -244,10 +244,16 @@ class AdminOrderListView(APIView):
     permission_classes = [IsAdminRole]
 
     def get(self, request):
-        qs = Order.objects.all().prefetch_related("order_items").order_by("-created_at")
+        qs = Order.objects.select_related("user").prefetch_related("order_items").order_by("-created_at")
         status = request.query_params.get("status")
+        user_id = request.query_params.get("user_id") or request.query_params.get("customer")
+        open_only = request.query_params.get("open") in ("1", "true", "yes")
         if status:
             qs = qs.filter(status=status)
+        if user_id:
+            qs = qs.filter(user_id=user_id)
+        if open_only:
+            qs = qs.filter(status__in=["pending", "confirmed", "packed", "out_for_delivery"])
         return Response(OrderSerializer(qs[:100], many=True).data)
 
     def post(self, request):
@@ -298,18 +304,28 @@ class AdminProductView(APIView):
     permission_classes = [IsAdminRole]
 
     @staticmethod
-    def _serialize_product(product):
+    def _serialize_product(product, offer_sections=None):
         data = ProductSerializer(product).data
         data["gallery"] = data.get("images") or []
         data["variants"] = data.get("variants") or []
-        data["offer_sections"] = product_section_slugs(product.id)
+        data["offer_sections"] = offer_sections if offer_sections is not None else product_section_slugs(product.id)
         return data
 
     def get(self, request):
         qs = Product.objects.all().prefetch_related("images", "variants", "offer_placements").order_by("-created_at")
+        placements_map: dict[str, list[str]] = {}
+        for product_id, section in ProductOfferPlacement.objects.values_list("product_id", "section").order_by(
+            "sort_order"
+        ):
+            placements_map.setdefault(str(product_id), []).append(section)
         categories = Category.objects.all().order_by("sort_order")
         return Response({
-            "products": [self._serialize_product(p) for p in qs],
+            "products": [
+                {
+                    **self._serialize_product(p, placements_map.get(str(p.id), [])),
+                }
+                for p in qs
+            ],
             "categories": CategorySerializer(categories, many=True).data,
         })
 
@@ -365,11 +381,16 @@ class AdminProductView(APIView):
             return Response({"detail": str(exc)}, status=400)
 
         images = data.get("images") or data.get("gallery") or []
+        if isinstance(images, str):
+            images = [u.strip() for u in images.replace(",", "\n").splitlines() if u.strip()]
         ProductImage.objects.filter(product=product).delete()
         for i, url in enumerate(images):
             if not url:
                 continue
-            ProductImage.objects.create(product=product, image_url=url, sort_order=i)
+            ProductImage.objects.create(product=product, image_url=str(url), sort_order=i)
+        if images and not product.image_url:
+            product.image_url = str(images[0])
+            product.save(update_fields=["image_url"])
 
         variants = data.get("variants", [])
         if variants is not None:

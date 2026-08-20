@@ -47,6 +47,7 @@ function AdminProducts() {
   const { data, isLoading } = useQuery({
     queryKey: ["admin-products"],
     queryFn: () => fetchProducts(),
+    staleTime: 60_000,
   });
 
   const invalidate = () => {

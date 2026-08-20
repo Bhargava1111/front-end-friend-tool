@@ -29,12 +29,14 @@ export function AdminProductForm({
   form,
   setForm,
   categories,
+  catalogProducts = [],
   onSubmit,
   isPending,
 }: {
   form: ProductForm;
   setForm: (f: ProductForm) => void;
   categories: Category[];
+  catalogProducts?: Array<{ id: string; name: string; is_combo?: boolean }>;
   onSubmit: () => void;
   isPending: boolean;
 }) {
@@ -130,6 +132,86 @@ export function AdminProductForm({
         values={form.gallery.split("\n").map((v) => v.trim()).filter(Boolean)}
         onChange={(urls) => setForm({ ...form, gallery: urls.join("\n") })}
       />
+      <div className="rounded-2xl border border-border bg-secondary/40 p-3">
+        <label className="flex items-center gap-2 text-sm font-semibold">
+          <Switch
+            checked={form.is_combo}
+            onCheckedChange={(v) => setForm({ ...form, is_combo: v })}
+          />
+          Combo product (frequently bought together)
+        </label>
+        <p className="mt-1 text-[11px] text-muted-foreground">
+          Shoppers see included items and can add the combo in one tap.
+        </p>
+        {form.is_combo && (
+          <div className="mt-3 space-y-2">
+            <div className="flex items-center justify-between">
+              <Label>Items in this combo</Label>
+              <Button
+                type="button"
+                size="sm"
+                variant="secondary"
+                onClick={() =>
+                  setForm({
+                    ...form,
+                    combo_items: [...form.combo_items, { product_id: "", quantity: "1" }],
+                  })
+                }
+              >
+                Add item
+              </Button>
+            </div>
+            {form.combo_items.map((item, index) => (
+              <div key={index} className="grid grid-cols-[1fr_72px_auto] gap-2">
+                <Select
+                  value={item.product_id || "none"}
+                  onValueChange={(v) => {
+                    const combo_items = [...form.combo_items];
+                    combo_items[index] = { ...combo_items[index], product_id: v === "none" ? "" : v };
+                    setForm({ ...form, combo_items });
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select product" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Select product</SelectItem>
+                    {catalogProducts
+                      .filter((p) => p.id !== form.id && !p.is_combo)
+                      .map((p) => (
+                        <SelectItem key={p.id} value={p.id}>
+                          {p.name}
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+                <Input
+                  inputMode="numeric"
+                  value={item.quantity}
+                  onChange={(e) => {
+                    const combo_items = [...form.combo_items];
+                    combo_items[index] = { ...combo_items[index], quantity: e.target.value };
+                    setForm({ ...form, combo_items });
+                  }}
+                />
+                <Button
+                  type="button"
+                  size="icon"
+                  variant="ghost"
+                  onClick={() =>
+                    setForm({
+                      ...form,
+                      combo_items: form.combo_items.filter((_, i) => i !== index),
+                    })
+                  }
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
       <div>
         <Label htmlFor="p-desc">Description</Label>
         <Textarea

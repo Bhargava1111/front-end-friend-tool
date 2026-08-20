@@ -88,7 +88,14 @@ export const getAdminDashboard = createServerFn({ method: "GET" })
 
 export const getAdminOrders = createServerFn({ method: "GET" })
   .middleware([requireAuth])
-  .handler(async ({ context }) => admin(context.accessToken, "/admin-api/orders/"));
+  .inputValidator((data?: { customer?: string; open?: boolean }) => data ?? {})
+  .handler(async ({ data, context }) => {
+    const params = new URLSearchParams();
+    if (data.customer) params.set("user_id", data.customer);
+    if (data.open) params.set("open", "1");
+    const qs = params.toString();
+    return admin(context.accessToken, `/admin-api/orders/${qs ? `?${qs}` : ""}`);
+  });
 
 export const setOrderStatus = createServerFn({ method: "POST" })
   .middleware([requireAuth])

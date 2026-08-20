@@ -64,6 +64,7 @@ def notify_order_status(order):
         "pending": "Order placed",
         "confirmed": "Order confirmed",
         "packed": "Order packed",
+        "out_for_delivery": "Out for delivery",
         "delivered": "Order delivered",
         "cancelled": "Order cancelled",
     }

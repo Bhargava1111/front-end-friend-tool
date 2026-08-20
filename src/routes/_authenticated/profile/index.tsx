@@ -30,6 +30,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import type { Profile } from "@/lib/types";
 import { displayEmail } from "@/lib/profile-utils";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/profile/")({
   head: () => ({
@@ -117,17 +118,20 @@ function ProfilePage() {
         </div>
       </header>
 
-      <nav className="space-y-2.5 p-4">
-        {navItems.map(({ to, label, icon: Icon }) => (
+      <nav className="mx-4 mt-4 overflow-hidden rounded-2xl border border-border bg-card card-elevated">
+        {navItems.map(({ to, label, icon: Icon }, i) => (
           <Link
             key={to}
             to={to}
-            className="flex items-center gap-3 rounded-2xl border border-border bg-card p-4 card-elevated"
+            className={cn(
+              "flex items-center gap-3 px-4 py-3.5 transition-colors hover:bg-secondary/50",
+              i > 0 && "border-t border-border",
+            )}
           >
-            <span className="grid h-9 w-9 place-items-center rounded-full bg-primary-soft text-primary">
+            <span className="grid h-9 w-9 place-items-center rounded-full bg-secondary text-foreground">
               <Icon className="h-4 w-4" />
             </span>
-            <span className="flex-1 text-sm font-semibold">{label}</span>
+            <span className="flex-1 text-sm font-medium text-foreground">{label}</span>
             <ChevronRight className="h-4 w-4 text-muted-foreground" />
           </Link>
         ))}

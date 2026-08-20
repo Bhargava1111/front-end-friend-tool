@@ -1,5 +1,7 @@
 import { Trash2 } from "lucide-react";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { useAdminFn } from "@/hooks/use-admin-fn";
 import { getAdminProductsClient, getAdminCategoriesClient, adminListCouponsClient, adminListBrandsClient } from "@/lib/admin-client.functions";
 import { getAdminCategories, getAdminProducts } from "@/lib/admin.functions";
@@ -84,22 +86,30 @@ export function AdminBannerForm({
   const fetchProducts = useAdminFn(getAdminProducts, getAdminProductsClient);
   const listBrands = useAdminFn(adminListBrands, adminListBrandsClient);
   const listCoupons = useAdminFn(adminListCoupons, adminListCouponsClient);
+  const [uploading, setUploading] = useState(false);
 
   const { data: categories = [] } = useQuery({
     queryKey: ["admin-categories"],
     queryFn: () => fetchCategories(),
+    staleTime: 60_000,
   });
   const { data: brands = [] } = useQuery({
     queryKey: ["admin-brands"],
     queryFn: () => listBrands(),
+    enabled: form.placement === "brands",
+    staleTime: 60_000,
   });
   const { data: coupons = [] } = useQuery({
     queryKey: ["admin-coupons"],
     queryFn: () => listCoupons(),
+    enabled: form.placement === "coupons",
+    staleTime: 60_000,
   });
   const { data: productData } = useQuery({
     queryKey: ["admin-products"],
     queryFn: () => fetchProducts(),
+    enabled: form.placement === "combos",
+    staleTime: 60_000,
   });
 
   const catalogProducts = (productData?.products ?? []).filter((p) => !p.is_combo);
@@ -111,6 +121,14 @@ export function AdminBannerForm({
       className="space-y-3"
       onSubmit={(e) => {
         e.preventDefault();
+        if (uploading) {
+          toast.error("Wait for the image to finish uploading.");
+          return;
+        }
+        if (!form.image_url.trim()) {
+          toast.error("Add a banner image or paste an image URL.");
+          return;
+        }
         onSubmit();
       }}
     >
@@ -137,6 +155,7 @@ export function AdminBannerForm({
         required
         value={form.image_url}
         onChange={(url) => setForm({ ...form, image_url: url })}
+        onBusyChange={setUploading}
         hint="Wide images work best (16:7). Upload as many banners as you like — the carousel paginates."
       />
       <div>
@@ -396,12 +415,14 @@ export function AdminBannerForm({
         />
         Active
       </label>
-      <Button type="submit" className="w-full" disabled={isPending}>
-        {isPending
-          ? "Saving…"
-          : form.placement === "combos"
-            ? "Save combo pack"
-            : "Save banner"}
+      <Button type="submit" className="w-full" disabled={isPending || uploading}>
+        {uploading
+          ? "Uploading image…"
+          : isPending
+            ? "Saving…"
+            : form.placement === "combos"
+              ? "Save combo pack"
+              : "Save banner"}
       </Button>
     </form>
   );
@@ -411,9 +432,9 @@ function buildSavePayload(f: BannerFormState) {
   return {
     id: f.id,
     title: f.title,
-    subtitle: f.subtitle || null,
+    subtitle: f.subtitle || "",
     image_url: f.image_url,
-    link_slug: f.link_slug || null,
+    link_slug: f.link_slug || "",
     sort_order: Number(f.sort_order) || 0,
     is_active: f.is_active,
     placement: f.placement,

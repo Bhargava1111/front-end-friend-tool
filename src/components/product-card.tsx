@@ -8,6 +8,7 @@ import { formatShopError } from "@/lib/auth-session";
 import { useSession, useWishlist } from "@/hooks/use-shop";
 import { formatINR } from "@/lib/format";
 import { pickDefaultVariant } from "@/components/variant-picker";
+import { productQtyOptions, unitPriceForQty } from "@/lib/product-qty";
 import { cn } from "@/lib/utils";
 import type { Product } from "@/lib/types";
 
@@ -19,6 +20,9 @@ export function ProductCard({ product, className }: { product: Product; classNam
   const toggle = toggleWishlist;
   const { data: wishlist } = useWishlist();
   const [added, setAdded] = useState(false);
+
+  const qtyOptions = productQtyOptions(product);
+  const [selectedQty, setSelectedQty] = useState(() => qtyOptions[0] ?? 1);
 
   const images = (product.images?.length ? product.images : product.image_url ? [product.image_url] : []).slice(0, 5);
   const [frame, setFrame] = useState(0);
@@ -33,10 +37,15 @@ export function ProductCard({ product, className }: { product: Product; classNam
     };
   }, [cycling, images.length]);
 
+  useEffect(() => {
+    setSelectedQty(qtyOptions[0] ?? 1);
+  }, [product.id, qtyOptions.join(",")]);
+
   const wishlisted = (wishlist ?? []).some((w) => w.product?.id === product.id);
   const defaultVariant = pickDefaultVariant(product.variants);
   const packCount = (product.variants ?? []).filter((v) => v.is_active !== false).length;
-  const price = Number(defaultVariant?.price ?? product.price);
+  const variantPrice = defaultVariant ? Number(defaultVariant.price) : Number(product.price);
+  const price = unitPriceForQty(product, selectedQty, variantPrice);
   const mrp = defaultVariant
     ? defaultVariant.mrp
       ? Number(defaultVariant.mrp)
@@ -46,10 +55,15 @@ export function ProductCard({ product, className }: { product: Product; classNam
       : null;
   const discount = mrp && mrp > price ? Math.round(((mrp - price) / mrp) * 100) : 0;
 
-
   const addMutation = useMutation({
-    mutationFn: () =>
-      add({ data: { productId: product.id, variantId: defaultVariant?.id ?? null } }),
+    mutationFn: (quantity: number) =>
+      add({
+        data: {
+          productId: product.id,
+          variantId: defaultVariant?.id ?? null,
+          quantity,
+        },
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["cart"] });
       setAdded(true);
@@ -87,14 +101,14 @@ export function ProductCard({ product, className }: { product: Product; classNam
           setCycling(false);
           setFrame(0);
         }}
-        className="relative block aspect-square overflow-hidden bg-secondary"
+        className="relative block aspect-square overflow-hidden bg-secondary/60 p-2"
       >
         {images.length ? (
           <img
             src={images[Math.min(frame, images.length - 1)]}
             alt={product.name}
             loading="lazy"
-            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+            className="h-full w-full object-contain transition-transform duration-500 group-hover:scale-[1.02]"
           />
         ) : (
           <div className="flex h-full items-center justify-center text-xs text-muted-foreground">
@@ -144,7 +158,6 @@ export function ProductCard({ product, className }: { product: Product; classNam
         )}
       </Link>
 
-
       <button
         type="button"
         aria-label={wishlisted ? "Remove from wishlist" : "Add to wishlist"}
@@ -175,9 +188,33 @@ export function ProductCard({ product, className }: { product: Product; classNam
             </span>
           )}
         </div>
-        <div className="mt-auto flex items-end justify-between pt-2">
+
+        {qtyOptions.length > 0 && (
+          <div className="mt-1 flex flex-wrap gap-1">
+            {qtyOptions.map((q) => (
+              <button
+                key={q}
+                type="button"
+                onClick={() => setSelectedQty(q)}
+                className={cn(
+                  "min-w-[2rem] rounded-lg border px-2 py-0.5 text-[10px] font-bold transition-colors",
+                  selectedQty === q
+                    ? "border-primary bg-primary text-primary-foreground"
+                    : "border-border bg-secondary text-foreground",
+                )}
+              >
+                {q}
+              </button>
+            ))}
+          </div>
+        )}
+
+        <div className="mt-auto flex items-end justify-between gap-2 pt-2">
           <div>
             <p className="text-base font-bold text-foreground">{formatINR(price)}</p>
+            {qtyOptions.length > 0 && (
+              <p className="text-[10px] text-muted-foreground">Qty {selectedQty}</p>
+            )}
             {discount > 0 && mrp && (
               <p className="text-xs text-muted-foreground line-through">{formatINR(mrp)}</p>
             )}
@@ -188,10 +225,10 @@ export function ProductCard({ product, className }: { product: Product; classNam
             disabled={product.stock === 0 || addMutation.isPending}
             onClick={() => {
               if (requireAuth()) return;
-              addMutation.mutate();
+              addMutation.mutate(selectedQty);
             }}
             aria-label={`Add ${product.name} to cart`}
-            className="grid h-9 w-9 place-items-center rounded-xl bg-primary text-primary-foreground transition-transform active:scale-90 disabled:opacity-40"
+            className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-primary text-primary-foreground transition-transform active:scale-90 disabled:opacity-40"
           >
             {added ? <Check className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
           </button>

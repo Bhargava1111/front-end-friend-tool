@@ -39,7 +39,7 @@ function OrdersPage() {
   const all = data ?? [];
   const orders = all.filter((o) =>
     tab === "active"
-      ? ["pending", "confirmed", "packed"].includes(o.status)
+      ? ["pending", "confirmed", "packed", "out_for_delivery"].includes(o.status)
       : ["delivered", "cancelled"].includes(o.status),
   );
 

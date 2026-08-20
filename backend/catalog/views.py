@@ -113,7 +113,12 @@ class ProductDetailView(APIView):
         product = active_products().filter(slug=slug).first()
         if not product:
             return Response({"detail": "Not found."}, status=404)
-        related = active_products().filter(category=product.category).exclude(id=product.id)[:6]
+        related = (
+            active_products()
+            .filter(category=product.category)
+            .exclude(id=product.id)
+            .prefetch_related("images", "variants")[:6]
+        )
         data = ProductSerializer(product).data
         data["related"] = ProductSerializer(related, many=True).data
         return Response(data)

@@ -42,6 +42,7 @@ function NewProduct() {
         form={form}
         setForm={setForm}
         categories={data?.categories ?? []}
+        catalogProducts={data?.products ?? []}
         onSubmit={() => saveMutation.mutate()}
         isPending={saveMutation.isPending}
       />

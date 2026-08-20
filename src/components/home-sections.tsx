@@ -413,29 +413,53 @@ function BannerSlide({
   className,
   overlayClass,
   badge,
+  layout = "overlay",
 }: {
   banner: Banner;
   className: string;
   overlayClass: string;
   badge?: ReactNode;
+  layout?: "overlay" | "card";
 }) {
-  const body = (
-    <div className={cn("relative shrink-0 overflow-hidden card-elevated", className)}>
-      {banner.image_url ? (
-        <img src={banner.image_url} alt={banner.title} loading="lazy" className="h-full w-full object-cover" />
-      ) : (
-        <div className="h-full w-full bg-secondary" />
+  const imageBlock = banner.image_url ? (
+    <img
+      src={banner.image_url}
+      alt={banner.title}
+      loading="lazy"
+      className={cn(
+        "h-full w-full",
+        layout === "card" ? "object-contain p-1" : "object-cover",
       )}
-      <div className={cn("absolute inset-0", overlayClass)} />
-      <div className="absolute inset-y-0 left-0 flex w-[72%] flex-col justify-end p-4">
-        {badge}
-        <p className="text-sm font-bold leading-tight text-white drop-shadow-sm">{banner.title}</p>
-        {banner.subtitle && (
-          <p className="mt-1 line-clamp-2 text-[11px] text-white/85">{banner.subtitle}</p>
-        )}
-      </div>
-    </div>
+    />
+  ) : (
+    <div className="h-full w-full bg-secondary" />
   );
+
+  const body =
+    layout === "card" ? (
+      <div className={cn("flex shrink-0 flex-col overflow-hidden rounded-2xl bg-card", className)}>
+        <div className="aspect-[16/9] bg-secondary/80">{imageBlock}</div>
+        <div className="p-3">
+          {badge}
+          <p className="text-sm font-bold leading-tight text-foreground">{banner.title}</p>
+          {banner.subtitle && (
+            <p className="mt-0.5 line-clamp-2 text-[11px] text-muted-foreground">{banner.subtitle}</p>
+          )}
+        </div>
+      </div>
+    ) : (
+      <div className={cn("relative shrink-0 overflow-hidden card-elevated", className)}>
+        {imageBlock}
+        <div className={cn("absolute inset-0", overlayClass)} />
+        <div className="absolute inset-y-0 left-0 flex w-[72%] flex-col justify-end p-4">
+          {badge}
+          <p className="text-sm font-bold leading-tight text-white drop-shadow-sm">{banner.title}</p>
+          {banner.subtitle && (
+            <p className="mt-1 line-clamp-2 text-[11px] text-white/85">{banner.subtitle}</p>
+          )}
+        </div>
+      </div>
+    );
   if (banner.link_slug) {
     return (
       <Link to="/category/$slug" params={{ slug: banner.link_slug }} className="shrink-0">
@@ -502,21 +526,22 @@ export function FestivalBannerCarousel({ banners }: { banners: Banner[] }) {
               <p className="text-[11px] text-amber-100/75">Pooja kits, lamps and seasonal specials</p>
             </div>
           </div>
-          <SeeAll to="/offers" tone="onDark" />
+          <SeeAll to="/category/pooja-essentials" tone="onDark" />
         </div>
         <div ref={ref} className="no-scrollbar mt-3 flex gap-3 overflow-x-auto pb-1">
           {banners.map((b) => (
             <BannerSlide
-              key={b.id}
-              banner={b}
-              className="h-[148px] w-[240px] rounded-2xl ring-1 ring-amber-200/30"
-              overlayClass="bg-gradient-to-t from-amber-950/90 via-amber-950/25 to-transparent"
-              badge={
-                <span className="mb-1.5 w-fit rounded-full bg-amber-300 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-950">
-                  Festive
-                </span>
-              }
-            />
+            key={b.id}
+            banner={b}
+            layout="card"
+            className="w-[min(82vw,300px)]"
+            overlayClass=""
+            badge={
+              <span className="mb-1.5 w-fit rounded-full bg-amber-300 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-950">
+                Festive
+              </span>
+            }
+          />
           ))}
         </div>
       </div>

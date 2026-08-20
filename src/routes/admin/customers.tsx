@@ -1,11 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAdminFn } from "@/hooks/use-admin-fn";
-import { getAdminCustomersClient } from "@/lib/admin-client.functions";
+import { getAdminCustomersClient, getAdminCustomerDetailClient } from "@/lib/admin-client.functions";
 
 import { ChevronRight } from "lucide-react";
-import { getAdminCustomers } from "@/lib/admin.functions";
+import { getAdminCustomers, getAdminCustomerDetail } from "@/lib/admin.functions";
 import { formatINR, formatDate } from "@/lib/format";
 import { Input } from "@/components/ui/input";
 
@@ -24,11 +24,23 @@ export const Route = createFileRoute("/admin/customers")({
 });
 
 function AdminCustomers() {
+  const queryClient = useQueryClient();
   const fetchCustomers = useAdminFn(getAdminCustomers, getAdminCustomersClient);
-  const { data = [], isLoading } = useQuery({
+  const fetchDetail = useAdminFn(getAdminCustomerDetail, getAdminCustomerDetailClient);
+  const { data = [], isLoading, isError, error, refetch } = useQuery({
     queryKey: ["admin-customers"],
     queryFn: () => fetchCustomers(),
+    staleTime: 30_000,
+    retry: 1,
   });
+
+  const prefetchCustomer = (id: string) => {
+    void queryClient.prefetchQuery({
+      queryKey: ["admin-customer", id],
+      queryFn: () => fetchDetail({ data: { id } }),
+      staleTime: 30_000,
+    });
+  };
 
   const [q, setQ] = useState("");
   const term = q.trim().toLowerCase();
@@ -40,6 +52,21 @@ function AdminCustomers() {
     : data;
 
   if (isLoading) return <div className="h-64 animate-pulse rounded-2xl bg-card" />;
+  if (isError) {
+    return (
+      <div className="rounded-2xl border border-border bg-card p-8 text-center">
+        <p className="text-sm font-semibold text-foreground">Couldn't load customers</p>
+        <p className="mt-1 text-xs text-muted-foreground">{(error as Error)?.message}</p>
+        <button
+          type="button"
+          onClick={() => refetch()}
+          className="mt-4 rounded-full bg-primary px-4 py-1.5 text-xs font-semibold text-primary-foreground"
+        >
+          Try again
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-3">
@@ -82,6 +109,8 @@ function AdminCustomers() {
                 <Link
                   to="/admin/customer/$id"
                   params={{ id: c.id }}
+                  onMouseEnter={() => prefetchCustomer(c.id)}
+                  onFocus={() => prefetchCustomer(c.id)}
                   className="flex items-center gap-1 hover:underline"
                 >
                   {c.full_name ?? "Guest"}
@@ -96,6 +125,8 @@ function AdminCustomers() {
                 <Link
                   to="/admin/customer/$id"
                   params={{ id: c.id }}
+                  onMouseEnter={() => prefetchCustomer(c.id)}
+                  onFocus={() => prefetchCustomer(c.id)}
                   className="rounded-full bg-secondary px-3 py-1 text-xs font-semibold text-foreground"
                 >
                   View details

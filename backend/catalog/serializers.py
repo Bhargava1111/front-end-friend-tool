@@ -199,14 +199,18 @@ class OrderSerializer(serializers.ModelSerializer):
     discount = serializers.SerializerMethodField()
     tax = serializers.SerializerMethodField()
     total = serializers.SerializerMethodField()
+    user_id = serializers.SerializerMethodField()
 
     class Meta:
         model = Order
         fields = (
-            "id", "order_number", "status", "subtotal", "delivery_fee", "discount", "tax",
+            "id", "user_id", "order_number", "status", "subtotal", "delivery_fee", "discount", "tax",
             "total", "coupon_code", "payment_method", "delivery_slot", "delivery_date",
             "recipient_name", "phone", "address_text", "notes", "created_at", "order_items",
         )
+
+    def get_user_id(self, obj):
+        return str(obj.user_id)
 
     def get_subtotal(self, obj):
         return decimal_to_float(obj.subtotal)

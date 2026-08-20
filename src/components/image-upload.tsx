@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ImagePlus, Loader2, Trash2, UploadCloud, GripVertical } from "lucide-react";
 import { toast } from "sonner";
 import { uploadMedia, type MediaFolder } from "@/lib/media";
@@ -6,8 +6,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 
-function useUploader(folder: MediaFolder, onDone: (urls: string[]) => void) {
+function useUploader(folder: MediaFolder, onDone: (urls: string[]) => void, onBusyChange?: (busy: boolean) => void) {
   const [busy, setBusy] = useState(false);
+  useEffect(() => {
+    onBusyChange?.(busy);
+  }, [busy, onBusyChange]);
   async function handleFiles(files: FileList | null) {
     if (!files || files.length === 0) return;
     setBusy(true);
@@ -37,6 +40,7 @@ export function ImageUploadField({
   aspect = "aspect-[16/7]",
   required,
   hint,
+  onBusyChange,
 }: {
   label: string;
   value: string;
@@ -45,10 +49,15 @@ export function ImageUploadField({
   aspect?: string;
   required?: boolean;
   hint?: string;
+  onBusyChange?: (busy: boolean) => void;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [drag, setDrag] = useState(false);
-  const { busy, handleFiles } = useUploader(folder, (urls) => urls[0] && onChange(urls[0]));
+  const { busy, handleFiles } = useUploader(
+    folder,
+    (urls) => urls[0] && onChange(urls[0]),
+    onBusyChange,
+  );
 
   return (
     <div className="space-y-2">
@@ -128,10 +137,12 @@ export function ImageUploadField({
       />
       <Input
         value={value}
-        required={required}
+        required={required && !busy}
+        disabled={busy}
         onChange={(e) => onChange(e.target.value)}
         placeholder="…or paste an image URL"
         className="h-9 text-xs"
+        aria-invalid={required && !busy && !value ? true : undefined}
       />
       {hint && <p className="text-[11px] text-muted-foreground">{hint}</p>}
     </div>

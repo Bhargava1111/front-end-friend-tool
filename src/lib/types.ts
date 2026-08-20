@@ -102,7 +102,13 @@ export type Address = {
   is_default: boolean;
 };
 
-export type OrderStatus = "pending" | "confirmed" | "packed" | "delivered" | "cancelled";
+export type OrderStatus =
+  | "pending"
+  | "confirmed"
+  | "packed"
+  | "out_for_delivery"
+  | "delivered"
+  | "cancelled";
 
 export type OrderItem = {
   id: string;
@@ -116,6 +122,7 @@ export type OrderItem = {
 
 export type Order = {
   id: string;
+  user_id?: string;
   order_number: string;
   status: OrderStatus;
   subtotal: number;

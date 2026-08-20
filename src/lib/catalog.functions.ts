@@ -28,11 +28,14 @@ export async function getProductBySlug({ data }: { data: { slug: string } }) {
       product?: import("@/lib/types").Product;
     }
   >(`/products/${data.slug}/`);
-  if (res.product) {
-    return { product: res.product, related: res.related ?? [] };
-  }
-  const { related = [], ...product } = res;
-  return { product, related };
+  const related = res.related ?? [];
+  const { related: _ignored, product: nested, ...flat } = res;
+  const product = nested ?? flat;
+  const images = [
+    ...(product.images ?? []),
+    ...(product.image_url ? [product.image_url] : []),
+  ].filter((src, i, all) => Boolean(src) && all.indexOf(src) === i);
+  return { product: { ...product, images }, related };
 }
 
 export async function searchProducts({

@@ -2,7 +2,7 @@ import { useSession } from "@/hooks/use-shop";
 import { useEffect, useRef, useState, type Dispatch, type SetStateAction } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { LocateFixed, MapPin, Pencil, Plus, Trash2 } from "lucide-react";
+import { LocateFixed, MapPin, Pencil, Plus, Trash2, Home, Briefcase, MapPinned } from "lucide-react";
 import { toast } from "sonner";
 import { getAddresses, saveAddress, deleteAddress } from "@/lib/shop.functions";
 import { detectCurrentAddress } from "@/lib/geo";
@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import type { Address } from "@/lib/types";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/addresses")({
   head: () => ({
@@ -273,31 +274,57 @@ function AddressForm({
       </div>
 
       <div className="grid grid-cols-2 gap-3">
-        <Field label="Label" value={form.label} onChange={(v) => setForm({ ...form, label: v })} />
+        <div className="col-span-2">
+          <Label className="text-xs font-semibold">Address label</Label>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {[
+              { label: "Home", icon: Home },
+              { label: "Work", icon: Briefcase },
+              { label: "Other", icon: MapPinned },
+            ].map(({ label, icon: Icon }) => (
+              <button
+                key={label}
+                type="button"
+                onClick={() => setForm({ ...form, label })}
+                className={cn(
+                  "flex items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-semibold transition-colors",
+                  form.label === label
+                    ? "border-primary bg-primary text-primary-foreground"
+                    : "border-border bg-secondary text-foreground",
+                )}
+              >
+                <Icon className="h-3.5 w-3.5" />
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
         <Field
           label="Recipient"
           value={form.recipient_name}
           onChange={(v) => setForm({ ...form, recipient_name: v })}
           required
         />
+        <Field label="Phone" value={form.phone} onChange={(v) => setForm({ ...form, phone: v })} required />
       </div>
       <Field
-        label="Phone"
-        value={form.phone}
-        onChange={(v) => setForm({ ...form, phone: v })}
-        required
-      />
-      <Field
-        label="Address line 1"
+        label="House no. & floor"
         value={form.line1}
         onChange={(v) => setForm({ ...form, line1: v })}
         required
+        placeholder="House No. & Floor"
       />
       <Field
-        label="Address line 2"
+        label="Building & block (optional)"
         value={form.line2}
         onChange={(v) => setForm({ ...form, line2: v })}
-        placeholder="Area, landmark"
+        placeholder="Building & Block No."
+      />
+      <Field
+        label="Landmark & area (optional)"
+        value={form.landmark ?? ""}
+        onChange={(v) => setForm({ ...form, landmark: v })}
+        placeholder="Landmark & Area Name"
       />
       <div className="grid grid-cols-2 gap-3">
         <Field label="City" value={form.city} onChange={(v) => setForm({ ...form, city: v })} required />

@@ -44,6 +44,33 @@ function CustomerDetail() {
   const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["admin-customer", id],
     queryFn: () => fetchDetail({ data: { id } }),
+    staleTime: 30_000,
+    retry: 1,
+  });
+
+  const invalidate = () => {
+    qc.invalidateQueries({ queryKey: ["admin-customer", id] });
+    qc.invalidateQueries({ queryKey: ["admin-customers"] });
+    qc.invalidateQueries({ queryKey: ["admin-users"] });
+  };
+
+  const blockMutation = useMutation({
+    mutationFn: (is_active: boolean) => manageUser({ data: { id, is_active } }),
+    onSuccess: (_, is_active) => {
+      toast.success(is_active ? "Customer unblocked" : "Customer blocked");
+      invalidate();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const statusMutation = useMutation({
+    mutationFn: (status: "verified" | "rejected" | "pending") =>
+      setStatus({ data: { userId: id, status } }),
+    onSuccess: () => {
+      toast.success("Verification updated");
+      invalidate();
+    },
+    onError: (e: Error) => toast.error(e.message),
   });
 
   if (isLoading) {
@@ -89,38 +116,13 @@ function CustomerDetail() {
         ? "Not submitted"
         : verifyStatus;
 
-  const invalidate = () => {
-    qc.invalidateQueries({ queryKey: ["admin-customer", id] });
-    qc.invalidateQueries({ queryKey: ["admin-customers"] });
-    qc.invalidateQueries({ queryKey: ["admin-users"] });
-  };
-
-  const blockMutation = useMutation({
-    mutationFn: (is_active: boolean) => manageUser({ data: { id, is_active } }),
-    onSuccess: (_, is_active) => {
-      toast.success(is_active ? "Customer unblocked" : "Customer blocked");
-      invalidate();
-    },
-    onError: (e: Error) => toast.error(e.message),
-  });
-
-  const statusMutation = useMutation({
-    mutationFn: (status: "verified" | "rejected" | "pending") =>
-      setStatus({ data: { userId: id, status } }),
-    onSuccess: () => {
-      toast.success("Verification updated");
-      invalidate();
-    },
-    onError: (e: Error) => toast.error(e.message),
-  });
-
   const cards = [
-    { label: "Orders", value: String(stats.orders), icon: ShoppingBag },
-    { label: "Lifetime spend", value: formatINR(stats.spend), icon: IndianRupee },
-    { label: "Avg order", value: formatINR(stats.avg), icon: IndianRupee },
-    { label: "Cancelled", value: String(stats.cancelled), icon: ShoppingBag },
-    { label: "In cart", value: String(stats.cartCount), icon: ShoppingBag },
-    { label: "Wishlisted", value: String(stats.wishlistCount), icon: Star },
+    { label: "Orders", value: String(stats?.orders ?? 0), icon: ShoppingBag },
+    { label: "Lifetime spend", value: formatINR(stats?.spend ?? 0), icon: IndianRupee },
+    { label: "Avg order", value: formatINR(stats?.avg ?? 0), icon: IndianRupee },
+    { label: "Cancelled", value: String(stats?.cancelled ?? 0), icon: ShoppingBag },
+    { label: "In cart", value: String(stats?.cartCount ?? 0), icon: ShoppingBag },
+    { label: "Wishlisted", value: String(stats?.wishlistCount ?? 0), icon: Star },
   ];
 
   return (
@@ -176,7 +178,7 @@ function CustomerDetail() {
               <Calendar className="h-3.5 w-3.5" /> Joined {formatDate(profile.created_at)}
             </span>
             {lastSignInAt && <span>Last sign-in {formatDate(lastSignInAt)}</span>}
-            {stats.lastOrderAt && <span>Last order {formatDate(stats.lastOrderAt)}</span>}
+            {stats?.lastOrderAt && <span>Last order {formatDate(stats.lastOrderAt)}</span>}
           </p>
           {lastAddress && <p className="mt-1 text-xs text-muted-foreground">{lastAddress}</p>}
           <div className="mt-2 flex flex-wrap gap-2">
@@ -198,6 +200,7 @@ function CustomerDetail() {
             )}
             <Link
               to="/admin/orders"
+              search={{ customer: id, open: true }}
               className="rounded-full bg-secondary px-3 py-1 text-[11px] font-semibold text-foreground"
             >
               Open orders

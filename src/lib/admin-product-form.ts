@@ -47,6 +47,8 @@ export type ProductForm = {
   origin: string;
   variants: VariantRow[];
   price_tiers: PriceTierRow[];
+  is_combo: boolean;
+  combo_items: Array<{ product_id: string; quantity: string }>;
 };
 
 export const UNITS = ["g", "kg", "ml", "l", "pcs"] as const;
@@ -156,6 +158,8 @@ export const emptyProductForm: ProductForm = {
   origin: "",
   variants: [],
   price_tiers: [],
+  is_combo: false,
+  combo_items: [],
 };
 
 export function productFormToPayload(f: ProductForm) {
@@ -171,6 +175,10 @@ export function productFormToPayload(f: ProductForm) {
     image_url: f.image_url || "",
     video_url: f.video_url || "",
     gallery: f.gallery
+      .split("\n")
+      .map((v) => v.trim())
+      .filter(Boolean),
+    images: f.gallery
       .split("\n")
       .map((v) => v.trim())
       .filter(Boolean),
@@ -206,6 +214,15 @@ export function productFormToPayload(f: ProductForm) {
         unit_price: Number(t.unit_price || 0),
       }))
       .filter((t) => t.min_qty >= 1 && t.max_qty >= t.min_qty && t.unit_price > 0),
+    is_combo: f.is_combo,
+    combo_items: f.is_combo
+      ? f.combo_items
+          .filter((item) => item.product_id)
+          .map((item) => ({
+            product_id: item.product_id,
+            quantity: Number(item.quantity || 1),
+          }))
+      : [],
   };
 }
 
@@ -221,6 +238,7 @@ export function productToForm(p: {
   image_url?: string | null;
   video_url?: string | null;
   gallery?: string[];
+  images?: string[];
   description?: string | null;
   is_active: boolean;
   is_featured: boolean;
@@ -246,6 +264,8 @@ export function productToForm(p: {
     max_qty?: number;
     unit_price?: number;
   }> | null;
+  is_combo?: boolean;
+  combo_items?: Array<{ product_id: string; quantity?: number }>;
 }): ProductForm {
   return {
     id: p.id,
@@ -258,7 +278,7 @@ export function productToForm(p: {
     category_id: p.category_id ?? "",
     image_url: p.image_url ?? "",
     video_url: p.video_url ?? "",
-    gallery: (p.gallery ?? []).join("\n"),
+    gallery: (p.gallery ?? p.images ?? []).join("\n"),
     description: p.description ?? "",
     is_active: p.is_active,
     is_featured: p.is_featured,
@@ -285,6 +305,11 @@ export function productToForm(p: {
       min_qty: String(t.min_qty ?? 1),
       max_qty: String(t.max_qty ?? 999),
       unit_price: String(t.unit_price ?? ""),
+    })),
+    is_combo: Boolean(p.is_combo),
+    combo_items: (p.combo_items ?? []).map((item) => ({
+      product_id: item.product_id,
+      quantity: String(item.quantity ?? 1),
     })),
   };
 }

@@ -14,7 +14,16 @@ export function useNativeFn<SF extends AnyFn, CF extends AnyFn>(serverFn: SF, cl
   ) as CF;
 }
 
-/** Server functions on web; direct Django admin API on Capacitor. */
+/**
+ * Admin calls go straight to Django from the browser.
+ * Routing them through TanStack server functions added a slow extra hop and
+ * turned API errors into a generic HTML 500 ("Server error").
+ */
 export function useAdminFn<SF extends AnyFn, CF extends AnyFn>(serverFn: SF, clientFn: CF): CF {
-  return useNativeFn(serverFn, clientFn);
+  const server = useServerFn(serverFn as Parameters<typeof useServerFn>[0]);
+  return useCallback(
+    (...args: Parameters<CF>) =>
+      typeof window !== "undefined" ? clientFn(...args) : (server as CF)(...args),
+    [server, clientFn],
+  ) as CF;
 }

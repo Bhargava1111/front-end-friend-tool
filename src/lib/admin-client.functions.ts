@@ -77,8 +77,14 @@ export async function getAdminDashboardClient() {
   return adminClient("/admin-api/dashboard/");
 }
 
-export async function getAdminOrdersClient() {
-  return adminClient("/admin-api/orders/");
+export async function getAdminOrdersClient(opts?: {
+  data?: { customer?: string; open?: boolean };
+}) {
+  const params = new URLSearchParams();
+  if (opts?.data?.customer) params.set("user_id", opts.data.customer);
+  if (opts?.data?.open) params.set("open", "1");
+  const qs = params.toString();
+  return adminClient(`/admin-api/orders/${qs ? `?${qs}` : ""}`);
 }
 
 export async function setOrderStatusClient(opts: { data: { id: string; status: string } }) {

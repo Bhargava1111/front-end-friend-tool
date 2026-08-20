@@ -156,8 +156,10 @@ function ProductPage() {
   const saved = saveLater.items.some((p) => p.id === product.id);
   const discount = mrp && mrp > price ? Math.round(((mrp - price) / mrp) * 100) : 0;
 
-  const bundle = data.related.slice(0, 2);
+  const bundle = (data.related ?? []).slice(0, 2);
   const bundleTotal = price + bundle.reduce((s, p) => s + Number(p.price), 0);
+  const productThumb = (p: { image_url?: string | null; images?: string[] }) =>
+    p.images?.[0] || p.image_url || "";
 
   const requireAuth = () => {
     if (session) return false;
@@ -251,7 +253,10 @@ function ProductPage() {
       />
 
       <ImageGallery
-        images={data.images ?? (product.image_url ? [product.image_url] : [])}
+        images={[
+          ...(product.images ?? []),
+          ...(product.image_url ? [product.image_url] : []),
+        ].filter((src, i, all) => src && all.indexOf(src) === i)}
         alt={product.name}
         badge={
           discount > 0 ? (
@@ -491,8 +496,8 @@ function ProductPage() {
               {[product, ...bundle].map((p) => (
                 <div key={p.id} className="min-w-0 flex-1">
                   <div className="aspect-square overflow-hidden rounded-xl bg-secondary">
-                    {p.image_url && (
-                      <img src={p.image_url} alt={p.name} loading="lazy" className="h-full w-full object-cover" />
+                    {productThumb(p) && (
+                      <img src={productThumb(p)} alt={p.name} loading="lazy" className="h-full w-full object-contain p-1" />
                     )}
                   </div>
                   <p className="mt-1.5 line-clamp-2 text-[11px] font-medium">{p.name}</p>
