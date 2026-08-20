@@ -141,7 +141,9 @@ class AdminPanelSession(models.Model):
     revoked_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
-        indexes = [models.Index(fields=["user", "-last_activity_at"])]
+        indexes = [
+            models.Index(fields=["user", "-last_activity_at"], name="accounts_ad_user_id_6f0a0a_idx")
+        ]
 
 
 class AppSetting(models.Model):

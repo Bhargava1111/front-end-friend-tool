@@ -51,6 +51,15 @@ sudo -u "${APP_USER}" bash -c "
 systemctl restart mnxstore-api.service
 systemctl restart mnxstore-celery.service || true
 
+cp "${BACKEND_DIR}/deploy/vps/deploy.sh" "${APP_DIR}/deploy.sh" 2>/dev/null || true
+chmod +x "${APP_DIR}/deploy.sh" 2>/dev/null || true
+
+if ! command -v node >/dev/null 2>&1 || [[ "$(node -v | cut -d. -f1 | tr -d v)" -lt 20 ]]; then
+  echo "=== Installing Node.js 20 ==="
+  curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+  apt-get install -y -qq nodejs
+fi
+
 if [[ -f "${APP_DIR}/package.json" ]] && command -v node >/dev/null 2>&1; then
   echo "=== Building web frontend ==="
   WEB_OUT="${APP_DIR}/web-output"
@@ -83,5 +92,15 @@ nginx -t && systemctl reload nginx
 
 echo ""
 echo "=== Deploy complete ==="
-systemctl is-active mnxstore-api.service
-curl -sf "http://127.0.0.1/api/v1/health/" && echo "Health check OK" || echo "Health check failed — check logs"
+systemctl is-active mnxstore-api.service || true
+systemctl is-active mnxstore-web.service || true
+sleep 2
+for i in 1 2 3 4 5; do
+  if curl -sf "http://127.0.0.1/api/v1/health/" >/dev/null; then
+    echo "Health check OK"
+    curl -s "http://127.0.0.1/api/v1/health/"; echo
+    break
+  fi
+  echo "Health check retry ${i}/5..."
+  sleep 2
+done

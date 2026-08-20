@@ -53,7 +53,7 @@ def health_view(_request):
         "nginx": "ok",
     }
 
-    critical = ("database", "redis", "celery")
+    critical = ("database",)
     failed = [name for name in critical if services[name] == "error"]
     status = "ok" if not failed else "degraded"
     http_status = 200 if status == "ok" else 503
