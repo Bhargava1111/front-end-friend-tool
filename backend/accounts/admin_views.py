@@ -6,7 +6,8 @@ from decimal import Decimal
 from django.conf import settings
 from datetime import timedelta
 
-from django.db.models import Count, Sum
+from django.db.models import Count, Max, Q, Sum
+from django.shortcuts import get_object_or_404
 from django.db.models.functions import TruncDate
 from django.utils import timezone
 from rest_framework.response import Response
@@ -485,21 +486,31 @@ class AdminBannerView(APIView):
                 if category:
                     data = {**data, "link_slug": category.slug}
 
-        fields = {
-            k: data[k]
-            for k in ("title", "subtitle", "image_url", "link_slug", "sort_order", "is_active", "placement")
-            if k in data
-        }
+        fields = {}
+        for key in ("title", "subtitle", "image_url", "link_slug", "sort_order", "is_active", "placement"):
+            if key not in data:
+                continue
+            value = data[key]
+            if value is None and key in ("title", "subtitle", "image_url", "link_slug"):
+                value = ""
+            fields[key] = value
         if data.get("brand_id"):
             fields["brand_id"] = data["brand_id"]
+        elif "brand_id" in data and not data.get("brand_id"):
+            fields["brand_id"] = None
         if data.get("coupon_id"):
             fields["coupon_id"] = data["coupon_id"]
+        elif "coupon_id" in data and not data.get("coupon_id"):
+            fields["coupon_id"] = None
         if product_id:
             fields["product_id"] = product_id
-        if bid:
-            Banner.objects.filter(id=bid).update(**fields)
-        else:
-            Banner.objects.create(**fields)
+        try:
+            if bid:
+                Banner.objects.filter(id=bid).update(**fields)
+            else:
+                Banner.objects.create(**fields)
+        except Exception as exc:
+            return Response({"detail": str(exc)}, status=400)
         return Response({"ok": True})
 
     def delete(self, request):
@@ -580,9 +591,13 @@ class AdminCustomerListView(APIView):
     permission_classes = [IsAdminRole]
 
     def get(self, request):
-        users = User.objects.filter(role="customer").annotate(
-            order_count=Count("orders"),
-            total_spend=Sum("orders__total"),
+        users = (
+            User.objects.filter(role="customer")
+            .annotate(
+                order_count=Count("orders", distinct=True),
+                total_spend=Sum("orders__total"),
+            )
+            .order_by("-date_joined")
         )
         profiles = {p.user_id: p for p in Profile.objects.filter(user__in=users)}
         return Response([{
@@ -607,12 +622,17 @@ class AdminCustomerDetailView(APIView):
         from accounts.models import Address
         from orders.models import CartItem, WishlistItem
 
-        user = User.objects.get(id=pk)
+        user = get_object_or_404(User, id=pk)
         profile = Profile.objects.filter(user=user).first()
-        orders = Order.objects.filter(user=user).order_by("-created_at")
-        non_cancelled = orders.exclude(status="cancelled")
-        spend = non_cancelled.aggregate(s=Sum("total"))["s"] or 0
-        count = non_cancelled.count()
+        stats_row = Order.objects.filter(user=user).aggregate(
+            orders=Count("id"),
+            cancelled=Count("id", filter=Q(status="cancelled")),
+            spend=Sum("total", filter=~Q(status="cancelled")),
+            last_order_at=Max("created_at"),
+        )
+        recent_orders = list(Order.objects.filter(user=user).order_by("-created_at")[:20])
+        spend = stats_row["spend"] or 0
+        paid_count = (stats_row["orders"] or 0) - (stats_row["cancelled"] or 0)
         items = OrderItem.objects.filter(order__user=user).values(
             "order_id", "product_name", "variant_label", "quantity", "line_total"
         )[:100]
@@ -667,8 +687,8 @@ class AdminCustomerDetailView(APIView):
                 "verification_status": profile.verification_status if profile else "pending",
                 "address_text": profile.address_text if profile else "",
                 "pincode": profile.pincode if profile else "",
-                "latitude": profile.latitude if profile else None,
-                "longitude": profile.longitude if profile else None,
+                "latitude": float(profile.latitude) if profile and profile.latitude is not None else None,
+                "longitude": float(profile.longitude) if profile and profile.longitude is not None else None,
                 "location_accuracy_m": profile.location_accuracy_m if profile else None,
                 "rejection_reason": profile.rejection_reason if profile else "",
                 "submitted_at": profile.submitted_at.isoformat() if profile and profile.submitted_at else None,
@@ -676,15 +696,29 @@ class AdminCustomerDetailView(APIView):
             "email": user.email,
             "lastSignInAt": user.last_login.isoformat() if user.last_login else None,
             "stats": {
-                "orders": orders.count(),
-                "cancelled": orders.filter(status="cancelled").count(),
+                "orders": stats_row["orders"] or 0,
+                "cancelled": stats_row["cancelled"] or 0,
                 "spend": float(spend),
-                "avg": float(spend / count) if count else 0,
-                "lastOrderAt": orders.first().created_at.isoformat() if orders.exists() else None,
+                "avg": float(spend / paid_count) if paid_count else 0,
+                "lastOrderAt": stats_row["last_order_at"].isoformat() if stats_row["last_order_at"] else None,
                 "cartCount": CartItem.objects.filter(user=user).count(),
                 "wishlistCount": WishlistItem.objects.filter(user=user).count(),
             },
-            "orders": OrderSerializer(orders[:20], many=True).data,
+            "orders": [
+                {
+                    "id": str(o.id),
+                    "order_number": o.order_number,
+                    "status": o.status,
+                    "total": float(o.total or 0),
+                    "payment_method": o.payment_method,
+                    "delivery_slot": o.delivery_slot,
+                    "created_at": o.created_at.isoformat(),
+                    "recipient_name": o.recipient_name,
+                    "phone": o.phone,
+                    "address_text": o.address_text,
+                }
+                for o in recent_orders
+            ],
             "items": [
                 {
                     "order_id": str(i["order_id"]),
