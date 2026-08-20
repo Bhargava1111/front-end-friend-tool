@@ -1,13 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
+import { useAdminFn } from "@/hooks/use-admin-fn";
+import { getAdminRidersClient, getDeliveryPerformanceClient, assignDeliveryClient, getAdminOrdersClient } from "@/lib/admin-client.functions";
+
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
-import {
-  assignDelivery,
-  getAdminRiders,
-  getDeliveryPerformance,
-} from "@/lib/admin-platform.functions";
+import { assignDelivery, getAdminRiders, getDeliveryPerformance } from "@/lib/admin-platform.functions";
 import { getAdminOrders } from "@/lib/admin.functions";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -19,10 +17,10 @@ export const Route = createFileRoute("/admin/delivery/")({
 
 function AdminDelivery() {
   const qc = useQueryClient();
-  const fetchRiders = useServerFn(getAdminRiders);
-  const fetchOrders = useServerFn(getAdminOrders);
-  const fetchPerf = useServerFn(getDeliveryPerformance);
-  const assign = useServerFn(assignDelivery);
+  const fetchRiders = useAdminFn(getAdminRiders, getAdminRidersClient);
+  const fetchOrders = useAdminFn(getAdminOrders, getAdminOrdersClient);
+  const fetchPerf = useAdminFn(getDeliveryPerformance, getDeliveryPerformanceClient);
+  const assign = useAdminFn(assignDelivery, assignDeliveryClient);
   const [assignOrder, setAssignOrder] = useState("");
   const [assignRider, setAssignRider] = useState("");
 

@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { createFileRoute, useNavigate, useParams } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
+import { useAdminFn } from "@/hooks/use-admin-fn";
+import { adminListBrandsClient, adminSaveBrandClient } from "@/lib/admin-client.functions";
 import { toast } from "sonner";
 import { adminListBrands, adminSaveBrand } from "@/lib/admin-extra.functions";
 import { AdminFormShell } from "@/components/admin-form-shell";
@@ -30,8 +31,8 @@ function EditBrand() {
   const { id } = useParams({ from: "/admin/brands/$id" });
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const list = useServerFn(adminListBrands);
-  const save = useServerFn(adminSaveBrand);
+  const list = useAdminFn(adminListBrands, adminListBrandsClient);
+  const save = useAdminFn(adminSaveBrand, adminSaveBrandClient);
   const [form, setForm] = useState<{
     name: string;
     slug: string;

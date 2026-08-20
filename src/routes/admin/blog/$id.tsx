@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { createFileRoute, useNavigate, useParams } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
+import { useAdminFn } from "@/hooks/use-admin-fn";
+import { getAdminBlogPostsClient, saveAdminBlogPostClient } from "@/lib/admin-client.functions";
 import { toast } from "sonner";
 import { getAdminBlogPosts, saveAdminBlogPost } from "@/lib/admin-ops.functions";
 import { AdminFormShell } from "@/components/admin-form-shell";
@@ -33,8 +34,8 @@ function EditBlogPost() {
   const { id } = useParams({ from: "/admin/blog/$id" });
   const navigate = useNavigate();
   const qc = useQueryClient();
-  const fetchPosts = useServerFn(getAdminBlogPosts);
-  const save = useServerFn(saveAdminBlogPost);
+  const fetchPosts = useAdminFn(getAdminBlogPosts, getAdminBlogPostsClient);
+  const save = useAdminFn(saveAdminBlogPost, saveAdminBlogPostClient);
   const [draft, setDraft] = useState<Draft | null>(null);
 
   const { data = [], isLoading } = useQuery({

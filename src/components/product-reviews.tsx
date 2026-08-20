@@ -16,7 +16,6 @@ import { Skeleton } from "./skeletons";
 import { formatDate } from "@/lib/format";
 
 export function ProductReviews({ productId }: { productId: string }) {
-  const fetchReviews = useServerFn(getProductReviews);
   const send = useServerFn(submitReview);
   const queryClient = useQueryClient();
   const { session, user } = useSession();
@@ -28,7 +27,7 @@ export function ProductReviews({ productId }: { productId: string }) {
 
   const { data, isLoading } = useQuery({
     queryKey: ["reviews", productId],
-    queryFn: () => fetchReviews({ data: { productId } }),
+    queryFn: () => getProductReviews({ data: { productId } }),
   });
 
   const mutation = useMutation({

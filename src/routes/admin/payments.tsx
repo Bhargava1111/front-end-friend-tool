@@ -1,6 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
+import { useAdminFn } from "@/hooks/use-admin-fn";
+import { getAdminPaymentsClient } from "@/lib/admin-client.functions";
+
 import { getAdminPayments } from "@/lib/admin-platform.functions";
 import { formatINR } from "@/lib/format";
 
@@ -9,7 +11,7 @@ export const Route = createFileRoute("/admin/payments")({
 });
 
 function AdminPayments() {
-  const fetch = useServerFn(getAdminPayments);
+  const fetch = useAdminFn(getAdminPayments, getAdminPaymentsClient);
   const { data, isLoading } = useQuery({
     queryKey: ["admin-payments"],
     queryFn: () =>

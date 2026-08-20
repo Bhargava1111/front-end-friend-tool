@@ -1,12 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
+import { useAdminFn } from "@/hooks/use-admin-fn";
+import { getAdminCategoriesClient, deleteAdminCategoryClient } from "@/lib/admin-client.functions";
+
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
-import {
-  getAdminCategories,
-  deleteAdminCategory,
-} from "@/lib/admin.functions";
+import { getAdminCategories, deleteAdminCategory } from "@/lib/admin.functions";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/admin/categories/")({
@@ -25,8 +24,8 @@ export const Route = createFileRoute("/admin/categories/")({
 
 function AdminCategories() {
   const qc = useQueryClient();
-  const fetchCategories = useServerFn(getAdminCategories);
-  const remove = useServerFn(deleteAdminCategory);
+  const fetchCategories = useAdminFn(getAdminCategories, getAdminCategoriesClient);
+  const remove = useAdminFn(deleteAdminCategory, deleteAdminCategoryClient);
 
   const { data = [], isLoading } = useQuery({
     queryKey: ["admin-categories"],

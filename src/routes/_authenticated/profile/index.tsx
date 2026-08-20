@@ -1,6 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import {
   Camera,
   ChevronRight,
@@ -25,7 +24,7 @@ import { toast } from "sonner";
 import { useSession } from "@/hooks/use-shop";
 import { clearSession } from "@/lib/auth-store";
 import { getProfile } from "@/lib/shop.functions";
-import { deleteAccount } from "@/lib/platform.functions";
+import { deleteAccountClient } from "@/lib/platform.functions";
 import { PageShell } from "@/components/page-shell";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
@@ -50,12 +49,10 @@ function ProfilePage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { user, session, signOut } = useSession();
-  const fetchProfile = useServerFn(getProfile);
-  const removeAccount = useServerFn(deleteAccount);
 
   const { data: profile } = useQuery({
     queryKey: ["profile"],
-    queryFn: () => fetchProfile() as Promise<Profile>,
+    queryFn: () => getProfile() as Promise<Profile>,
     enabled: !!session,
   });
 
@@ -150,7 +147,7 @@ function ProfilePage() {
           onClick={async () => {
             if (!confirm("Delete your account permanently? This cannot be undone.")) return;
             try {
-              await removeAccount();
+              await deleteAccountClient();
               await handleSignOut();
               toast.success("Account deleted");
             } catch (e) {

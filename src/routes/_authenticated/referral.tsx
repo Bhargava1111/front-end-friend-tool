@@ -1,11 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import { Copy, Share2, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 import { PageShell, TopBar } from "@/components/page-shell";
 import { Button } from "@/components/ui/button";
-import { getReferral } from "@/lib/platform.functions";
+import { getReferralClient } from "@/lib/platform.functions";
 import { formatINR } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/referral")({
@@ -23,10 +22,9 @@ export const Route = createFileRoute("/_authenticated/referral")({
 });
 
 function ReferralPage() {
-  const fetch = useServerFn(getReferral);
   const { data } = useQuery({
     queryKey: ["referral"],
-    queryFn: () => fetch() as Promise<{ code: string; total_referrals: number; total_earned: number }>,
+    queryFn: () => getReferralClient() as Promise<{ code: string; total_referrals: number; total_earned: number }>,
   });
   const code = data?.code ?? "…";
   const friendReward = 150;

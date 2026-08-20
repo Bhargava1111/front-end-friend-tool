@@ -1,10 +1,15 @@
 import { useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { BadgeCheck, Clock, LocateFixed, ShieldCheck, TriangleAlert } from "lucide-react";
-import { getMyVerification, submitVerification } from "@/lib/account.functions";
+import {
+  getMyVerification,
+  getMyVerificationClient,
+  submitVerification,
+  submitVerificationClient,
+} from "@/lib/account.functions";
+import { useNativeFn } from "@/hooks/use-admin-fn";
 import { useSession } from "@/hooks/use-shop";
 import { useStores } from "@/components/location-bar";
 import { StoreMap } from "@/components/store-map";
@@ -38,8 +43,8 @@ export const Route = createFileRoute("/_authenticated/verify-account")({
 function VerifyAccount() {
   const qc = useQueryClient();
   const { session } = useSession();
-  const fetchStatus = useServerFn(getMyVerification);
-  const submit = useServerFn(submitVerification);
+  const fetchStatus = useNativeFn(getMyVerification, getMyVerificationClient);
+  const submit = useNativeFn(submitVerification, submitVerificationClient);
   const { data: stores = [] } = useStores();
 
   const { data } = useQuery({
@@ -83,9 +88,10 @@ function VerifyAccount() {
           location_accuracy_m: coords?.accuracy ?? null,
         },
       }),
-    onSuccess: () => {
+    onSuccess: (result) => {
       toast.success("Details sent for verification");
-      qc.invalidateQueries({ queryKey: ["my-verification"] });
+      qc.setQueryData(["my-verification"], result);
+      void qc.invalidateQueries({ queryKey: ["my-verification"] });
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -101,11 +107,13 @@ function VerifyAccount() {
       });
 
       const place = await addressFromCoords(pos.latitude, pos.longitude);
-      const fullAddress = [place.line1, place.line2, place.city, place.state]
-        .filter(Boolean)
-        .join(", ");
-      setAddress((current) => current || fullAddress);
-      setPincode((current) => current || place.pincode);
+      const fullAddress =
+        place.fullAddress ||
+        [place.line1, place.line2, place.city, place.state, place.pincode]
+          .filter(Boolean)
+          .join(", ");
+      setAddress(fullAddress);
+      if (place.pincode) setPincode(place.pincode);
 
       toast.success(
         pos.accuracy && pos.accuracy > 150
@@ -144,7 +152,15 @@ function VerifyAccount() {
 
   return (
     <PageShell withCartBar={false}>
-      <TopBar title="Verify your account" subtitle="One-time check before ordering" backTo="/profile" />
+      <TopBar
+        title={status === "submitted" ? "Pending review" : "Verify your account"}
+        subtitle={
+          status === "submitted"
+            ? "Our team is checking your pin and address"
+            : "One-time check before ordering"
+        }
+        backTo="/profile"
+      />
 
       <div className="space-y-4 p-4 lg:grid lg:grid-cols-2 lg:gap-5 lg:space-y-0">
         <div className="space-y-4">
@@ -152,10 +168,9 @@ function VerifyAccount() {
             <div className="flex gap-3 rounded-2xl border border-accent/40 bg-accent/10 p-4">
               <Clock className="mt-0.5 h-5 w-5 shrink-0 text-accent-foreground" />
               <div>
-                <p className="text-sm font-semibold text-foreground">Awaiting admin approval</p>
+                <p className="text-sm font-semibold text-foreground">Pending review</p>
                 <p className="mt-0.5 text-xs text-muted-foreground">
-                  Our team is checking your address and location. You can update the details below
-                  any time before approval.
+                  Details sent for verification. You can update the address or pin below if needed.
                 </p>
               </div>
             </div>

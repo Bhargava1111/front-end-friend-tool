@@ -49,7 +49,36 @@ sudo -u "${APP_USER}" bash -c "
 "
 
 systemctl restart mnxstore-api.service
-systemctl restart mnxstore-celery.service
+systemctl restart mnxstore-celery.service || true
+
+if [[ -f "${APP_DIR}/package.json" ]] && command -v node >/dev/null 2>&1; then
+  echo "=== Building web frontend ==="
+  WEB_OUT="${APP_DIR}/web-output"
+  VPS_IP="${VPS_IP:-200.234.39.88}"
+  if sudo -u "${APP_USER}" bash -c "
+    set -a
+    source ${ENV_FILE}
+    set +a
+    cd ${APP_DIR}
+    npm ci
+    NITRO_PRESET=node-server \
+      VITE_API_URL=http://127.0.0.1/api/v1 \
+      API_URL=http://127.0.0.1/api/v1 \
+      VITE_PUBLIC_WEB_URL=http://${VPS_IP} \
+      VITE_APP_URL=http://${VPS_IP} \
+      npm run build
+    rm -rf ${WEB_OUT}
+    cp -a .output ${WEB_OUT}
+  "; then
+    cp "${APP_DIR}/backend/deploy/vps/systemd/mnxstore-web.service" /etc/systemd/system/ 2>/dev/null || true
+    systemctl daemon-reload
+    systemctl enable mnxstore-web.service >/dev/null 2>&1 || true
+    systemctl restart mnxstore-web.service
+  else
+    echo "WARN: web frontend build failed — API still restarted."
+  fi
+fi
+
 nginx -t && systemctl reload nginx
 
 echo ""

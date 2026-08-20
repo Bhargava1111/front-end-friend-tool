@@ -1,13 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import { Clock, CreditCard, Loader2, MapPin, ShieldCheck, Truck } from "lucide-react";
 import { toast } from "sonner";
 import { useCart, useSession } from "@/hooks/use-shop";
 import { useStorefront } from "@/hooks/use-storefront";
 import { getAddresses, placeOrder } from "@/lib/shop.functions";
-import { getMyVerification } from "@/lib/account.functions";
+import { getMyVerification, getMyVerificationClient } from "@/lib/account.functions";
+import { useNativeFn } from "@/hooks/use-admin-fn";
 import { PageShell, TopBar } from "@/components/page-shell";
 import { FulfilmentMap } from "@/components/fulfilment-map";
 import { Button } from "@/components/ui/button";
@@ -46,15 +46,15 @@ function CheckoutPage() {
   const { data: lines } = useCart();
   const { settings, coupons } = useStorefront();
   const { code: appliedCode, clear: clearCoupon } = useAppliedCoupon();
-  const fetchAddresses = useServerFn(getAddresses);
-  const submit = useServerFn(placeOrder);
+  const fetchAddresses = getAddresses;
+  const submit = placeOrder;
   const [addressId, setAddressId] = useState<string | null>(null);
   const [notes, setNotes] = useState("");
   const slots = useMemo(() => deliverySlots(), []);
   const [slotId, setSlotId] = useState(slots[0]?.id ?? "express");
   const [payment, setPayment] = useState("cod");
 
-  const fetchVerification = useServerFn(getMyVerification);
+  const fetchVerification = useNativeFn(getMyVerification, getMyVerificationClient);
   const { data: verification } = useQuery({
     queryKey: ["my-verification"],
     queryFn: () => fetchVerification(),
@@ -113,7 +113,7 @@ function CheckoutPage() {
             <div className="min-w-0">
               <p className="text-sm font-semibold text-foreground">
                 {verification.verification_status === "submitted"
-                  ? "Verification in review"
+                  ? "Pending review"
                   : "Verify your account to order"}
               </p>
               <p className="mt-0.5 text-xs text-muted-foreground">

@@ -58,8 +58,8 @@ export const Route = createFileRoute("/_authenticated/orders/$id")({
 function OrderDetailPage() {
   const { id } = Route.useParams();
   const queryClient = useQueryClient();
-  const fetchOrder = useServerFn(getOrder);
-  const cancel = useServerFn(cancelOrder);
+  const fetchOrder = getOrder;
+  const cancel = cancelOrder;
   const sendReturn = useServerFn(requestReturn);
   const fetchReturns = useServerFn(getReturnsForOrder);
   const repeat = useServerFn(reorder);

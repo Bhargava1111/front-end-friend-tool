@@ -1,6 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
+import { useAdminFn } from "@/hooks/use-admin-fn";
+import { getAdminActivityLogsClient } from "@/lib/admin-client.functions";
+
 import { getAdminActivityLogs } from "@/lib/admin-platform.functions";
 
 export const Route = createFileRoute("/admin/audit-logs")({
@@ -8,7 +10,7 @@ export const Route = createFileRoute("/admin/audit-logs")({
 });
 
 function AdminAuditLogs() {
-  const fetch = useServerFn(getAdminActivityLogs);
+  const fetch = useAdminFn(getAdminActivityLogs, getAdminActivityLogsClient);
   const { data = [], isLoading } = useQuery({
     queryKey: ["admin-audit-logs"],
     queryFn: () => fetch() as Promise<Array<Record<string, string>>>,

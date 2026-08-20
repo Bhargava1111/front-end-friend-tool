@@ -26,8 +26,16 @@ export function locationErrorMessage(err?: GeolocationPositionError) {
   return "Couldn't get your location. Enable GPS and try again.";
 }
 
-/** Device GPS — uses Capacitor on native apps, browser API elsewhere. */
+/** Device GPS — prefers a high-accuracy fix (street / door-level) like delivery apps. */
 export async function getDeviceCoords(): Promise<DeviceCoords> {
+  const first = await readOnce();
+  if (first.accuracy && first.accuracy <= 25) return first;
+
+  const improved = await waitForBetterFix(first);
+  return improved ?? first;
+}
+
+async function readOnce(): Promise<DeviceCoords> {
   if (Capacitor.isNativePlatform()) {
     const { Geolocation } = await import("@capacitor/geolocation");
     let perm = await Geolocation.checkPermissions();
@@ -66,6 +74,34 @@ export async function getDeviceCoords(): Promise<DeviceCoords> {
         }),
       (err) => reject(new Error(locationErrorMessage(err))),
       { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 },
+    );
+  });
+}
+
+async function waitForBetterFix(seed: DeviceCoords): Promise<DeviceCoords | null> {
+  if (typeof navigator === "undefined" || !navigator.geolocation) return null;
+  return new Promise((resolve) => {
+    let best = seed;
+    const done = (value: DeviceCoords | null) => {
+      clearTimeout(timer);
+      navigator.geolocation.clearWatch(watchId);
+      resolve(value);
+    };
+    const timer = setTimeout(() => done(best.accuracy && best.accuracy < (seed.accuracy ?? 999) ? best : seed), 8000);
+    const watchId = navigator.geolocation.watchPosition(
+      (pos) => {
+        const next = {
+          latitude: pos.coords.latitude,
+          longitude: pos.coords.longitude,
+          accuracy: pos.coords.accuracy,
+        };
+        if (!best.accuracy || (next.accuracy && next.accuracy < best.accuracy)) {
+          best = next;
+        }
+        if (next.accuracy && next.accuracy <= 20) done(next);
+      },
+      () => done(best),
+      { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 },
     );
   });
 }

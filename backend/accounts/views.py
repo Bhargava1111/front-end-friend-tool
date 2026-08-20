@@ -74,7 +74,7 @@ class OtpRequestView(APIView):
             "expires_in": settings.OTP_TTL_SECONDS,
             "resend_in": settings.OTP_RESEND_COOLDOWN,
         }
-        if is_preview_host(request) or settings.DEBUG:
+        if is_preview_host(request) or settings.DEBUG or settings.ENABLE_DEMO_OTP:
             payload["preview_code"] = code
         return Response(payload)
 
@@ -138,6 +138,9 @@ class OtpVerifyView(APIView):
                     user.full_name = full_name
                 user.save()
 
+        if not user.is_active:
+            return Response({"ok": False, "detail": "This account has been blocked. Contact the store."}, status=403)
+
         ensure_profile(user)
         tokens = tokens_for_user(user)
         return Response({
@@ -159,6 +162,8 @@ class LoginView(APIView):
             user = User.objects.filter(phone=identifier).first()
         if not user or not user.check_password(password):
             return Response({"detail": "Invalid credentials."}, status=401)
+        if not user.is_active:
+            return Response({"detail": "This account has been blocked. Contact the store."}, status=403)
         tokens = tokens_for_user(user)
         return Response({"access": tokens["access"], "refresh": tokens["refresh"], "user": UserSerializer(user).data})
 
@@ -348,7 +353,7 @@ class ProfileOtpRequestView(APIView):
             "expires_in": settings.OTP_TTL_SECONDS,
             "resend_in": settings.OTP_RESEND_COOLDOWN,
         }
-        if is_preview_host(request) or settings.DEBUG:
+        if is_preview_host(request) or settings.DEBUG or settings.ENABLE_DEMO_OTP:
             payload["preview_code"] = code
         return Response(payload)
 
@@ -471,15 +476,52 @@ class VerificationView(APIView):
         user.full_name = request.data.get("full_name", user.full_name)
         user.phone = request.data.get("phone", user.phone)
         user.save()
-        profile.address_text = request.data.get("address_text", "")
-        profile.pincode = request.data.get("pincode", "")
-        profile.latitude = request.data.get("latitude")
-        profile.longitude = request.data.get("longitude")
-        profile.location_accuracy_m = request.data.get("location_accuracy_m")
+
+        def _num(value):
+            if value is None or value == "":
+                return None
+            try:
+                return float(value)
+            except (TypeError, ValueError):
+                return None
+
+        profile.address_text = (request.data.get("address_text") or "").strip()
+        profile.pincode = str(request.data.get("pincode") or "").replace(" ", "")[:6]
+        profile.latitude = _num(request.data.get("latitude"))
+        profile.longitude = _num(request.data.get("longitude"))
+        profile.location_accuracy_m = _num(request.data.get("location_accuracy_m"))
         profile.verification_status = Profile.VerificationStatus.SUBMITTED
         profile.submitted_at = timezone.now()
+        profile.verified_at = None
         profile.rejection_reason = ""
         profile.save()
+
+        line1 = profile.address_text[:255]
+        line2 = profile.address_text[255:510]
+        addr_fields = {
+            "label": "Home",
+            "recipient_name": user.full_name or "Customer",
+            "phone": user.phone or "",
+            "line1": line1 or "Captured location",
+            "line2": line2,
+            "city": "",
+            "state": "",
+            "pincode": profile.pincode or "",
+            "latitude": profile.latitude,
+            "longitude": profile.longitude,
+            "is_default": True,
+        }
+        existing = (
+            Address.objects.filter(user=user, is_default=True).first()
+            or Address.objects.filter(user=user).first()
+        )
+        if existing:
+            for key, value in addr_fields.items():
+                setattr(existing, key, value)
+            existing.save()
+        else:
+            Address.objects.create(user=user, **addr_fields)
+
         return Response(ProfileSerializer(profile).data)
 
 

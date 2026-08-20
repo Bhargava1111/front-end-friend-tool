@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
+import { useAdminFn } from "@/hooks/use-admin-fn";
+import { saveAdminBannerClient } from "@/lib/admin-client.functions";
 import { toast } from "sonner";
 import { saveAdminBanner } from "@/lib/admin.functions";
 import { AdminFormShell } from "@/components/admin-form-shell";
@@ -24,7 +25,7 @@ function NewBanner() {
   const { placement } = Route.useSearch();
   const navigate = useNavigate();
   const qc = useQueryClient();
-  const save = useServerFn(saveAdminBanner);
+  const save = useAdminFn(saveAdminBanner, saveAdminBannerClient);
   const [form, setForm] = useState<BannerFormState>(() => emptyBannerForm(placement));
 
   const invalidate = () => {

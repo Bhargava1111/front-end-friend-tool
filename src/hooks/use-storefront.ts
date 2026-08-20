@@ -1,5 +1,4 @@
 import { useQuery } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import { getStorefrontMeta } from "@/lib/storefront.functions";
 import { DEFAULT_SETTINGS, type CouponRow, type StoreSettings } from "@/lib/commerce";
 
@@ -10,10 +9,9 @@ export type StorefrontMeta = {
 };
 
 export function useStorefront() {
-  const fetchMeta = useServerFn(getStorefrontMeta);
   const query = useQuery({
     queryKey: ["storefront-meta"],
-    queryFn: () => fetchMeta() as Promise<StorefrontMeta>,
+    queryFn: () => getStorefrontMeta() as Promise<StorefrontMeta>,
     staleTime: 5 * 60 * 1000,
   });
   return {

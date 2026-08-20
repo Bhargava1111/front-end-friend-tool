@@ -1,205 +1,195 @@
-import { createServerFn } from "@tanstack/react-start";
-import { requireAuth } from "@/integrations/django/auth-middleware";
 import { apiFetch, toJsonBody } from "@/lib/api";
+import { ensureValidAccessToken } from "@/lib/auth-session";
+
+async function requireToken() {
+  const token = await ensureValidAccessToken();
+  if (!token) throw new Error("Please sign in to continue.");
+  return token;
+}
 
 /* ------------------------------- CART ------------------------------- */
 
-export const getCart = createServerFn({ method: "GET" })
-  .middleware([requireAuth])
-  .handler(async ({ context }) => {
-    const data = await apiFetch<{ items: unknown[] }>("/cart/", { token: context.accessToken });
-    return data.items ?? [];
-  });
+export async function getCart() {
+  const token = await requireToken();
+  const data = await apiFetch<{ items: unknown[] }>("/cart/", { token });
+  return data.items ?? [];
+}
 
-export const addToCart = createServerFn({ method: "POST" })
-  .middleware([requireAuth])
-  .inputValidator((data: { productId: string; quantity?: number; variantId?: string | null }) => data)
-  .handler(async ({ data, context }) => {
-    await apiFetch("/cart/", {
-      method: "POST",
-      token: context.accessToken,
-      body: toJsonBody({
-        product_id: data.productId,
-        variant_id: data.variantId,
-        quantity: data.quantity ?? 1,
-      }),
-    });
-    return { ok: true };
+export async function addToCart({
+  data,
+}: {
+  data: { productId: string; quantity?: number; variantId?: string | null };
+}) {
+  const token = await requireToken();
+  await apiFetch("/cart/", {
+    method: "POST",
+    token,
+    body: toJsonBody({
+      product_id: data.productId,
+      variant_id: data.variantId,
+      quantity: data.quantity ?? 1,
+    }),
   });
+  return { ok: true };
+}
 
-export const setCartQuantity = createServerFn({ method: "POST" })
-  .middleware([requireAuth])
-  .inputValidator((data: { itemId: string; quantity: number }) => data)
-  .handler(async ({ data, context }) => {
-    await apiFetch(`/cart/${data.itemId}/`, {
-      method: "PATCH",
-      token: context.accessToken,
-      body: toJsonBody({ quantity: data.quantity }),
-    });
-    return { ok: true };
+export async function setCartQuantity({ data }: { data: { itemId: string; quantity: number } }) {
+  const token = await requireToken();
+  await apiFetch(`/cart/${data.itemId}/`, {
+    method: "PATCH",
+    token,
+    body: toJsonBody({ quantity: data.quantity }),
   });
+  return { ok: true };
+}
 
-export const removeCartItem = createServerFn({ method: "POST" })
-  .middleware([requireAuth])
-  .inputValidator((data: { itemId: string }) => data)
-  .handler(async ({ data, context }) => {
-    await apiFetch(`/cart/${data.itemId}/`, {
-      method: "DELETE",
-      token: context.accessToken,
-    });
-    return { ok: true };
+export async function removeCartItem({ data }: { data: { itemId: string } }) {
+  const token = await requireToken();
+  await apiFetch(`/cart/${data.itemId}/`, {
+    method: "DELETE",
+    token,
   });
+  return { ok: true };
+}
 
 /* ----------------------------- WISHLIST ----------------------------- */
 
-export const getWishlist = createServerFn({ method: "GET" })
-  .middleware([requireAuth])
-  .handler(async ({ context }) => {
-    return apiFetch("/wishlist/", { token: context.accessToken });
-  });
+export async function getWishlist() {
+  const token = await requireToken();
+  return apiFetch("/wishlist/", { token });
+}
 
-export const toggleWishlist = createServerFn({ method: "POST" })
-  .middleware([requireAuth])
-  .inputValidator((data: { productId: string }) => data)
-  .handler(async ({ data, context }) => {
-    const res = await apiFetch<{ wishlisted: boolean }>("/wishlist/", {
-      method: "POST",
-      token: context.accessToken,
-      body: toJsonBody({ product_id: data.productId }),
-    });
-    return { wishlisted: res.wishlisted };
+export async function toggleWishlist({ data }: { data: { productId: string } }) {
+  const token = await requireToken();
+  const res = await apiFetch<{ wishlisted: boolean }>("/wishlist/", {
+    method: "POST",
+    token,
+    body: toJsonBody({ product_id: data.productId }),
   });
+  return { wishlisted: res.wishlisted };
+}
 
 /* ----------------------------- ADDRESSES ---------------------------- */
 
-export const getAddresses = createServerFn({ method: "GET" })
-  .middleware([requireAuth])
-  .handler(async ({ context }) => {
-    return apiFetch("/me/addresses/", { token: context.accessToken });
-  });
+export async function getAddresses() {
+  const token = await requireToken();
+  return apiFetch("/me/addresses/", { token });
+}
 
-export const saveAddress = createServerFn({ method: "POST" })
-  .middleware([requireAuth])
-  .inputValidator(
-    (data: {
-      id?: string;
-      label: string;
-      recipient_name: string;
-      phone: string;
-      line1: string;
-      line2?: string;
-      city: string;
-      state: string;
-      pincode: string;
-      landmark?: string;
-      latitude?: number | null;
-      longitude?: number | null;
-      is_default: boolean;
-    }) => data,
-  )
-  .handler(async ({ data, context }) => {
-    const { id, ...fields } = data;
-    if (id) {
-      await apiFetch(`/me/addresses/${id}/`, {
-        method: "PATCH",
-        token: context.accessToken,
-        body: toJsonBody(fields),
-      });
-    } else {
-      await apiFetch("/me/addresses/", {
-        method: "POST",
-        token: context.accessToken,
-        body: toJsonBody(fields),
-      });
-    }
-    return { ok: true };
-  });
-
-export const deleteAddress = createServerFn({ method: "POST" })
-  .middleware([requireAuth])
-  .inputValidator((data: { id: string }) => data)
-  .handler(async ({ data, context }) => {
-    await apiFetch(`/me/addresses/${data.id}/`, {
-      method: "DELETE",
-      token: context.accessToken,
+export async function saveAddress({
+  data,
+}: {
+  data: {
+    id?: string;
+    label: string;
+    recipient_name: string;
+    phone: string;
+    line1: string;
+    line2?: string;
+    city: string;
+    state: string;
+    pincode: string;
+    landmark?: string;
+    latitude?: number | null;
+    longitude?: number | null;
+    is_default: boolean;
+  };
+}) {
+  const token = await requireToken();
+  const { id, ...fields } = data;
+  if (id) {
+    await apiFetch(`/me/addresses/${id}/`, {
+      method: "PATCH",
+      token,
+      body: toJsonBody(fields),
     });
-    return { ok: true };
+  } else {
+    await apiFetch("/me/addresses/", {
+      method: "POST",
+      token,
+      body: toJsonBody(fields),
+    });
+  }
+  return { ok: true };
+}
+
+export async function deleteAddress({ data }: { data: { id: string } }) {
+  const token = await requireToken();
+  await apiFetch(`/me/addresses/${data.id}/`, {
+    method: "DELETE",
+    token,
   });
+  return { ok: true };
+}
 
 /* ------------------------------ PROFILE ----------------------------- */
 
-export const getProfile = createServerFn({ method: "GET" })
-  .middleware([requireAuth])
-  .handler(async ({ context }) => {
-    return apiFetch("/me/", { token: context.accessToken });
-  });
+export async function getProfile() {
+  const token = await requireToken();
+  return apiFetch("/me/", { token });
+}
 
-export const updateProfile = createServerFn({ method: "POST" })
-  .middleware([requireAuth])
-  .inputValidator(
-    (data: {
-      first_name: string;
-      last_name: string;
-      gst_number?: string;
-      avatar_url?: string;
-    }) => data,
-  )
-  .handler(async ({ data, context }) => {
-    await apiFetch("/me/", {
-      method: "PATCH",
-      token: context.accessToken,
-      body: toJsonBody(data),
-    });
-    return { ok: true };
+export async function updateProfile({
+  data,
+}: {
+  data: {
+    first_name: string;
+    last_name: string;
+    gst_number?: string;
+    avatar_url?: string;
+  };
+}) {
+  const token = await requireToken();
+  await apiFetch("/me/", {
+    method: "PATCH",
+    token,
+    body: toJsonBody(data),
   });
+  return { ok: true };
+}
 
 /* ------------------------------ ORDERS ------------------------------ */
 
-export const getOrders = createServerFn({ method: "GET" })
-  .middleware([requireAuth])
-  .handler(async ({ context }) => {
-    return apiFetch("/orders/", { token: context.accessToken });
-  });
+export async function getOrders() {
+  const token = await requireToken();
+  return apiFetch("/orders/", { token });
+}
 
-export const getOrder = createServerFn({ method: "GET" })
-  .middleware([requireAuth])
-  .inputValidator((data: { id: string }) => data)
-  .handler(async ({ data, context }) => {
-    return apiFetch(`/orders/${data.id}/`, { token: context.accessToken });
-  });
+export async function getOrder({ data }: { data: { id: string } }) {
+  const token = await requireToken();
+  return apiFetch(`/orders/${data.id}/`, { token });
+}
 
-export const placeOrder = createServerFn({ method: "POST" })
-  .middleware([requireAuth])
-  .inputValidator(
-    (data: {
-      addressId: string;
-      notes?: string;
-      couponCode?: string;
-      deliverySlot?: string;
-      paymentMethod?: string;
-    }) => data,
-  )
-  .handler(async ({ data, context }) => {
-    return apiFetch<{ id: string; orderNumber: string }>("/orders/", {
-      method: "POST",
-      token: context.accessToken,
-      body: toJsonBody({
-        address_id: data.addressId,
-        notes: data.notes,
-        couponCode: data.couponCode,
-        deliverySlot: data.deliverySlot,
-        paymentMethod: data.paymentMethod,
-      }),
-    });
+export async function placeOrder({
+  data,
+}: {
+  data: {
+    addressId: string;
+    notes?: string;
+    couponCode?: string;
+    deliverySlot?: string;
+    paymentMethod?: string;
+  };
+}) {
+  const token = await requireToken();
+  return apiFetch<{ id: string; orderNumber: string }>("/orders/", {
+    method: "POST",
+    token,
+    body: toJsonBody({
+      address_id: data.addressId,
+      notes: data.notes,
+      couponCode: data.couponCode,
+      deliverySlot: data.deliverySlot,
+      paymentMethod: data.paymentMethod,
+    }),
   });
+}
 
-export const cancelOrder = createServerFn({ method: "POST" })
-  .middleware([requireAuth])
-  .inputValidator((data: { id: string }) => data)
-  .handler(async ({ data, context }) => {
-    await apiFetch(`/orders/${data.id}/cancel/`, {
-      method: "POST",
-      token: context.accessToken,
-    });
-    return { ok: true };
+export async function cancelOrder({ data }: { data: { id: string } }) {
+  const token = await requireToken();
+  await apiFetch(`/orders/${data.id}/cancel/`, {
+    method: "POST",
+    token,
   });
+  return { ok: true };
+}

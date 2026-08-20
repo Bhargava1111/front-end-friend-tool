@@ -1,5 +1,5 @@
-import { createServerFn } from "@tanstack/react-start";
 import { apiFetch } from "@/lib/api";
+import { readOfflineCache, writeOfflineCache } from "@/lib/offline-cache";
 
 export type BlogPostRow = {
   id: string;
@@ -15,19 +15,34 @@ export type BlogPostRow = {
   created_at?: string;
 };
 
-export const listBlogPosts = createServerFn({ method: "GET" }).handler(async () => {
-  return apiFetch<BlogPostRow[]>("/blog/");
-});
+function normalizePosts(rows: BlogPostRow[] | { results?: BlogPostRow[] } | null | undefined) {
+  const list = Array.isArray(rows) ? rows : (rows?.results ?? []);
+  return list.map((post) => ({
+    ...post,
+    tags: Array.isArray(post.tags) ? post.tags : post.tags ? [String(post.tags)] : [],
+  }));
+}
 
-export const getBlogPost = createServerFn({ method: "GET" })
-  .inputValidator((data: { slug: string }) => data)
-  .handler(async ({ data }) => {
-    try {
-      const post = await apiFetch<BlogPostRow & { related?: { title: string; slug: string; excerpt: string }[] }>(
-        `/blog/${data.slug}/`,
-      );
-      return { post, others: post.related ?? [] };
-    } catch {
-      return null;
-    }
-  });
+export async function listBlogPosts() {
+  try {
+    const rows = await apiFetch<BlogPostRow[] | { results?: BlogPostRow[] }>("/blog/");
+    const posts = normalizePosts(rows);
+    writeOfflineCache("blog-posts", posts);
+    return posts;
+  } catch (error) {
+    const cached = readOfflineCache<BlogPostRow[]>("blog-posts");
+    if (cached) return cached;
+    throw error;
+  }
+}
+
+export async function getBlogPost({ data }: { data: { slug: string } }) {
+  try {
+    const post = await apiFetch<BlogPostRow & { related?: { title: string; slug: string; excerpt: string }[] }>(
+      `/blog/${data.slug}/`,
+    );
+    return { post, others: post.related ?? [] };
+  } catch {
+    return null;
+  }
+}

@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
+import { useAdminFn } from "@/hooks/use-admin-fn";
+import { createAdminUserClient } from "@/lib/admin-client.functions";
 import { toast } from "sonner";
 import { createAdminUser } from "@/lib/admin-ops.functions";
 import { AdminFormShell } from "@/components/admin-form-shell";
@@ -24,7 +25,7 @@ export const Route = createFileRoute("/admin/users/new")({
 function NewUser() {
   const navigate = useNavigate();
   const qc = useQueryClient();
-  const create = useServerFn(createAdminUser);
+  const create = useAdminFn(createAdminUser, createAdminUserClient);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");

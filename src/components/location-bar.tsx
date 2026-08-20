@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import { Link } from "@tanstack/react-router";
 import { ChevronDown, LocateFixed, MapPin, Store as StoreIcon } from "lucide-react";
 import { toast } from "sonner";
@@ -23,10 +22,9 @@ import { cn } from "@/lib/utils";
 import { getDeviceCoords } from "@/lib/device-location";
 
 export function useStores() {
-  const fetchStores = useServerFn(getStoreLocations);
   return useQuery({
     queryKey: ["stores"],
-    queryFn: () => fetchStores() as Promise<StoreLocation[]>,
+    queryFn: () => getStoreLocations() as Promise<StoreLocation[]>,
     staleTime: 5 * 60 * 1000,
   });
 }

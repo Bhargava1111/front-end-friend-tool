@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import {
   LayoutDashboard,
   Package,
@@ -24,6 +23,12 @@ import {
   Menu,
 } from "lucide-react";
 import { getAdminStatus, getAdminPanelSessionStatus, revokeAdminPanelSession } from "@/lib/admin.functions";
+import { useAdminFn } from "@/hooks/use-admin-fn";
+import {
+  getAdminStatusClient,
+  getAdminPanelSessionStatusClient,
+  revokeAdminPanelSessionClient,
+} from "@/lib/admin-client.functions";
 import { useSession } from "@/hooks/use-shop";
 import { useAdminIdle } from "@/hooks/use-admin-idle";
 import { AdminOtpGate } from "@/components/admin-otp-gate";
@@ -147,9 +152,9 @@ function NavList({ pathname, onNavigate }: { pathname: string; onNavigate?: () =
 function AdminLayout() {
   const queryClient = useQueryClient();
   const { session, loading: sessionLoading } = useSession();
-  const check = useServerFn(getAdminStatus);
-  const checkPanel = useServerFn(getAdminPanelSessionStatus);
-  const revokePanel = useServerFn(revokeAdminPanelSession);
+  const check = useAdminFn(getAdminStatus, getAdminStatusClient);
+  const checkPanel = useAdminFn(getAdminPanelSessionStatus, getAdminPanelSessionStatusClient);
+  const revokePanel = useAdminFn(revokeAdminPanelSession, revokeAdminPanelSessionClient);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [drawer, setDrawer] = useState(false);
   const [panelUnlocked, setPanelUnlocked] = useState(false);

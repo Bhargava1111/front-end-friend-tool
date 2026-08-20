@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { createFileRoute, useNavigate, useParams } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
+import { useAdminFn } from "@/hooks/use-admin-fn";
+import { setOrderDeliveryClient, getAdminOrdersClient, setOrderStatusClient } from "@/lib/admin-client.functions";
 import { CalendarClock, Check, X } from "lucide-react";
 import { toast } from "sonner";
 import { setOrderDelivery } from "@/lib/admin-ops.functions";
@@ -32,9 +33,9 @@ function OrderDetail() {
   const { id } = useParams({ from: "/admin/orders/$id" });
   const navigate = useNavigate();
   const qc = useQueryClient();
-  const fetchOrders = useServerFn(getAdminOrders);
-  const updateStatus = useServerFn(setOrderStatus);
-  const scheduleFn = useServerFn(setOrderDelivery);
+  const fetchOrders = useAdminFn(getAdminOrders, getAdminOrdersClient);
+  const updateStatus = useAdminFn(setOrderStatus, setOrderStatusClient);
+  const scheduleFn = useAdminFn(setOrderDelivery, setOrderDeliveryClient);
   const [localDate, setLocalDate] = useState("");
 
   const { data = [], isLoading } = useQuery({

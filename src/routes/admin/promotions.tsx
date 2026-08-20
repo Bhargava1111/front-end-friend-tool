@@ -1,6 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
+import { useAdminFn } from "@/hooks/use-admin-fn";
+import { getAdminBOGOClient, getAdminCategoryDiscountsClient } from "@/lib/admin-client.functions";
+
 import { getAdminBOGO, getAdminCategoryDiscounts } from "@/lib/admin-platform.functions";
 
 export const Route = createFileRoute("/admin/promotions")({
@@ -8,8 +10,8 @@ export const Route = createFileRoute("/admin/promotions")({
 });
 
 function AdminPromotions() {
-  const fetchBogo = useServerFn(getAdminBOGO);
-  const fetchCat = useServerFn(getAdminCategoryDiscounts);
+  const fetchBogo = useAdminFn(getAdminBOGO, getAdminBOGOClient);
+  const fetchCat = useAdminFn(getAdminCategoryDiscounts, getAdminCategoryDiscountsClient);
   const { data: bogo = [], isError } = useQuery({
     queryKey: ["admin-bogo"],
     queryFn: () => fetchBogo() as Promise<Array<Record<string, unknown>>>,

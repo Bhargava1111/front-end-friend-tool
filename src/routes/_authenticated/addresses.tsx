@@ -2,7 +2,6 @@ import { useSession } from "@/hooks/use-shop";
 import { useEffect, useRef, useState, type Dispatch, type SetStateAction } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import { LocateFixed, MapPin, Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { getAddresses, saveAddress, deleteAddress } from "@/lib/shop.functions";
@@ -61,9 +60,9 @@ function newAddressForm(user?: { full_name?: string | null; phone?: string | nul
 function AddressesPage() {
   const queryClient = useQueryClient();
   const { session, user } = useSession();
-  const fetchAddresses = useServerFn(getAddresses);
-  const save = useServerFn(saveAddress);
-  const remove = useServerFn(deleteAddress);
+  const fetchAddresses = getAddresses;
+  const save = saveAddress;
+  const remove = deleteAddress;
   const [form, setForm] = useState<FormState | null>(null);
   const autoFilled = useRef(false);
 

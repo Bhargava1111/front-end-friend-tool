@@ -60,8 +60,16 @@ export const Route = createFileRoute("/")({
   errorComponent: ({ error }) => (
     <PageShell>
       <div className="flex min-h-[70vh] flex-col items-center justify-center px-8 text-center">
-        <h1 className="text-lg font-semibold text-foreground">We couldn't load the store</h1>
-        <p className="mt-2 text-sm text-muted-foreground">{error.message}</p>
+        <h1 className="text-lg font-semibold text-foreground">
+          {typeof navigator !== "undefined" && navigator.onLine === false
+            ? "You're offline"
+            : "We couldn't load the store"}
+        </h1>
+        <p className="mt-2 text-sm text-muted-foreground">
+          {typeof navigator !== "undefined" && navigator.onLine === false
+            ? "Connect to the internet to refresh. Previously loaded products will appear here when available."
+            : error.message}
+        </p>
       </div>
     </PageShell>
   ),
@@ -71,13 +79,18 @@ function Home() {
   const { data } = useSuspenseQuery(homeQuery);
   const allProducts = Array.from(
     new Map(
-      [...(data.all ?? []), ...data.newest, ...data.featured, ...data.bestSelling].map((p) => [
+      [
+        ...(data.all ?? []),
+        ...(data.newest ?? []),
+        ...(data.featured ?? []),
+        ...(data.bestSelling ?? []),
+      ].map((p) => [
         p.id,
         p,
       ]),
     ).values(),
   );
-  const trending = data.bestSelling.length ? data.bestSelling : data.newest;
+  const trending = (data.bestSelling?.length ? data.bestSelling : data.newest) ?? [];
   const categoryScrollRef = useAutoScroll<HTMLDivElement>(data.categories.length > 3);
   const sections = (data as { sections?: OfferSectionsMap }).sections ?? {};
   // All home banners feed the hero carousel — it paginates cleanly past 10 slides.

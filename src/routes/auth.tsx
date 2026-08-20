@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useServerFn } from "@tanstack/react-start";
 import { ArrowLeft, KeyRound, Loader2, Mail, Smartphone, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { useSession } from "@/hooks/use-shop";
@@ -11,8 +10,8 @@ import {
   verifyEmailOtp,
   loginWithPassword,
 } from "@/lib/auth-otp.functions";
-import { getApiBase } from "@/lib/api";
-import { saveSession, type AuthUser } from "@/lib/auth-store";
+import { apiFetch } from "@/lib/api";
+import { type AuthUser } from "@/lib/auth-store";
 import { OtpInput } from "@/components/otp-input";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -64,11 +63,6 @@ function useCooldown() {
 function AuthPage() {
   const navigate = useNavigate();
   const { session, loading, signIn } = useSession();
-  const askPhoneOtp = useServerFn(requestPhoneOtp);
-  const confirmPhoneOtp = useServerFn(verifyPhoneOtp);
-  const askEmailOtp = useServerFn(requestEmailOtp);
-  const confirmEmailOtp = useServerFn(verifyEmailOtp);
-  const doPasswordLogin = useServerFn(loginWithPassword);
 
   const [mode, setMode] = useState<Mode>("login");
   const [method, setMethod] = useState<Method>("phone");
@@ -102,7 +96,7 @@ function AuthPage() {
     setBusy(true);
     try {
       if (method === "phone") {
-        const res = await askPhoneOtp({ data: { phone, fullName } });
+        const res = await requestPhoneOtp({ data: { phone, fullName } });
         if (!res.ok) {
           if (res.cooldownSeconds) cooldown.start(res.cooldownSeconds);
           toast.error(res.message);
@@ -114,7 +108,7 @@ function AuthPage() {
         setStep("otp");
         toast.success("Code sent");
       } else {
-        const res = await askEmailOtp({ data: { email, fullName } }) as {
+        const res = await requestEmailOtp({ data: { email, fullName } }) as {
           ok?: boolean;
           detail?: string;
           preview_code?: string;
@@ -147,7 +141,7 @@ function AuthPage() {
     setBusy(true);
     try {
       if (method === "phone") {
-        const res = await confirmPhoneOtp({ data: { phone, code: codeValue, fullName } });
+        const res = await verifyPhoneOtp({ data: { phone, code: codeValue, fullName } });
         if (!res.ok) {
           toast.error(res.message);
           setCode("");
@@ -159,7 +153,7 @@ function AuthPage() {
           user: res.user as AuthUser,
         });
       } else {
-        const res = await confirmEmailOtp({ data: { email, code: codeValue, fullName } }) as {
+        const res = await verifyEmailOtp({ data: { email, code: codeValue, fullName } }) as {
           access: string;
           refresh: string;
           user: AuthUser;
@@ -184,7 +178,7 @@ function AuthPage() {
         toast.error("Password signup is not available yet. Use OTP sign-in.");
         return;
       }
-      const res = await doPasswordLogin({ data: { identifier: email, password } }) as {
+      const res = await loginWithPassword({ data: { identifier: email, password } }) as {
         access: string;
         refresh: string;
         user: AuthUser;
@@ -195,21 +189,14 @@ function AuthPage() {
     } catch (err) {
       // Fallback: call Render API from the browser if the server function fetch fails.
       try {
-        const r = await fetch(`${getApiBase()}/auth/login/`, {
+        const data = await apiFetch<{ access: string; refresh: string; user: AuthUser }>("/auth/login/", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ identifier: email, password }),
         });
-        const data = await r.json().catch(() => ({}));
-        if (!r.ok) {
-          throw new Error(
-            typeof data?.detail === "string" ? data.detail : "Invalid credentials.",
-          );
-        }
         signIn({
           access: data.access,
           refresh: data.refresh,
-          user: data.user as AuthUser,
+          user: data.user,
         });
         toast.success("Signed in");
         navigate({ to: "/", replace: true });

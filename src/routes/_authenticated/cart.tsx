@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import { Bookmark, Minus, Plus, ShoppingCart, Tag, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { useCart } from "@/hooks/use-shop";
@@ -33,9 +32,9 @@ export const Route = createFileRoute("/_authenticated/cart")({
 function CartPage() {
   const { data: lines, isLoading } = useCart();
   const queryClient = useQueryClient();
-  const setQty = useServerFn(setCartQuantity);
-  const remove = useServerFn(removeCartItem);
-  const add = useServerFn(addToCart);
+  const setQty = setCartQuantity;
+  const remove = removeCartItem;
+  const add = addToCart;
   const { settings, coupons } = useStorefront();
   const { code: appliedCode, apply, clear: clearCoupon } = useAppliedCoupon();
   const saveLater = useSaveForLater();

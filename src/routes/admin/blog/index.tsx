@@ -1,6 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
+import { useAdminFn } from "@/hooks/use-admin-fn";
+import { getAdminBlogPostsClient, deleteAdminBlogPostClient } from "@/lib/admin-client.functions";
+
 import { toast } from "sonner";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { getAdminBlogPosts, deleteAdminBlogPost } from "@/lib/admin-ops.functions";
@@ -23,8 +25,8 @@ export const Route = createFileRoute("/admin/blog/")({
 
 function AdminBlog() {
   const qc = useQueryClient();
-  const fetchPosts = useServerFn(getAdminBlogPosts);
-  const remove = useServerFn(deleteAdminBlogPost);
+  const fetchPosts = useAdminFn(getAdminBlogPosts, getAdminBlogPostsClient);
+  const remove = useAdminFn(deleteAdminBlogPost, deleteAdminBlogPostClient);
 
   const { data = [], isLoading } = useQuery({
     queryKey: ["admin-blog"],

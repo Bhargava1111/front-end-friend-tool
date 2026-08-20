@@ -1,13 +1,22 @@
 import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
+import { useAdminFn } from "@/hooks/use-admin-fn";
+import { getAdminUsersClient, setUserVerificationClient, deleteAdminUserClient, manageAdminUserClient } from "@/lib/admin-client.functions";
 import { toast } from "sonner";
-import { BadgeCheck, Eye, MapPin, Plus, Trash2, X } from "lucide-react";
+import { BadgeCheck, Ban, Eye, MapPin, MoreHorizontal, Plus, Trash2, Unlock, X } from "lucide-react";
 import { getAdminUsers, setUserVerification, deleteAdminUser } from "@/lib/admin-ops.functions";
+import { manageAdminUser } from "@/lib/admin-platform.functions";
 import { formatDate } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export const Route = createFileRoute("/admin/users/")({
   head: () => ({
@@ -29,6 +38,13 @@ export const Route = createFileRoute("/admin/users/")({
 const TABS = ["submitted", "pending", "verified", "rejected", "all"] as const;
 type Tab = (typeof TABS)[number];
 
+const STATUS_LABEL: Record<string, string> = {
+  pending: "Not submitted",
+  submitted: "Pending review",
+  verified: "Verified",
+  rejected: "Rejected",
+};
+
 const BADGES: Record<string, string> = {
   pending: "bg-secondary text-muted-foreground",
   submitted: "bg-accent/20 text-accent-foreground",
@@ -38,9 +54,10 @@ const BADGES: Record<string, string> = {
 
 function AdminUsers() {
   const qc = useQueryClient();
-  const fetchUsers = useServerFn(getAdminUsers);
-  const setStatus = useServerFn(setUserVerification);
-  const remove = useServerFn(deleteAdminUser);
+  const fetchUsers = useAdminFn(getAdminUsers, getAdminUsersClient);
+  const setStatus = useAdminFn(setUserVerification, setUserVerificationClient);
+  const remove = useAdminFn(deleteAdminUser, deleteAdminUserClient);
+  const manageUser = useAdminFn(manageAdminUser, manageAdminUserClient);
   const [tab, setTab] = useState<Tab>("all");
 
   const { data = [], isLoading, isError, error, refetch } = useQuery({
@@ -58,6 +75,16 @@ function AdminUsers() {
       setStatus({ data: vars }),
     onSuccess: () => {
       toast.success("User updated");
+      invalidate();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const blockMutation = useMutation({
+    mutationFn: (vars: { userId: string; is_active: boolean }) =>
+      manageUser({ data: { id: vars.userId, is_active: vars.is_active } }),
+    onSuccess: (_, vars) => {
+      toast.success(vars.is_active ? "User unblocked" : "User blocked");
       invalidate();
     },
     onError: (e: Error) => toast.error(e.message),
@@ -134,6 +161,7 @@ function AdminUsers() {
       <div className="space-y-3">
         {rows.map((u) => {
           const status = u.verification_status ?? "pending";
+          const blocked = u.is_active === false;
           return (
             <div key={u.id} className="rounded-2xl border border-border bg-card p-4">
               <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
@@ -168,14 +196,21 @@ function AdminUsers() {
                     <p className="mt-1 text-xs text-destructive">Rejected: {u.rejection_reason}</p>
                   )}
                 </div>
-                <span
-                  className={cn(
-                    "shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold capitalize",
-                    BADGES[status] ?? BADGES.pending,
+                <div className="flex shrink-0 flex-col items-end gap-1">
+                  <span
+                    className={cn(
+                      "rounded-full px-2.5 py-1 text-[11px] font-semibold capitalize",
+                      BADGES[status] ?? BADGES.pending,
+                    )}
+                  >
+                    {STATUS_LABEL[status] ?? status}
+                  </span>
+                  {blocked && (
+                    <span className="rounded-full bg-destructive/10 px-2 py-0.5 text-[10px] font-semibold text-destructive">
+                      Blocked
+                    </span>
                   )}
-                >
-                  {status}
-                </span>
+                </div>
               </div>
 
               <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-border pt-3">
@@ -211,6 +246,51 @@ function AdminUsers() {
                     <X className="h-3.5 w-3.5" /> Reject
                   </Button>
                 )}
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-9 gap-1.5 text-xs"
+                  disabled={blockMutation.isPending}
+                  onClick={() => blockMutation.mutate({ userId: u.id, is_active: blocked })}
+                >
+                  {blocked ? <Unlock className="h-3.5 w-3.5" /> : <Ban className="h-3.5 w-3.5" />}
+                  {blocked ? "Unblock" : "Block"}
+                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button size="sm" variant="secondary" className="h-9 gap-1.5 text-xs">
+                      <MoreHorizontal className="h-3.5 w-3.5" /> More
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem asChild>
+                      <Link to="/admin/customer/$id" params={{ id: u.id }}>
+                        Customer profile
+                      </Link>
+                    </DropdownMenuItem>
+                    {u.latitude != null && u.longitude != null && (
+                      <DropdownMenuItem asChild>
+                        <a
+                          href={`https://www.google.com/maps?q=${u.latitude},${u.longitude}`}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          Open Maps
+                        </a>
+                      </DropdownMenuItem>
+                    )}
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      className="text-destructive"
+                      disabled={deleteMutation.isPending}
+                      onClick={() => {
+                        if (confirm("Remove this user permanently?")) deleteMutation.mutate(u.id);
+                      }}
+                    >
+                      Remove user
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
                 <Button
                   size="sm"
                   variant="ghost"

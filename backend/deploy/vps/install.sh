@@ -15,7 +15,7 @@ ENV_FILE="${APP_DIR}/.env"
 DEPLOY_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Override before running if needed:
-GIT_REPO="${GIT_REPO:-https://github.com/Bhargava1111/pulagantigowthami143.git}"
+GIT_REPO="${GIT_REPO:-https://github.com/Bhargava1111/front-end-friend-tool.git}"
 GIT_BRANCH="${GIT_BRANCH:-main}"
 VPS_IP="${VPS_IP:-200.234.39.88}"
 DOMAIN="${DOMAIN:-}"
@@ -57,6 +57,7 @@ chown "${APP_USER}:${APP_USER}" "${APP_DIR}"
 echo "[3/14] Fetching application code..."
 if [[ -d "${APP_DIR}/.git" ]]; then
   echo "  Repo exists — pulling latest..."
+  git config --global --add safe.directory "${APP_DIR}" 2>/dev/null || true
   sudo -u "${APP_USER}" git -C "${APP_DIR}" fetch origin
   sudo -u "${APP_USER}" git -C "${APP_DIR}" checkout "${GIT_BRANCH}"
   sudo -u "${APP_USER}" git -C "${APP_DIR}" pull origin "${GIT_BRANCH}"
@@ -196,8 +197,44 @@ systemctl restart mnxstore-api.socket
 systemctl restart mnxstore-api.service
 systemctl restart mnxstore-celery.service
 
-# ── 13. Nginx ────────────────────────────────────────────────────────
-echo "[13/14] Nginx..."
+# ── 13. Web frontend (Node/Nitro) ────────────────────────────────────
+echo "[13/16] Web frontend..."
+if ! command -v node &>/dev/null || [[ "$(node -v | cut -d. -f1 | tr -d v)" -lt 20 ]]; then
+  curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+  apt-get install -y -qq nodejs
+fi
+
+WEB_OUT="${APP_DIR}/web-output"
+if [[ -f "${APP_DIR}/package.json" ]]; then
+  echo "  Building web app (this may take a few minutes)..."
+  cp "${DEPLOY_DIR}/systemd/mnxstore-web.service" /etc/systemd/system/
+  systemctl daemon-reload
+  systemctl enable mnxstore-web.service
+  if ! sudo -u "${APP_USER}" bash -c "
+    set -a
+    source ${ENV_FILE}
+    set +a
+    cd ${APP_DIR}
+    npm ci
+    NITRO_PRESET=node-server \
+      VITE_API_URL=http://127.0.0.1/api/v1 \
+      API_URL=http://127.0.0.1/api/v1 \
+      VITE_PUBLIC_WEB_URL=http://${VPS_IP} \
+      VITE_APP_URL=http://${VPS_IP} \
+      npm run build
+    rm -rf ${WEB_OUT}
+    cp -a .output ${WEB_OUT}
+  "; then
+    echo "  WARN: web frontend build failed — API will still work for the mobile app."
+  else
+    systemctl restart mnxstore-web.service
+  fi
+else
+  echo "  WARN: ${APP_DIR}/package.json not found — skip web frontend (API only)."
+fi
+
+# ── 14. Nginx ────────────────────────────────────────────────────────
+echo "[14/16] Nginx..."
 SERVER_NAMES="${VPS_IP}"
 if [[ -n "${DOMAIN}" ]]; then
   SERVER_NAMES="${DOMAIN} ${VPS_IP}"
@@ -211,8 +248,8 @@ nginx -t
 systemctl enable nginx
 systemctl reload nginx
 
-# ── 14. Firewall ─────────────────────────────────────────────────────
-echo "[14/14] UFW firewall..."
+# ── 15. Firewall ─────────────────────────────────────────────────────
+echo "[15/16] UFW firewall..."
 ufw allow OpenSSH
 ufw allow 'Nginx Full'
 ufw --force enable
@@ -250,6 +287,7 @@ echo " INSTALL COMPLETE"
 echo "=============================================="
 echo ""
 echo "Health:  http://${VPS_IP}/api/v1/health/"
+echo "Web app: http://${VPS_IP}/"
 echo "API:     http://${VPS_IP}/api/v1/"
 if [[ -n "${DOMAIN}" ]]; then
   echo "Domain:  https://${DOMAIN}/api/v1/"
@@ -259,7 +297,7 @@ echo "Demo login: admin@mnxstore.in / Demo@12345"
 echo ""
 echo "Useful commands:"
 echo "  bash ${APP_DIR}/status.sh"
-echo "  systemctl status mnxstore-api mnxstore-celery nginx postgresql redis-server"
+echo "  systemctl status mnxstore-web mnxstore-api mnxstore-celery nginx postgresql redis-server"
 echo "  journalctl -u mnxstore-api -f"
 echo "  journalctl -u mnxstore-celery -f"
 echo "  bash ${APP_DIR}/deploy.sh"

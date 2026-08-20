@@ -65,7 +65,7 @@ class AdminPanelOtpRequestView(AdminPanelAccessMixin, APIView):
             "expires_in": settings.OTP_TTL_SECONDS,
             "idle_timeout_seconds": settings.ADMIN_PANEL_IDLE_SECONDS,
         }
-        if is_preview_host(request) or settings.DEBUG:
+        if is_preview_host(request) or settings.DEBUG or settings.ENABLE_DEMO_OTP:
             payload["preview_code"] = code
         return Response(payload)
 

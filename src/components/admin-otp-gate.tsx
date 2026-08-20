@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { useServerFn } from "@tanstack/react-start";
 import { ArrowLeft, Loader2, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import { requestAdminPanelOtp, verifyAdminPanelOtp } from "@/lib/admin.functions";
+import { useAdminFn } from "@/hooks/use-admin-fn";
+import { requestAdminPanelOtpClient, verifyAdminPanelOtpClient } from "@/lib/admin-client.functions";
 import { saveAdminPanelToken } from "@/lib/admin-session";
 import { OtpInput } from "@/components/otp-input";
 import { Button } from "@/components/ui/button";
@@ -21,8 +22,8 @@ function useCooldown() {
 }
 
 export function AdminOtpGate({ onVerified }: { onVerified: () => void }) {
-  const askOtp = useServerFn(requestAdminPanelOtp);
-  const confirmOtp = useServerFn(verifyAdminPanelOtp);
+  const askOtp = useAdminFn(requestAdminPanelOtp, requestAdminPanelOtpClient);
+  const confirmOtp = useAdminFn(verifyAdminPanelOtp, verifyAdminPanelOtpClient);
   const cooldown = useCooldown();
 
   const [loading, setLoading] = useState(true);
@@ -46,9 +47,9 @@ export function AdminOtpGate({ onVerified }: { onVerified: () => void }) {
       setChannel((res.channel as "email" | "phone") ?? "email");
       if (res.idle_timeout_seconds) setIdleMinutes(Math.round(res.idle_timeout_seconds / 60));
       if (res.preview_code) {
-        toast.message(`Test mode: admin OTP is ${res.preview_code}`);
+        toast.message(`Demo OTP: ${res.preview_code}`);
       } else {
-        toast.success("Verification code sent.");
+        toast.success("Verification code sent to your admin email.");
       }
       if (res.cooldown_seconds) cooldown.start(res.cooldown_seconds);
     } catch (e) {
@@ -98,7 +99,8 @@ export function AdminOtpGate({ onVerified }: { onVerified: () => void }) {
           {maskedTarget ? ` (${maskedTarget})` : ""}.
         </p>
         <p className="mt-2 text-center text-xs text-muted-foreground">
-          The panel locks after {idleMinutes} minutes of inactivity. You will need a new code to re-enter.
+          The panel locks after {idleMinutes} minutes of inactivity. Demo servers accept{" "}
+          <span className="font-medium">123456</span> when <span className="font-medium">ENABLE_DEMO_OTP</span> is on.
         </p>
 
         <div className="mt-6">

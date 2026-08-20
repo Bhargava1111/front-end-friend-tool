@@ -1,6 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import { getCart, getWishlist } from "@/lib/shop.functions";
 import type { CartLine, Product } from "@/lib/types";
 import { ensureValidAccessToken, isAuthError } from "@/lib/auth-session";
@@ -68,10 +67,9 @@ export function useSession() {
 }
 
 export function useCart() {
-  const fetchCart = useServerFn(getCart);
   return useQuery({
     queryKey: ["cart"],
-    queryFn: () => fetchCart() as Promise<CartLine[]>,
+    queryFn: () => getCart() as Promise<CartLine[]>,
     enabled: hasValidSession(),
     retry: (count, error) =>
       !(error instanceof Error && isAuthError(error.message)) && count < 1,
@@ -84,10 +82,9 @@ export function useCartCount() {
 }
 
 export function useWishlist() {
-  const fetchWishlist = useServerFn(getWishlist);
   return useQuery({
     queryKey: ["wishlist"],
-    queryFn: () => fetchWishlist() as Promise<{ id: string; product: Product }[]>,
+    queryFn: () => getWishlist() as Promise<{ id: string; product: Product }[]>,
     enabled: hasValidSession(),
     retry: (count, error) =>
       !(error instanceof Error && isAuthError(error.message)) && count < 1,

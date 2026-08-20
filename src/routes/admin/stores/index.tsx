@@ -1,6 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
+import { useAdminFn } from "@/hooks/use-admin-fn";
+import { getAdminStoresClient, deleteAdminStoreClient } from "@/lib/admin-client.functions";
+
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { getAdminStores, deleteAdminStore } from "@/lib/admin.functions";
@@ -27,8 +29,8 @@ export const Route = createFileRoute("/admin/stores/")({
 
 function AdminStores() {
   const qc = useQueryClient();
-  const fetchStores = useServerFn(getAdminStores);
-  const remove = useServerFn(deleteAdminStore);
+  const fetchStores = useAdminFn(getAdminStores, getAdminStoresClient);
+  const remove = useAdminFn(deleteAdminStore, deleteAdminStoreClient);
 
   const { data = [], isLoading } = useQuery({
     queryKey: ["admin-stores"],

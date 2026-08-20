@@ -1,7 +1,8 @@
 import { useMemo, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
+import { useAdminFn } from "@/hooks/use-admin-fn";
+import { getAdminProductsClient, getAdminCustomersClient, createAdminOrderClient } from "@/lib/admin-client.functions";
 import { Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { createAdminOrder, getAdminProducts, getAdminCustomers } from "@/lib/admin.functions";
@@ -28,9 +29,9 @@ type Line = { product_id: string; quantity: number };
 function NewOrder() {
   const navigate = useNavigate();
   const qc = useQueryClient();
-  const fetchProducts = useServerFn(getAdminProducts);
-  const fetchCustomers = useServerFn(getAdminCustomers);
-  const create = useServerFn(createAdminOrder);
+  const fetchProducts = useAdminFn(getAdminProducts, getAdminProductsClient);
+  const fetchCustomers = useAdminFn(getAdminCustomers, getAdminCustomersClient);
+  const create = useAdminFn(createAdminOrder, createAdminOrderClient);
 
   const [userId, setUserId] = useState("");
   const [name, setName] = useState("");

@@ -1,9 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import { Trophy } from "lucide-react";
 import { PageShell, TopBar } from "@/components/page-shell";
-import { getLoyalty } from "@/lib/platform.functions";
+import { getLoyaltyClient } from "@/lib/platform.functions";
 
 export const Route = createFileRoute("/_authenticated/rewards")({
   head: () => ({
@@ -20,10 +19,9 @@ export const Route = createFileRoute("/_authenticated/rewards")({
 });
 
 function RewardsPage() {
-  const fetch = useServerFn(getLoyalty);
   const { data } = useQuery({
     queryKey: ["loyalty"],
-    queryFn: () => fetch() as Promise<{ points: number; lifetime_points: number; tier: string }>,
+    queryFn: () => getLoyaltyClient() as Promise<{ points: number; lifetime_points: number; tier: string }>,
   });
   const points = data?.points ?? 0;
   const tier = data?.tier ?? "Bronze";

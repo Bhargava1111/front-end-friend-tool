@@ -1,6 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
+import { useAdminFn } from "@/hooks/use-admin-fn";
+import { adminListCouponsClient, adminDeleteCouponClient } from "@/lib/admin-client.functions";
+
 import { Pencil, Plus, Trash2, TicketPercent } from "lucide-react";
 import { toast } from "sonner";
 import { adminListCoupons, adminDeleteCoupon } from "@/lib/admin-extra.functions";
@@ -36,8 +38,8 @@ function describe(c: CouponRow) {
 }
 
 function AdminCouponsPage() {
-  const list = useServerFn(adminListCoupons);
-  const remove = useServerFn(adminDeleteCoupon);
+  const list = useAdminFn(adminListCoupons, adminListCouponsClient);
+  const remove = useAdminFn(adminDeleteCoupon, adminDeleteCouponClient);
   const queryClient = useQueryClient();
 
   const { data, isLoading, isError, refetch } = useQuery({

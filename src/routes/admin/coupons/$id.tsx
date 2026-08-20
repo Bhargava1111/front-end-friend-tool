@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { createFileRoute, useNavigate, useParams } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
+import { useAdminFn } from "@/hooks/use-admin-fn";
+import { adminListCouponsClient, adminSaveCouponClient } from "@/lib/admin-client.functions";
 import { toast } from "sonner";
 import { adminListCoupons, adminSaveCoupon } from "@/lib/admin-extra.functions";
 import { AdminFormShell } from "@/components/admin-form-shell";
@@ -40,8 +41,8 @@ function EditCoupon() {
   const { id } = useParams({ from: "/admin/coupons/$id" });
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const list = useServerFn(adminListCoupons);
-  const save = useServerFn(adminSaveCoupon);
+  const list = useAdminFn(adminListCoupons, adminListCouponsClient);
+  const save = useAdminFn(adminSaveCoupon, adminSaveCouponClient);
   const [form, setForm] = useState<{
     code: string;
     title: string;

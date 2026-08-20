@@ -42,7 +42,9 @@ export function AdminNotificationAlerts() {
     if (!isAdmin) return;
 
     const adminAlerts = notifications.filter(
-      (n) => n.type === "admin_order" || n.title.toLowerCase().includes("new order"),
+      (n) =>
+        n.type === "admin_order" ||
+        (typeof n.title === "string" && n.title.toLowerCase().includes("new order")),
     );
 
     if (!bootstrappedRef.current) {

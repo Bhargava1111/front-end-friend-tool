@@ -97,6 +97,7 @@ export type ParsedAddress = {
   landmark?: string;
   latitude: number;
   longitude: number;
+  fullAddress?: string;
 };
 
 async function reverseGeocodeBigDataCloud(lat: number, lng: number): Promise<ReverseGeocodeResponse> {
@@ -124,6 +125,26 @@ async function reverseGeocodeBigDataCloud(lat: number, lng: number): Promise<Rev
   };
 }
 
+function formatFullAddress(place: ReverseGeocodeResponse, lat: number, lng: number) {
+  const parts = [
+    place.line1,
+    place.street && place.street !== place.line1 ? place.street : "",
+    place.line2,
+    place.suburb,
+    place.city,
+    place.state,
+    place.pincode,
+  ].filter((part, index, arr) => {
+    const value = (part || "").trim();
+    if (!value) return false;
+    return arr.findIndex((other) => (other || "").trim().toLowerCase() === value.toLowerCase()) === index;
+  });
+  if (place.label && place.label.split(",").length >= 3) {
+    return place.label;
+  }
+  return parts.join(", ") || place.label || `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+}
+
 /** Resolve GPS coordinates to saved-address form fields. */
 export async function addressFromCoords(lat: number, lng: number): Promise<ParsedAddress> {
   try {
@@ -141,6 +162,7 @@ export async function addressFromCoords(lat: number, lng: number): Promise<Parse
         landmark: data.landmark || undefined,
         latitude: data.latitude ?? lat,
         longitude: data.longitude ?? lng,
+        fullAddress: formatFullAddress(data, lat, lng),
       };
     }
   } catch {
@@ -156,6 +178,7 @@ export async function addressFromCoords(lat: number, lng: number): Promise<Parse
     pincode: place.pincode || "",
     latitude: lat,
     longitude: lng,
+    fullAddress: [place.street, place.label, place.detail].filter(Boolean).join(", "),
   };
 }
 

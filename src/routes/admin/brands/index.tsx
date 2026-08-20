@@ -1,6 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
+import { useAdminFn } from "@/hooks/use-admin-fn";
+import { adminListBrandsClient, adminDeleteBrandClient } from "@/lib/admin-client.functions";
+
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { adminListBrands, adminDeleteBrand } from "@/lib/admin-extra.functions";
@@ -24,8 +26,8 @@ type BrandRow = {
 };
 
 function AdminBrandsPage() {
-  const list = useServerFn(adminListBrands);
-  const remove = useServerFn(adminDeleteBrand);
+  const list = useAdminFn(adminListBrands, adminListBrandsClient);
+  const remove = useAdminFn(adminDeleteBrand, adminDeleteBrandClient);
   const queryClient = useQueryClient();
 
   const { data, isLoading, isError, refetch } = useQuery({

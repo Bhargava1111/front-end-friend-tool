@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
+import { useAdminFn } from "@/hooks/use-admin-fn";
+import { getAdminTicketsClient, updateAdminTicketClient } from "@/lib/admin-client.functions";
+
 import { Mail, Send } from "lucide-react";
 import { toast } from "sonner";
 import { getAdminTickets, updateAdminTicket } from "@/lib/admin-platform.functions";
@@ -41,8 +43,8 @@ function statusLabel(status: string) {
 
 function AdminTickets() {
   const qc = useQueryClient();
-  const fetch = useServerFn(getAdminTickets);
-  const update = useServerFn(updateAdminTicket);
+  const fetch = useAdminFn(getAdminTickets, getAdminTicketsClient);
+  const update = useAdminFn(updateAdminTicket, updateAdminTicketClient);
   const [replies, setReplies] = useState<Record<string, string>>({});
 
   const { data = [], isLoading, isError } = useQuery({

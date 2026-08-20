@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
+import { useAdminFn } from "@/hooks/use-admin-fn";
+import { setOrderDeliveryClient, getAdminOrdersClient, setOrderStatusClient } from "@/lib/admin-client.functions";
+
 import { toast } from "sonner";
 import { CalendarClock, Check, Eye, Plus, X } from "lucide-react";
 import { setOrderDelivery } from "@/lib/admin-ops.functions";
@@ -38,11 +40,11 @@ const STATUSES: OrderStatus[] = ["pending", "confirmed", "packed", "delivered", 
 
 function AdminOrders() {
   const qc = useQueryClient();
-  const fetchOrders = useServerFn(getAdminOrders);
-  const updateStatus = useServerFn(setOrderStatus);
+  const fetchOrders = useAdminFn(getAdminOrders, getAdminOrdersClient);
+  const updateStatus = useAdminFn(setOrderStatus, setOrderStatusClient);
   const [filter, setFilter] = useState<"all" | OrderStatus>("all");
   const [dates, setDates] = useState<Record<string, string>>({});
-  const scheduleFn = useServerFn(setOrderDelivery);
+  const scheduleFn = useAdminFn(setOrderDelivery, setOrderDeliveryClient);
 
   const { data = [], isLoading, isError, error, refetch } = useQuery({
     queryKey: ["admin-orders"],

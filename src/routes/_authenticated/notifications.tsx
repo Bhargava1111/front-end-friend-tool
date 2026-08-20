@@ -1,13 +1,15 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import { BellRing, CheckCheck, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { PageShell, TopBar, EmptyState } from "@/components/page-shell";
 import { useNotifications } from "@/components/notification-bell";
 import { useSession } from "@/hooks/use-shop";
-import { clearNotifications, markNotificationsRead } from "@/lib/notifications.functions";
+import {
+  clearNotificationsClient,
+  markNotificationsReadClient,
+} from "@/lib/notifications.functions";
 import { formatDateTime } from "@/lib/format";
 import { isPushSupported, pushSubscribeErrorMessage, subscribeToPushNotifications } from "@/lib/push-notifications";
 import { useNotificationNavigator } from "@/lib/notification-navigate";
@@ -33,8 +35,6 @@ function NotificationsPage() {
   const { session, user } = useSession();
   const navigateNotification = useNotificationNavigator();
   const { data = [], isLoading, isError, refetch } = useNotifications();
-  const markRead = useServerFn(markNotificationsRead);
-  const clearAll = useServerFn(clearNotifications);
   const [pushBusy, setPushBusy] = useState(false);
 
   const invalidate = () => qc.invalidateQueries({ queryKey: ["notifications"] });
@@ -51,13 +51,13 @@ function NotificationsPage() {
   }
 
   const readMutation = useMutation({
-    mutationFn: (id?: string) => markRead({ data: { id } }),
+    mutationFn: (id?: string) => markNotificationsReadClient({ id }),
     onSuccess: invalidate,
     onError: (e: Error) => toast.error(e.message),
   });
 
   const clearMutation = useMutation({
-    mutationFn: () => clearAll(),
+    mutationFn: () => clearNotificationsClient(),
     onSuccess: () => {
       toast.success("Notifications cleared");
       invalidate();

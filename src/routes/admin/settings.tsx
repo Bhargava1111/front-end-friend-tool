@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
+import { useAdminFn } from "@/hooks/use-admin-fn";
+import { adminListSettingsClient, adminSaveSettingsClient } from "@/lib/admin-client.functions";
+
 import { Loader2, Save } from "lucide-react";
 import { toast } from "sonner";
 import { adminListSettings, adminSaveSettings } from "@/lib/admin-extra.functions";
@@ -18,8 +20,8 @@ export const Route = createFileRoute("/admin/settings")({
 });
 
 function AdminSettingsPage() {
-  const list = useServerFn(adminListSettings);
-  const save = useServerFn(adminSaveSettings);
+  const list = useAdminFn(adminListSettings, adminListSettingsClient);
+  const save = useAdminFn(adminSaveSettings, adminSaveSettingsClient);
   const queryClient = useQueryClient();
   const [form, setForm] = useState({ ...DEFAULT_SETTINGS });
 

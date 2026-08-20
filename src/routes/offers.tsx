@@ -1,6 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { queryOptions, useQuery, useSuspenseQuery } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import { Gift, ChevronRight } from "lucide-react";
 import { getHomeData } from "@/lib/catalog.functions";
 import { getPlacementBanners } from "@/lib/storefront.functions";
@@ -52,10 +51,9 @@ export const Route = createFileRoute("/offers")({
 
 function OffersPage() {
   const { data } = useSuspenseQuery(offersQuery);
-  const fetchBanners = useServerFn(getPlacementBanners);
   const { data: offerBanners = [] } = useQuery({
     queryKey: ["placement-banners", "offers"],
-    queryFn: () => fetchBanners({ data: { placement: "offers" as const } }),
+    queryFn: () => getPlacementBanners({ data: { placement: "offers" as const } }),
     staleTime: 5 * 60 * 1000,
   });
   const banners = offerBanners.length ? offerBanners : data.banners;

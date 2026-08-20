@@ -1,4 +1,4 @@
-import { getApiBase } from "@/lib/api";
+import { apiFetch, toJsonBody } from "@/lib/api";
 import {
   clearSession,
   getStoredSession,
@@ -35,29 +35,36 @@ export async function ensureValidAccessToken(): Promise<string | null> {
 }
 
 async function refreshAccessTokenClient(refresh: string): Promise<string | null> {
+  const session = getStoredSession();
   try {
-    const res = await fetch(`${getApiBase()}/auth/refresh/`, {
+    const data = await apiFetch<{ access: string; refresh?: string }>("/auth/refresh/", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ refresh }),
+      body: toJsonBody({ refresh }),
     });
 
-    const data = (await res.json().catch(() => ({}))) as { access?: string; detail?: string };
-
-    if (!res.ok || !data.access) {
+    if (!data.access) {
       reportAuthFailure();
       return null;
     }
 
-    const session = getStoredSession();
-    if (!session) return null;
+    const current = getStoredSession();
+    if (!current) return null;
 
-    const next: AuthSession = { ...session, access: data.access };
+    const next: AuthSession = {
+      ...current,
+      access: data.access,
+      refresh: data.refresh || current.refresh,
+    };
     saveSession(next);
     return data.access;
-  } catch {
-    reportAuthFailure();
-    return null;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "";
+    if (isAuthError(message)) {
+      reportAuthFailure();
+      return null;
+    }
+    // Network / API outage — keep the existing session instead of forcing login.
+    return session?.access ?? null;
   }
 }
 
@@ -73,9 +80,8 @@ export function isAuthError(message: string): boolean {
     m.includes("token is invalid") ||
     m.includes("token has expired") ||
     m.includes("invalid token") ||
-    m.includes("unauthorized") ||
-    m.includes("session expired") ||
-    m.includes("not authenticated")
+    m.includes("invalid refresh") ||
+    m.includes("session expired")
   );
 }
 

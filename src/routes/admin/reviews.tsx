@@ -1,13 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
+import { useAdminFn } from "@/hooks/use-admin-fn";
+import { adminListReviewsClient, adminSetReviewApprovalClient, adminDeleteReviewClient } from "@/lib/admin-client.functions";
+
 import { Eye, EyeOff, Trash2 } from "lucide-react";
 import { toast } from "sonner";
-import {
-  adminListReviews,
-  adminSetReviewApproval,
-  adminDeleteReview,
-} from "@/lib/admin-extra.functions";
+import { adminListReviews, adminSetReviewApproval, adminDeleteReview } from "@/lib/admin-extra.functions";
 import { Button } from "@/components/ui/button";
 import { StarRating } from "@/components/star-rating";
 import { Skeleton } from "@/components/skeletons";
@@ -30,9 +28,9 @@ type ReviewRow = {
 };
 
 function AdminReviewsPage() {
-  const list = useServerFn(adminListReviews);
-  const setApproval = useServerFn(adminSetReviewApproval);
-  const remove = useServerFn(adminDeleteReview);
+  const list = useAdminFn(adminListReviews, adminListReviewsClient);
+  const setApproval = useAdminFn(adminSetReviewApproval, adminSetReviewApprovalClient);
+  const remove = useAdminFn(adminDeleteReview, adminDeleteReviewClient);
   const queryClient = useQueryClient();
 
   const { data, isLoading, isError, refetch } = useQuery({

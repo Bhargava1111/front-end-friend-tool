@@ -1,8 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import { ArrowDownLeft, ArrowUpRight, Wallet } from "lucide-react";
-import { getWallet } from "@/lib/platform.functions";
+import { getWalletClient } from "@/lib/platform.functions";
 import { PageShell, TopBar } from "@/components/page-shell";
 import { formatINR, formatDate } from "@/lib/format";
 
@@ -14,11 +13,10 @@ export const Route = createFileRoute("/_authenticated/wallet")({
 });
 
 function WalletPage() {
-  const fetch = useServerFn(getWallet);
   const { data, isLoading } = useQuery({
     queryKey: ["wallet"],
     queryFn: () =>
-      fetch() as Promise<{
+      getWalletClient() as Promise<{
         balance: number;
         transactions: Array<{ id: string; type: string; amount: number; description: string; created_at: string }>;
       }>,

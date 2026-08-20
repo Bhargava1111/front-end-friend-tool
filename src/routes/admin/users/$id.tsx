@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { createFileRoute, useNavigate, useParams } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
-import { BadgeCheck, MapPin, X } from "lucide-react";
+import { useAdminFn } from "@/hooks/use-admin-fn";
+import { getAdminUsersClient, setUserVerificationClient, manageAdminUserClient } from "@/lib/admin-client.functions";
+import { BadgeCheck, Ban, MapPin, Unlock, X } from "lucide-react";
 import { toast } from "sonner";
 import { getAdminUsers, setUserVerification } from "@/lib/admin-ops.functions";
+import { manageAdminUser } from "@/lib/admin-platform.functions";
 import { formatDate } from "@/lib/format";
 import { AdminFormShell } from "@/components/admin-form-shell";
 import { StoreMap } from "@/components/store-map";
@@ -19,6 +21,13 @@ export const Route = createFileRoute("/admin/users/$id")({
   component: UserDetail,
 });
 
+const STATUS_LABEL: Record<string, string> = {
+  pending: "Not submitted",
+  submitted: "Pending review",
+  verified: "Verified",
+  rejected: "Rejected",
+};
+
 const BADGES: Record<string, string> = {
   pending: "bg-secondary text-muted-foreground",
   submitted: "bg-accent/20 text-accent-foreground",
@@ -30,8 +39,9 @@ function UserDetail() {
   const { id } = useParams({ from: "/admin/users/$id" });
   const navigate = useNavigate();
   const qc = useQueryClient();
-  const fetchUsers = useServerFn(getAdminUsers);
-  const setStatus = useServerFn(setUserVerification);
+  const fetchUsers = useAdminFn(getAdminUsers, getAdminUsersClient);
+  const setStatus = useAdminFn(setUserVerification, setUserVerificationClient);
+  const manageUser = useAdminFn(manageAdminUser, manageAdminUserClient);
   const [rejectReason, setRejectReason] = useState("");
 
   const { data = [], isLoading } = useQuery({
@@ -56,6 +66,15 @@ function UserDetail() {
       toast.success("User updated");
       invalidate();
       navigate({ to: "/admin/users" });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const blockMutation = useMutation({
+    mutationFn: (is_active: boolean) => manageUser({ data: { id, is_active } }),
+    onSuccess: (_, is_active) => {
+      toast.success(is_active ? "User unblocked" : "User blocked");
+      invalidate();
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -85,7 +104,7 @@ function UserDetail() {
             BADGES[status] ?? BADGES.pending,
           )}
         >
-          {status}
+          {STATUS_LABEL[status] ?? status}
         </span>
 
         <dl className="space-y-3 text-sm">
@@ -106,7 +125,7 @@ function UserDetail() {
           <div className="grid grid-cols-[100px_1fr] gap-2">
             <dt className="text-muted-foreground">Address</dt>
             <dd className="text-foreground">
-              {user.address_text || "—"}
+              {user.address_text || resolvedPlace?.label || "—"}
               {user.pincode ? ` — ${user.pincode}` : ""}
             </dd>
           </div>
@@ -187,6 +206,22 @@ function UserDetail() {
               <X className="h-4 w-4" /> Reject
             </Button>
           )}
+          <Button
+            variant={user.is_active === false ? "secondary" : "outline"}
+            className={cn("gap-1.5", user.is_active !== false && "border-destructive/40 text-destructive")}
+            disabled={blockMutation.isPending}
+            onClick={() => blockMutation.mutate(user.is_active === false)}
+          >
+            {user.is_active === false ? (
+              <>
+                <Unlock className="h-4 w-4" /> Unblock
+              </>
+            ) : (
+              <>
+                <Ban className="h-4 w-4" /> Block
+              </>
+            )}
+          </Button>
         </div>
       </div>
     </AdminFormShell>

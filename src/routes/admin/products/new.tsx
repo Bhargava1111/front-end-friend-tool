@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
+import { useAdminFn } from "@/hooks/use-admin-fn";
+import { getAdminProductsClient, saveAdminProductClient } from "@/lib/admin-client.functions";
 import { toast } from "sonner";
 import { getAdminProducts, saveAdminProduct } from "@/lib/admin.functions";
 import { emptyProductForm, productFormToPayload } from "@/lib/admin-product-form";
@@ -15,8 +16,8 @@ export const Route = createFileRoute("/admin/products/new")({
 function NewProduct() {
   const navigate = useNavigate();
   const qc = useQueryClient();
-  const fetchProducts = useServerFn(getAdminProducts);
-  const save = useServerFn(saveAdminProduct);
+  const fetchProducts = useAdminFn(getAdminProducts, getAdminProductsClient);
+  const save = useAdminFn(saveAdminProduct, saveAdminProductClient);
   const [form, setForm] = useState(emptyProductForm);
 
   const { data } = useQuery({

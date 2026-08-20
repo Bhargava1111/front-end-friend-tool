@@ -1,12 +1,25 @@
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
-import { ArrowLeft, Phone, Calendar, ShoppingBag, IndianRupee, Star, Mail, MapPin } from "lucide-react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useAdminFn } from "@/hooks/use-admin-fn";
+import { getAdminCustomerDetailClient, manageAdminUserClient, setUserVerificationClient } from "@/lib/admin-client.functions";
+
+import { ArrowLeft, Ban, MoreHorizontal, Phone, Calendar, ShoppingBag, IndianRupee, Star, Mail, MapPin, BadgeCheck, X, Unlock } from "lucide-react";
+import { toast } from "sonner";
 import { getAdminCustomerDetail } from "@/lib/admin.functions";
+import { manageAdminUser } from "@/lib/admin-platform.functions";
+import { setUserVerification } from "@/lib/admin-ops.functions";
 import { formatINR, formatDate } from "@/lib/format";
 import { STATUS_STYLES } from "@/lib/order-status";
 import type { OrderStatus } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export const Route = createFileRoute("/admin/customer/$id")({
   head: () => ({
@@ -24,7 +37,10 @@ export const Route = createFileRoute("/admin/customer/$id")({
 
 function CustomerDetail() {
   const { id } = useParams({ from: "/admin/customer/$id" });
-  const fetchDetail = useServerFn(getAdminCustomerDetail);
+  const fetchDetail = useAdminFn(getAdminCustomerDetail, getAdminCustomerDetailClient);
+  const manageUser = useAdminFn(manageAdminUser, manageAdminUserClient);
+  const setStatus = useAdminFn(setUserVerification, setUserVerificationClient);
+  const qc = useQueryClient();
   const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["admin-customer", id],
     queryFn: () => fetchDetail({ data: { id } }),
@@ -63,7 +79,40 @@ function CustomerDetail() {
   }
 
   const { profile, orders = [], items = [], reviews = [], stats, addresses = [], returns = [], email, lastSignInAt } = data;
-  const lastAddress = orders[0]?.address_text;
+  const lastAddress = profile.address_text || orders[0]?.address_text;
+  const blocked = profile.is_active === false;
+  const verifyStatus = profile.verification_status ?? "pending";
+  const statusLabel =
+    verifyStatus === "submitted"
+      ? "Pending review"
+      : verifyStatus === "pending"
+        ? "Not submitted"
+        : verifyStatus;
+
+  const invalidate = () => {
+    qc.invalidateQueries({ queryKey: ["admin-customer", id] });
+    qc.invalidateQueries({ queryKey: ["admin-customers"] });
+    qc.invalidateQueries({ queryKey: ["admin-users"] });
+  };
+
+  const blockMutation = useMutation({
+    mutationFn: (is_active: boolean) => manageUser({ data: { id, is_active } }),
+    onSuccess: (_, is_active) => {
+      toast.success(is_active ? "Customer unblocked" : "Customer blocked");
+      invalidate();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const statusMutation = useMutation({
+    mutationFn: (status: "verified" | "rejected" | "pending") =>
+      setStatus({ data: { userId: id, status } }),
+    onSuccess: () => {
+      toast.success("Verification updated");
+      invalidate();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
 
   const cards = [
     { label: "Orders", value: String(stats.orders), icon: ShoppingBag },
@@ -93,6 +142,27 @@ function CustomerDetail() {
         )}
         <div className="min-w-0">
           <h1 className="text-lg font-bold text-foreground">{profile.full_name ?? "Guest customer"}</h1>
+          <div className="mt-1 flex flex-wrap items-center gap-2">
+            <span
+              className={cn(
+                "rounded-full px-2.5 py-0.5 text-[11px] font-semibold capitalize",
+                verifyStatus === "verified"
+                  ? "bg-primary/15 text-primary"
+                  : verifyStatus === "submitted"
+                    ? "bg-accent/20 text-accent-foreground"
+                    : verifyStatus === "rejected"
+                      ? "bg-destructive/10 text-destructive"
+                      : "bg-secondary text-muted-foreground",
+              )}
+            >
+              {statusLabel}
+            </span>
+            {blocked && (
+              <span className="rounded-full bg-destructive/10 px-2.5 py-0.5 text-[11px] font-semibold text-destructive">
+                Blocked
+              </span>
+            )}
+          </div>
           <p className="mt-0.5 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
             <span className="flex items-center gap-1">
               <Phone className="h-3.5 w-3.5" /> {profile.phone ?? "No phone"}
@@ -132,6 +202,78 @@ function CustomerDetail() {
             >
               Open orders
             </Link>
+            <Button
+              size="sm"
+              variant={blocked ? "secondary" : "outline"}
+              className={cn(
+                "h-7 rounded-full px-3 text-[11px]",
+                !blocked && "border-destructive/40 text-destructive",
+              )}
+              disabled={blockMutation.isPending}
+              onClick={() => blockMutation.mutate(blocked)}
+            >
+              {blocked ? (
+                <>
+                  <Unlock className="mr-1 h-3 w-3" /> Unblock
+                </>
+              ) : (
+                <>
+                  <Ban className="mr-1 h-3 w-3" /> Block
+                </>
+              )}
+            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button size="sm" variant="secondary" className="h-7 rounded-full px-3 text-[11px]">
+                  <MoreHorizontal className="mr-1 h-3.5 w-3.5" /> More options
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-52">
+                <DropdownMenuItem asChild>
+                  <Link to="/admin/users/$id" params={{ id }}>
+                    Open verification
+                  </Link>
+                </DropdownMenuItem>
+                {verifyStatus !== "verified" && (
+                  <DropdownMenuItem
+                    disabled={statusMutation.isPending}
+                    onClick={() => statusMutation.mutate("verified")}
+                  >
+                    <BadgeCheck className="h-4 w-4" /> Verify account
+                  </DropdownMenuItem>
+                )}
+                {verifyStatus !== "rejected" && (
+                  <DropdownMenuItem
+                    disabled={statusMutation.isPending}
+                    onClick={() => statusMutation.mutate("rejected")}
+                  >
+                    <X className="h-4 w-4" /> Reject verification
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuSeparator />
+                {profile.phone && (
+                  <DropdownMenuItem asChild>
+                    <a href={`tel:${profile.phone}`}>Call</a>
+                  </DropdownMenuItem>
+                )}
+                {email && (
+                  <DropdownMenuItem asChild>
+                    <a href={`mailto:${email}`}>Email</a>
+                  </DropdownMenuItem>
+                )}
+                {profile.latitude != null && profile.longitude != null && (
+                  <DropdownMenuItem asChild>
+                    <a
+                      href={`https://www.google.com/maps?q=${profile.latitude},${profile.longitude}`}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      Open pin on Maps
+                    </a>
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </div>
@@ -165,6 +307,16 @@ function CustomerDetail() {
                       .filter(Boolean)
                       .join(", ")}
                   </p>
+                  {a.latitude != null && a.longitude != null && (
+                    <a
+                      href={`https://www.google.com/maps?q=${a.latitude},${a.longitude}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="mt-1 inline-flex items-center gap-1 text-[11px] font-semibold text-primary"
+                    >
+                      Pin {Number(a.latitude).toFixed(5)}, {Number(a.longitude).toFixed(5)}
+                    </a>
+                  )}
                 </li>
               ))}
             </ul>

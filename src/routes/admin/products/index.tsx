@@ -1,14 +1,12 @@
 import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
+import { useAdminFn } from "@/hooks/use-admin-fn";
+import { getAdminProductsClient, deleteAdminProductClient, setProductPlacementsClient } from "@/lib/admin-client.functions";
+
 import { Plus, Pencil, Trash2, Tag } from "lucide-react";
 import { toast } from "sonner";
-import {
-  getAdminProducts,
-  deleteAdminProduct,
-  setProductPlacements,
-} from "@/lib/admin.functions";
+import { getAdminProducts, deleteAdminProduct, setProductPlacements } from "@/lib/admin.functions";
 import { OFFER_SECTIONS, offerSectionLabel } from "@/lib/offer-sections";
 import { formatINR } from "@/lib/format";
 import { Button } from "@/components/ui/button";
@@ -37,9 +35,9 @@ export const Route = createFileRoute("/admin/products/")({
 
 function AdminProducts() {
   const qc = useQueryClient();
-  const fetchProducts = useServerFn(getAdminProducts);
-  const remove = useServerFn(deleteAdminProduct);
-  const setPlacements = useServerFn(setProductPlacements);
+  const fetchProducts = useAdminFn(getAdminProducts, getAdminProductsClient);
+  const remove = useAdminFn(deleteAdminProduct, deleteAdminProductClient);
+  const setPlacements = useAdminFn(setProductPlacements, setProductPlacementsClient);
 
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<Set<string>>(new Set());

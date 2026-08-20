@@ -1,5 +1,6 @@
 import { ensureValidAccessToken } from "@/lib/auth-session";
 import { getApiBase } from "@/lib/api";
+import { getAdminPanelToken } from "@/lib/admin-session";
 
 export type MediaFolder =
   | "banners"
@@ -36,9 +37,13 @@ export async function uploadMedia(file: File, folder: MediaFolder = "misc") {
   form.append("file", file);
   form.append("folder", folder);
 
+  const headers: Record<string, string> = { Authorization: `Bearer ${token}` };
+  const adminSession = getAdminPanelToken();
+  if (adminSession) headers["X-Admin-Session"] = adminSession;
+
   const res = await fetch(`${getApiBase()}/media/`, {
     method: "POST",
-    headers: { Authorization: `Bearer ${token}` },
+    headers,
     body: form,
   });
 

@@ -1,6 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
+import { useAdminFn } from "@/hooks/use-admin-fn";
+import { adminListReturnsClient, adminSetReturnStatusClient, processAdminRefundClient } from "@/lib/admin-client.functions";
+
 import { PackageX } from "lucide-react";
 import { toast } from "sonner";
 import { adminListReturns, adminSetReturnStatus } from "@/lib/admin-extra.functions";
@@ -34,9 +36,9 @@ const STATUS_TONE: Record<string, string> = {
 };
 
 function AdminReturnsPage() {
-  const list = useServerFn(adminListReturns);
-  const setStatus = useServerFn(adminSetReturnStatus);
-  const refund = useServerFn(processAdminRefund);
+  const list = useAdminFn(adminListReturns, adminListReturnsClient);
+  const setStatus = useAdminFn(adminSetReturnStatus, adminSetReturnStatusClient);
+  const refund = useAdminFn(processAdminRefund, processAdminRefundClient);
   const queryClient = useQueryClient();
 
   const { data, isLoading, isError, refetch } = useQuery({

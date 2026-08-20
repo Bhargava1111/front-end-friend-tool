@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireAuth } from "@/integrations/django/auth-middleware";
 import { toJsonBody } from "@/lib/api";
-import { adminFetch } from "@/lib/admin-api";
+import { adminFetchServer as adminFetch } from "@/lib/admin-api.server";
 
 function admin(token: string, path: string, init?: RequestInit) {
   return adminFetch(token, path, init);

@@ -22,6 +22,7 @@ print_svc() {
 echo "Sri Mahalakshmi Stores — service status"
 echo "Time: $(date -Is)"
 
+print_svc "mnxstore-web"
 print_svc "mnxstore-api"
 print_svc "mnxstore-celery"
 print_svc "nginx"
@@ -42,7 +43,7 @@ echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "  Quick summary"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-for svc in mnxstore-api mnxstore-celery nginx postgresql redis-server; do
+for svc in mnxstore-web mnxstore-api mnxstore-celery nginx postgresql redis-server; do
   state=$(systemctl is-active "${svc}" 2>/dev/null || echo "missing")
   printf "  %-18s %s\n" "${svc}:" "${state}"
 done

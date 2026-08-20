@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
+import { useAdminFn } from "@/hooks/use-admin-fn";
+import { adminSaveCouponClient } from "@/lib/admin-client.functions";
 import { toast } from "sonner";
 import { adminSaveCoupon } from "@/lib/admin-extra.functions";
 import { AdminFormShell } from "@/components/admin-form-shell";
@@ -38,7 +39,7 @@ const blank = {
 function NewCoupon() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const save = useServerFn(adminSaveCoupon);
+  const save = useAdminFn(adminSaveCoupon, adminSaveCouponClient);
   const [form, setForm] = useState({ ...blank });
 
   const saveMutation = useMutation({

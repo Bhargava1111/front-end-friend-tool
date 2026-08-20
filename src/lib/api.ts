@@ -1,3 +1,4 @@
+import { Capacitor, CapacitorHttp } from "@capacitor/core";
 import { env } from "@/lib/env";
 
 function isPrivateLanHost(host: string) {
@@ -43,15 +44,54 @@ function resolveServerApiBase(): string {
   return `${origin}${apiPath.startsWith("/") ? apiPath : `/${apiPath}`}`.replace(/\/$/, "");
 }
 
+const NATIVE_API_STORAGE_KEY = "mnxstore_native_api_url";
+
+function readNativeApiOverride(): string {
+  if (typeof window === "undefined") return "";
+
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const fromQuery = params.get("nativeApi") || params.get("apiBase");
+    if (fromQuery?.startsWith("http")) {
+      localStorage.setItem(NATIVE_API_STORAGE_KEY, fromQuery.replace(/\/$/, ""));
+      return fromQuery.replace(/\/$/, "");
+    }
+  } catch {
+    // ignore
+  }
+
+  try {
+    const stored = localStorage.getItem(NATIVE_API_STORAGE_KEY);
+    if (stored?.startsWith("http")) return stored.replace(/\/$/, "");
+  } catch {
+    // ignore
+  }
+
+  return "";
+}
+
 export function getApiBase() {
   // SSR and TanStack server functions run in Node — fetch() needs an absolute URL.
   if (typeof window === "undefined") {
     return resolveServerApiBase();
   }
 
-  const base = (import.meta.env?.VITE_API_URL || env.apiUrl || "/api/v1").replace(/\/$/, "");
+  const nativeApi = readNativeApiOverride();
+  if (nativeApi) return nativeApi;
 
-  // Same-origin relative path — works in browser and Capacitor WebView (Vite /api/v1 proxy).
+  const base = (import.meta.env?.VITE_API_URL || env.apiUrl || "/api/v1").replace(/\/$/, "");
+  const nativeApp = Capacitor.isNativePlatform();
+
+  // Bundled Capacitor WebView is https://localhost — relative /api/v1 has no backend.
+  if (nativeApp) {
+    if (base.startsWith("http")) return base;
+    const origin = (env.publicWebUrl || env.appUrl || "").replace(/\/$/, "");
+    if (origin.startsWith("http")) {
+      return `${origin}${base.startsWith("/") ? base : `/${base}`}`.replace(/\/$/, "");
+    }
+  }
+
+  // Same-origin relative path — works in browser (Vite /api/v1 proxy).
   if (base.startsWith("/")) return base;
 
   const host = window.location.hostname;
@@ -82,6 +122,68 @@ export function getApiBase() {
   return base;
 }
 
+function headersToRecord(headers: Headers): Record<string, string> {
+  const out: Record<string, string> = {};
+  headers.forEach((value, key) => {
+    out[key] = value;
+  });
+  return out;
+}
+
+async function sendRequest(
+  url: string,
+  method: string,
+  headers: Headers,
+  body?: BodyInit | null,
+): Promise<{ ok: boolean; status: number; text: string; contentType: string }> {
+  const useBrowserFetch =
+    typeof FormData !== "undefined" && body instanceof FormData;
+
+  if (Capacitor.isNativePlatform() && !useBrowserFetch) {
+    let data: unknown;
+    if (typeof body === "string" && body) {
+      try {
+        data = JSON.parse(body);
+      } catch {
+        data = body;
+      }
+    }
+    const response = await CapacitorHttp.request({
+      url,
+      method: method || "GET",
+      headers: headersToRecord(headers),
+      data,
+      connectTimeout: 20000,
+      readTimeout: 20000,
+    });
+    const raw = response.data;
+    const text =
+      raw == null || raw === ""
+        ? ""
+        : typeof raw === "string"
+          ? raw
+          : JSON.stringify(raw);
+    const contentType =
+      response.headers?.["Content-Type"] ||
+      response.headers?.["content-type"] ||
+      (typeof raw === "object" && raw != null ? "application/json" : "text/plain");
+    return {
+      ok: response.status >= 200 && response.status < 300,
+      status: response.status,
+      text,
+      contentType,
+    };
+  }
+
+  const res = await fetch(url, { method, headers, body: body ?? undefined });
+  return {
+    ok: res.ok,
+    status: res.status,
+    text: res.status === 204 ? "" : await res.text(),
+    contentType: res.headers.get("content-type") ?? "",
+  };
+}
+
 export async function apiFetch<T>(
   path: string,
   options: RequestInit & { token?: string | null } = {},
@@ -96,15 +198,25 @@ export async function apiFetch<T>(
   }
 
   const url = path.startsWith("http") ? path : `${getApiBase()}${path.startsWith("/") ? path : `/${path}`}`;
-  const res = await fetch(url, { ...rest, headers });
+  let res: { ok: boolean; status: number; text: string; contentType: string };
+  try {
+    res = await sendRequest(url, rest.method ?? "GET", headers, rest.body);
+  } catch {
+    const offline =
+      typeof navigator !== "undefined" && navigator.onLine === false;
+    throw new Error(
+      offline
+        ? "You're offline. Connect to the internet to load live data."
+        : "Can't reach the store right now. Check your internet connection and try again.",
+    );
+  }
 
   if (res.status === 204) return undefined as T;
 
-  const text = await res.text();
+  const text = res.text;
   let data: unknown = null;
   if (text) {
-    const contentType = res.headers.get("content-type") ?? "";
-    if (contentType.includes("text/html") || text.trimStart().startsWith("<!DOCTYPE")) {
+    if (res.contentType.includes("text/html") || text.trimStart().startsWith("<!DOCTYPE")) {
       throw new Error(
         res.status >= 500
           ? "Server error. Please try again in a moment."

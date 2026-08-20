@@ -2,7 +2,6 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { Heart, Plus, Check, Play, Images } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { addToCart, toggleWishlist } from "@/lib/shop.functions";
 import { formatShopError } from "@/lib/auth-session";
@@ -16,8 +15,8 @@ export function ProductCard({ product, className }: { product: Product; classNam
   const { session } = useSession();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const add = useServerFn(addToCart);
-  const toggle = useServerFn(toggleWishlist);
+  const add = addToCart;
+  const toggle = toggleWishlist;
   const { data: wishlist } = useWishlist();
   const [added, setAdded] = useState(false);
 

@@ -1,6 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import { ArrowLeft, Camera } from "lucide-react";
 import { useSession } from "@/hooks/use-shop";
 import { getProfile } from "@/lib/shop.functions";
@@ -21,7 +20,7 @@ export const Route = createFileRoute("/_authenticated/profile/photo")({
 function ProfilePhotoPage() {
   const queryClient = useQueryClient();
   const { session } = useSession();
-  const fetchProfile = useServerFn(getProfile);
+  const fetchProfile = getProfile;
 
   const { data: profile } = useQuery({
     queryKey: ["profile"],

@@ -1,6 +1,5 @@
 import { createFileRoute, notFound, useNavigate, Link } from "@tanstack/react-router";
 import { queryOptions, useSuspenseQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import {
   Heart,
   Minus,
@@ -124,8 +123,8 @@ function ProductPage() {
   const { session } = useSession();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const add = useServerFn(addToCart);
-  const toggle = useServerFn(toggleWishlist);
+  const add = addToCart;
+  const toggle = toggleWishlist;
   const { data: wishlist } = useWishlist();
   const [qty, setQty] = useState(1);
   const cartCount = useCartCount();

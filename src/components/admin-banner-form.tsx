@@ -1,6 +1,7 @@
 import { Trash2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
+import { useAdminFn } from "@/hooks/use-admin-fn";
+import { getAdminProductsClient, getAdminCategoriesClient, adminListCouponsClient, adminListBrandsClient } from "@/lib/admin-client.functions";
 import { getAdminCategories, getAdminProducts } from "@/lib/admin.functions";
 import { adminListBrands, adminListCoupons } from "@/lib/admin-extra.functions";
 import { Button } from "@/components/ui/button";
@@ -78,10 +79,10 @@ export function AdminBannerForm({
   onSubmit: () => void;
   isPending: boolean;
 }) {
-  const fetchCategories = useServerFn(getAdminCategories);
-  const fetchProducts = useServerFn(getAdminProducts);
-  const listBrands = useServerFn(adminListBrands);
-  const listCoupons = useServerFn(adminListCoupons);
+  const fetchCategories = useAdminFn(getAdminCategories, getAdminCategoriesClient);
+  const fetchProducts = useAdminFn(getAdminProducts, getAdminProductsClient);
+  const listBrands = useAdminFn(adminListBrands, adminListBrandsClient);
+  const listCoupons = useAdminFn(adminListCoupons, adminListCouponsClient);
 
   const { data: categories = [] } = useQuery({
     queryKey: ["admin-categories"],

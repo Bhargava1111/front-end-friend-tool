@@ -16,7 +16,7 @@ class BlogListView(APIView):
                 "excerpt": p.excerpt,
                 "cover_url": p.cover_url,
                 "author": p.author,
-                "tags": p.tags,
+                "tags": p.tags if isinstance(p.tags, list) else ([p.tags] if p.tags else []),
                 "read_minutes": p.read_minutes,
                 "published_at": p.published_at.isoformat() if p.published_at else None,
             }

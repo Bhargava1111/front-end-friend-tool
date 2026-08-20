@@ -1,15 +1,12 @@
 import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
+import { useAdminFn } from "@/hooks/use-admin-fn";
+import { getAdminCategoriesClient, getAdminBannersClient, deleteAdminBannerClient, toggleAdminBannerClient } from "@/lib/admin-client.functions";
+
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
-import {
-  getAdminBanners,
-  deleteAdminBanner,
-  toggleAdminBanner,
-  getAdminCategories,
-} from "@/lib/admin.functions";
+import { getAdminBanners, deleteAdminBanner, toggleAdminBanner, getAdminCategories } from "@/lib/admin.functions";
 import { formatINR } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -31,10 +28,10 @@ export const Route = createFileRoute("/admin/banners/")({
 
 function AdminBanners() {
   const qc = useQueryClient();
-  const fetchBanners = useServerFn(getAdminBanners);
-  const fetchCategories = useServerFn(getAdminCategories);
-  const remove = useServerFn(deleteAdminBanner);
-  const toggle = useServerFn(toggleAdminBanner);
+  const fetchBanners = useAdminFn(getAdminBanners, getAdminBannersClient);
+  const fetchCategories = useAdminFn(getAdminCategories, getAdminCategoriesClient);
+  const remove = useAdminFn(deleteAdminBanner, deleteAdminBannerClient);
+  const toggle = useAdminFn(toggleAdminBanner, toggleAdminBannerClient);
   const [tab, setTab] = useState<Placement>("home");
 
   const { data = [], isLoading } = useQuery({

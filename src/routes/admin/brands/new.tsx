@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
+import { useAdminFn } from "@/hooks/use-admin-fn";
+import { adminSaveBrandClient } from "@/lib/admin-client.functions";
 import { toast } from "sonner";
 import { adminSaveBrand } from "@/lib/admin-extra.functions";
 import { AdminFormShell } from "@/components/admin-form-shell";
@@ -28,7 +29,7 @@ const blank = {
 function NewBrand() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const save = useServerFn(adminSaveBrand);
+  const save = useAdminFn(adminSaveBrand, adminSaveBrandClient);
   const [form, setForm] = useState({ ...blank });
 
   const saveMutation = useMutation({

@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import { Tag } from "lucide-react";
 import { getBrandDirectory } from "@/lib/storefront.functions";
 import { PageShell, TopBar, EmptyState } from "@/components/page-shell";
@@ -25,10 +24,9 @@ export const Route = createFileRoute("/brands")({
 });
 
 function BrandsPage() {
-  const fetchBrands = useServerFn(getBrandDirectory);
   const { data, isLoading } = useQuery({
     queryKey: ["brand-directory"],
-    queryFn: () => fetchBrands(),
+    queryFn: () => getBrandDirectory(),
   });
 
   return (

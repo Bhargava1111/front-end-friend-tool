@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
+import { useAdminFn } from "@/hooks/use-admin-fn";
+import { adminBroadcastNotificationClient } from "@/lib/admin-client.functions";
+
 import { Megaphone, Send } from "lucide-react";
 import { toast } from "sonner";
 import { adminBroadcastNotification } from "@/lib/admin-extra.functions";
@@ -23,7 +25,7 @@ const TEMPLATES = [
 ];
 
 function AdminNotificationsPage() {
-  const send = useServerFn(adminBroadcastNotification);
+  const send = useAdminFn(adminBroadcastNotification, adminBroadcastNotificationClient);
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [imageUrl, setImageUrl] = useState("");

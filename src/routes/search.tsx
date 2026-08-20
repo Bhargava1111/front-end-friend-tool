@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import {
   Search as SearchIcon,
   X,
@@ -51,7 +50,6 @@ export const Route = createFileRoute("/search")({
 function SearchPage() {
   const [term, setTerm] = useState("");
   const [sort, setSort] = useState<(typeof SORTS)[number]["key"]>("relevance");
-  const run = useServerFn(searchProducts);
   const hydrated = useHydrated();
   const { terms: recent, add: addRecent, remove: removeRecent, clear } = useRecentSearches();
 
@@ -59,7 +57,7 @@ function SearchPage() {
 
   const { data, isFetching } = useQuery({
     queryKey: ["search", term, sort],
-    queryFn: () => run({ data: { q: term, sort } }),
+    queryFn: () => searchProducts({ data: { q: term, sort } }),
     enabled: active,
   });
 

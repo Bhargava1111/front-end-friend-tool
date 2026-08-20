@@ -13,6 +13,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "dev-only-change-me-in-production")
 DEBUG = os.getenv("DEBUG", "True").lower() in ("1", "true", "yes")
 ALLOWED_HOSTS = [h.strip() for h in os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",") if h.strip()]
+if DEBUG:
+    ALLOWED_HOSTS = ["*"]
 _render_host = os.getenv("RENDER_EXTERNAL_HOSTNAME", "").strip()
 if _render_host and _render_host not in ALLOWED_HOSTS:
     ALLOWED_HOSTS.append(_render_host)
@@ -102,6 +104,24 @@ CORS_ALLOWED_ORIGINS = [
     o.strip()
     for o in os.getenv("CORS_ALLOWED_ORIGINS", "http://localhost:8080,http://127.0.0.1:8080").split(",")
     if o.strip()
+]
+for _origin in (
+    "http://localhost",
+    "https://localhost",
+    "http://localhost:8080",
+    "https://localhost:8080",
+    "capacitor://localhost",
+    "ionic://localhost",
+):
+    if _origin not in CORS_ALLOWED_ORIGINS:
+        CORS_ALLOWED_ORIGINS.append(_origin)
+CORS_ALLOWED_ORIGIN_REGEXES = [
+    r"^https?://localhost(:\d+)?$",
+    r"^https?://127\.0\.0\.1(:\d+)?$",
+    r"^capacitor://localhost$",
+    r"^ionic://localhost$",
+    r"^https?://192\.168\.\d+\.\d+(:\d+)?$",
+    r"^https?://10\.\d+\.\d+\.\d+(:\d+)?$",
 ]
 CORS_ALLOW_CREDENTIALS = True
 if DEBUG and os.getenv("CORS_ALLOW_ALL_ORIGINS", "True").lower() in ("1", "true", "yes"):

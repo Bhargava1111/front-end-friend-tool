@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
+import { useAdminFn } from "@/hooks/use-admin-fn";
+import { saveAdminStoreClient } from "@/lib/admin-client.functions";
 import { LocateFixed } from "lucide-react";
 import { toast } from "sonner";
 import { saveAdminStore } from "@/lib/admin.functions";
@@ -46,7 +47,7 @@ const empty: Form = {
 function NewStore() {
   const navigate = useNavigate();
   const qc = useQueryClient();
-  const save = useServerFn(saveAdminStore);
+  const save = useAdminFn(saveAdminStore, saveAdminStoreClient);
   const [form, setForm] = useState<Form>(empty);
 
   const invalidate = () => {

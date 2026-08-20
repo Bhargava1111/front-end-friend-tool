@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { createFileRoute, useNavigate, useParams } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
+import { useAdminFn } from "@/hooks/use-admin-fn";
+import { getAdminStoresClient, saveAdminStoreClient } from "@/lib/admin-client.functions";
 import { LocateFixed } from "lucide-react";
 import { toast } from "sonner";
 import { getAdminStores, saveAdminStore } from "@/lib/admin.functions";
@@ -35,8 +36,8 @@ function EditStore() {
   const { id } = useParams({ from: "/admin/stores/$id" });
   const navigate = useNavigate();
   const qc = useQueryClient();
-  const fetchStores = useServerFn(getAdminStores);
-  const save = useServerFn(saveAdminStore);
+  const fetchStores = useAdminFn(getAdminStores, getAdminStoresClient);
+  const save = useAdminFn(saveAdminStore, saveAdminStoreClient);
   const [form, setForm] = useState<Form | null>(null);
 
   const { data = [], isLoading } = useQuery({

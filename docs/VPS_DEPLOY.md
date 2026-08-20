@@ -217,6 +217,29 @@ Never commit `/var/www/mnxstore/.env` to Git.
 
 ## Troubleshooting
 
+**Connection timed out / Edge cannot open `http://200.234.39.88`**
+
+Port 22 (SSH) can be open while 80/443 are blocked. On the VPS:
+
+```bash
+ssh root@200.234.39.88
+bash /var/www/mnxstore/backend/deploy/vps/fix-http.sh
+```
+
+If the repo is the backend-only clone:
+
+```bash
+bash /var/www/mnxstore/deploy/vps/fix-http.sh
+```
+
+Also allow inbound **TCP 80** and **443** in Hostinger hPanel → VPS → Firewall. UFW on the VM is not enough if the provider firewall drops those ports.
+
+Then verify from your PC:
+
+```bash
+curl http://200.234.39.88/api/v1/health/
+```
+
 **502 Bad Gateway**
 
 ```bash

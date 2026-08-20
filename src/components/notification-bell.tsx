@@ -1,21 +1,19 @@
 import { useEffect } from "react";
 import { Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import { Bell } from "lucide-react";
-import { getNotifications, type AppNotification } from "@/lib/notifications.functions";
+import { fetchNotificationsClient } from "@/lib/notifications.functions";
 import { AUTH_CLEARED_EVENT } from "@/lib/auth-store";
 import { useSession } from "@/hooks/use-shop";
 import { cn } from "@/lib/utils";
 
 export function useNotifications() {
   const { session } = useSession();
-  const fetchNotifications = useServerFn(getNotifications);
   const queryClient = useQueryClient();
 
   const { data = [], isError, isLoading, refetch } = useQuery({
     queryKey: ["notifications"],
-    queryFn: () => fetchNotifications() as Promise<AppNotification[]>,
+    queryFn: () => fetchNotificationsClient(),
     enabled: !!session,
     refetchInterval: session?.user?.role === "admin" ? 5_000 : 15_000,
     retry: 1,

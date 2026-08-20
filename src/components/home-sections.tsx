@@ -1,7 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import { getPlacementBanners } from "@/lib/storefront.functions";
 import { getCombos } from "@/lib/catalog.functions";
 import { Zap, Ticket, Check, Copy, ChevronRight, Clock, Truck, ShieldCheck, RefreshCcw, Leaf } from "lucide-react";
@@ -177,7 +176,6 @@ export function CouponStrip() {
 }
 
 export function OfferCards() {
-  const fetchBanners = useServerFn(getPlacementBanners);
   const { data: combos = [], isLoading } = useQuery({
     queryKey: ["combo-packs"],
     queryFn: () => getCombos(),
@@ -185,7 +183,7 @@ export function OfferCards() {
   });
   const { data: banners = [] } = useQuery({
     queryKey: ["placement-banners", "combos"],
-    queryFn: () => fetchBanners({ data: { placement: "combos" } }),
+    queryFn: () => getPlacementBanners({ data: { placement: "combos" } }),
     staleTime: 5 * 60 * 1000,
   });
 

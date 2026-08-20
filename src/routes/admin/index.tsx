@@ -1,6 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
+import { useAdminFn } from "@/hooks/use-admin-fn";
+import { getAdminDashboardClient } from "@/lib/admin-client.functions";
+
 import {
   Area,
   AreaChart,
@@ -39,7 +41,7 @@ export const Route = createFileRoute("/admin/")({
 const PIE_COLORS = ["#F2A413", "#1F5136", "#4F8A6B", "#C98A10", "#B23B3B"];
 
 function Dashboard() {
-  const fetchDashboard = useServerFn(getAdminDashboard);
+  const fetchDashboard = useAdminFn(getAdminDashboard, getAdminDashboardClient);
   const { data, isLoading } = useQuery({
     queryKey: ["admin-dashboard"],
     queryFn: () => fetchDashboard(),

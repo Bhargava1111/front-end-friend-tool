@@ -1,7 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
+import { useAdminFn } from "@/hooks/use-admin-fn";
+import { getAdminCustomersClient } from "@/lib/admin-client.functions";
+
 import { ChevronRight } from "lucide-react";
 import { getAdminCustomers } from "@/lib/admin.functions";
 import { formatINR, formatDate } from "@/lib/format";
@@ -22,7 +24,7 @@ export const Route = createFileRoute("/admin/customers")({
 });
 
 function AdminCustomers() {
-  const fetchCustomers = useServerFn(getAdminCustomers);
+  const fetchCustomers = useAdminFn(getAdminCustomers, getAdminCustomersClient);
   const { data = [], isLoading } = useQuery({
     queryKey: ["admin-customers"],
     queryFn: () => fetchCustomers(),

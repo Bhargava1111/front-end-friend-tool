@@ -1,7 +1,9 @@
 import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
+import { useAdminFn } from "@/hooks/use-admin-fn";
+import { getAdminSalesReportClient } from "@/lib/admin-client.functions";
+
 import {
   Area,
   AreaChart,
@@ -75,7 +77,7 @@ function downloadCsv(name: string, rows: Array<Record<string, string | number>>)
 }
 
 function AdminReports() {
-  const fetchReport = useServerFn(getAdminSalesReport);
+  const fetchReport = useAdminFn(getAdminSalesReport, getAdminSalesReportClient);
   const [from, setFrom] = useState(isoDaysAgo(29));
   const [to, setTo] = useState(isoDaysAgo(0));
   const [granularity, setGranularity] = useState<SalesGranularity>("day");

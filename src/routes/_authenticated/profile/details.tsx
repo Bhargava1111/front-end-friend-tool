@@ -52,8 +52,8 @@ function VerifiedBadge({ verified }: { verified: boolean }) {
 function ProfileDetailsPage() {
   const queryClient = useQueryClient();
   const { session } = useSession();
-  const fetchProfile = useServerFn(getProfile);
-  const save = useServerFn(updateProfile);
+  const fetchProfile = getProfile;
+  const save = updateProfile;
   const askPhoneOtp = useServerFn(requestProfilePhoneOtp);
   const confirmPhoneOtp = useServerFn(verifyProfilePhoneOtp);
   const askEmailOtp = useServerFn(requestProfileEmailOtp);

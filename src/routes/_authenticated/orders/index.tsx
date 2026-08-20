@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import { ClipboardList, ChevronRight } from "lucide-react";
 import { getOrders } from "@/lib/shop.functions";
 import { PageShell, EmptyState } from "@/components/page-shell";
@@ -31,7 +30,7 @@ export const Route = createFileRoute("/_authenticated/orders/")({
 });
 
 function OrdersPage() {
-  const fetchOrders = useServerFn(getOrders);
+  const fetchOrders = getOrders;
   const [tab, setTab] = useState<(typeof TABS)[number]["key"]>("active");
   const { data, isLoading } = useQuery({
     queryKey: ["orders"],

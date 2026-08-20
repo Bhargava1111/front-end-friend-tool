@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
+import { useEffect, useState } from "react";
 import { Link, useRouter } from "@tanstack/react-router";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, WifiOff } from "lucide-react";
 import { BottomNav } from "./bottom-nav";
 import { DesktopHeader } from "./desktop-header";
 import { BackToTop, StickyCartBar } from "./cart-pill";
@@ -8,6 +9,31 @@ import { SiteFooter } from "./site-footer";
 
 import { cn } from "@/lib/utils";
 import { isNativePlatform } from "@/lib/capacitor";
+
+function OfflineBanner() {
+  const [offline, setOffline] = useState(
+    () => typeof navigator !== "undefined" && navigator.onLine === false,
+  );
+
+  useEffect(() => {
+    const on = () => setOffline(false);
+    const off = () => setOffline(true);
+    window.addEventListener("online", on);
+    window.addEventListener("offline", off);
+    return () => {
+      window.removeEventListener("online", on);
+      window.removeEventListener("offline", off);
+    };
+  }, []);
+
+  if (!offline) return null;
+  return (
+    <div className="sticky top-0 z-40 flex items-center justify-center gap-2 bg-destructive px-3 py-2 text-center text-xs font-semibold text-destructive-foreground">
+      <WifiOff className="h-3.5 w-3.5" />
+      You're offline — showing saved store data where available.
+    </div>
+  );
+}
 
 export function PageShell({
   children,
@@ -24,6 +50,7 @@ export function PageShell({
 }) {
   return (
     <div className="min-h-screen bg-background">
+      <OfflineBanner />
       {withNav && <DesktopHeader />}
       <div
         className={cn(

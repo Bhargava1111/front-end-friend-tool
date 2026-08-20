@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
+import { useAdminFn } from "@/hooks/use-admin-fn";
+import { saveAdminRiderClient } from "@/lib/admin-client.functions";
 import { toast } from "sonner";
 import { saveAdminRider } from "@/lib/admin-platform.functions";
 import { AdminFormShell } from "@/components/admin-form-shell";
@@ -16,7 +17,7 @@ export const Route = createFileRoute("/admin/delivery/new")({
 function NewRider() {
   const navigate = useNavigate();
   const qc = useQueryClient();
-  const saveRider = useServerFn(saveAdminRider);
+  const saveRider = useAdminFn(saveAdminRider, saveAdminRiderClient);
   const [form, setForm] = useState({ name: "", phone: "", vehicle: "bike" });
 
   const saveMutation = useMutation({

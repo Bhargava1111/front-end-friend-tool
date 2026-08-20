@@ -32,7 +32,7 @@ def issue_otp(identifier: str, channel: str, purpose: str = "login") -> tuple[st
     ).update(consumed_at=timezone.now())
 
     code = generate_code()
-    if settings.ENABLE_DEMO_OTP and settings.DEBUG:
+    if settings.ENABLE_DEMO_OTP:
         code = settings.DEMO_OTP_CODE
 
     row = OtpCode.objects.create(

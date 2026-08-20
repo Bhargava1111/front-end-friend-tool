@@ -584,11 +584,14 @@ class AdminCustomerListView(APIView):
             order_count=Count("orders"),
             total_spend=Sum("orders__total"),
         )
+        profiles = {p.user_id: p for p in Profile.objects.filter(user__in=users)}
         return Response([{
             "id": str(u.id),
             "full_name": u.full_name,
             "phone": u.phone,
             "email": u.email,
+            "is_active": u.is_active,
+            "verification_status": getattr(profiles.get(u.id), "verification_status", "pending"),
             "orders": u.order_count,
             "spend": float(u.total_spend or 0),
             "order_count": u.order_count,
@@ -613,9 +616,43 @@ class AdminCustomerDetailView(APIView):
         items = OrderItem.objects.filter(order__user=user).values(
             "order_id", "product_name", "variant_label", "quantity", "line_total"
         )[:100]
-        addresses = Address.objects.filter(user=user).values(
-            "id", "label", "recipient_name", "phone", "line1", "line2", "city", "state", "pincode", "is_default"
-        )
+        addresses = [
+            {
+                **row,
+                "id": str(row["id"]),
+            }
+            for row in Address.objects.filter(user=user).values(
+                "id",
+                "label",
+                "recipient_name",
+                "phone",
+                "line1",
+                "line2",
+                "landmark",
+                "city",
+                "state",
+                "pincode",
+                "latitude",
+                "longitude",
+                "is_default",
+            )
+        ]
+        if profile and profile.address_text and not addresses:
+            addresses = [{
+                "id": "profile-address",
+                "label": "Submitted for verification",
+                "recipient_name": user.full_name or "Customer",
+                "phone": user.phone or "",
+                "line1": profile.address_text,
+                "line2": "",
+                "landmark": "",
+                "city": "",
+                "state": "",
+                "pincode": profile.pincode or "",
+                "latitude": profile.latitude,
+                "longitude": profile.longitude,
+                "is_default": True,
+            }]
         returns = OrderReturn.objects.filter(user=user).values(
             "id", "order_id", "reason", "details", "status", "created_at"
         )
@@ -626,6 +663,15 @@ class AdminCustomerDetailView(APIView):
                 "phone": user.phone,
                 "avatar_url": profile.avatar_url if profile else "",
                 "created_at": user.date_joined.isoformat(),
+                "is_active": user.is_active,
+                "verification_status": profile.verification_status if profile else "pending",
+                "address_text": profile.address_text if profile else "",
+                "pincode": profile.pincode if profile else "",
+                "latitude": profile.latitude if profile else None,
+                "longitude": profile.longitude if profile else None,
+                "location_accuracy_m": profile.location_accuracy_m if profile else None,
+                "rejection_reason": profile.rejection_reason if profile else "",
+                "submitted_at": profile.submitted_at.isoformat() if profile and profile.submitted_at else None,
             },
             "email": user.email,
             "lastSignInAt": user.last_login.isoformat() if user.last_login else None,
@@ -677,6 +723,7 @@ class AdminUserVerificationView(APIView):
             "id": str(p.user_id),
             "full_name": p.user.full_name,
             "phone": p.user.phone,
+            "is_active": p.user.is_active,
             "verification_status": p.verification_status,
             "address_text": p.address_text,
             "pincode": p.pincode,
@@ -847,6 +894,7 @@ class AdminSalesReportView(APIView):
 
 class MediaUploadView(APIView):
     permission_classes = [IsAdminRole]
+    admin_session_exempt = True
 
     def post(self, request):
         file = request.FILES.get("file")

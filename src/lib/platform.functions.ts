@@ -1,6 +1,74 @@
 import { createServerFn } from "@tanstack/react-start";
 import { optionalAuth, requireAuth } from "@/integrations/django/auth-middleware";
+import { ensureValidAccessToken } from "@/lib/auth-session";
 import { apiFetch, toJsonBody } from "@/lib/api";
+
+async function requireAccessToken() {
+  const token = await ensureValidAccessToken();
+  if (!token) throw new Error("Please sign in to continue.");
+  return token;
+}
+
+/** Direct Django API — use in Capacitor / bundled APK (no server functions). */
+export async function getWalletClient() {
+  const token = await requireAccessToken();
+  return apiFetch("/wallet/", { token });
+}
+
+export async function getLoyaltyClient() {
+  const token = await requireAccessToken();
+  return apiFetch("/loyalty/", { token });
+}
+
+export async function getReferralClient() {
+  const token = await requireAccessToken();
+  return apiFetch("/referral/", { token });
+}
+
+export async function applyReferralCodeClient(data: { code: string }) {
+  const token = await requireAccessToken();
+  return apiFetch("/referral/", {
+    method: "POST",
+    token,
+    body: toJsonBody(data),
+  });
+}
+
+export async function deleteAccountClient() {
+  const token = await requireAccessToken();
+  return apiFetch("/me/delete/", { method: "POST", token });
+}
+
+export async function submitSupportTicketClient(data: {
+  name: string;
+  email?: string;
+  phone?: string;
+  subject: string;
+  message: string;
+  category?: string;
+  order_id?: string;
+}) {
+  const token = await ensureValidAccessToken();
+  return apiFetch("/support/tickets/", {
+    method: "POST",
+    token: token ?? null,
+    body: toJsonBody(data),
+  });
+}
+
+export async function getMySupportTicketsClient() {
+  const token = await requireAccessToken();
+  return apiFetch("/support/tickets/", { token });
+}
+
+export async function submitFeedbackClient(data: { rating: number; message: string; page?: string }) {
+  const token = await ensureValidAccessToken();
+  return apiFetch("/support/feedback/", {
+    method: "POST",
+    token: token ?? null,
+    body: toJsonBody(data),
+  });
+}
 
 export const submitSupportTicket = createServerFn({ method: "POST" })
   .middleware([optionalAuth])

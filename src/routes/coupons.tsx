@@ -1,7 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import { Ticket, Copy, Check } from "lucide-react";
 import { toast } from "sonner";
 import { PageShell, TopBar, EmptyState } from "@/components/page-shell";
@@ -31,10 +30,9 @@ export const Route = createFileRoute("/coupons")({
 
 function CouponsPage() {
   const { coupons, isLoading } = useStorefront();
-  const fetchBanners = useServerFn(getPlacementBanners);
   const { data: banners = [] } = useQuery({
     queryKey: ["placement-banners", "coupons"],
-    queryFn: () => fetchBanners({ data: { placement: "coupons" as const } }),
+    queryFn: () => getPlacementBanners({ data: { placement: "coupons" as const } }),
     staleTime: 5 * 60 * 1000,
   });
   const [copied, setCopied] = useState<string | null>(null);

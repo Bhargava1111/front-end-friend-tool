@@ -38,8 +38,16 @@ export const Route = createFileRoute("/blogs/")({
       <TopBar title="Journal" backTo="/" />
       <EmptyState
         icon={<Newspaper className="h-8 w-8" />}
-        title="Couldn't load the journal"
-        description={error.message}
+        title={
+          typeof navigator !== "undefined" && navigator.onLine === false
+            ? "You're offline"
+            : "Couldn't load the journal"
+        }
+        description={
+          typeof navigator !== "undefined" && navigator.onLine === false
+            ? "Connect to the internet to load articles. Saved posts will appear here next time you're online."
+            : error.message
+        }
       />
     </PageShell>
   ),
@@ -80,7 +88,7 @@ function BlogsPage() {
         />
       ) : (
         <div className="grid gap-3 p-4 lg:grid-cols-3 lg:px-0">
-          {posts.map((post, i) => (
+          {(Array.isArray(posts) ? posts : []).map((post, i) => (
             <Reveal key={post.slug} delay={i * 0.04}>
               <Link
                 to="/blogs/$slug"
@@ -96,7 +104,7 @@ function BlogsPage() {
                   />
                 )}
                 <div className="p-4">
-                  {(post.tags ?? []).slice(0, 1).map((tag) => (
+                  {(Array.isArray(post.tags) ? post.tags : []).slice(0, 1).map((tag) => (
                     <span
                       key={tag}
                       className="rounded-full bg-accent-soft px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-accent-foreground"

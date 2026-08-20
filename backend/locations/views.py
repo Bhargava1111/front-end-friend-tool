@@ -115,9 +115,11 @@ def _nominatim_reverse(lat: float, lng: float) -> dict | None:
     params = urlencode({
         "lat": lat,
         "lon": lng,
-        "format": "json",
+        "format": "jsonv2",
         "addressdetails": 1,
-        "zoom": 19,
+        "extratags": 1,
+        "namedetails": 1,
+        "zoom": 18,
     })
     return _fetch_json(f"{NOMINATIM_REVERSE}?{params}")
 
@@ -148,6 +150,7 @@ def _resolve_location(lat: float, lng: float) -> dict:
 
     if not street:
         house = _pick_address_field(address, "house_number")
+        building = _pick_address_field(address, "building", "amenity", "shop", "office")
         road = _pick_address_field(
             address,
             "road",
@@ -156,8 +159,14 @@ def _resolve_location(lat: float, lng: float) -> dict:
             "residential",
             "path",
             "cycleway",
+            "neighbourhood",
         )
-        street = f"{house} {road}".strip() if house and road else road
+        if house and road:
+            street = f"{house} {road}".strip()
+        elif building and road:
+            street = f"{building}, {road}"
+        else:
+            street = road or building
 
     suburb = _normalize_area_name(
         _pick_address_field(address, "suburb", "neighbourhood", "quarter", "hamlet")
@@ -198,6 +207,8 @@ def _resolve_location(lat: float, lng: float) -> dict:
     area_parts = _unique_parts(locality, district, suburb)
     area = ", ".join(area_parts)
 
+    display_name = str((nominatim or {}).get("display_name") or "").strip()
+
     if street and district and district.casefold() not in street.casefold():
         label = f"{street}, {district}"
     elif street and area:
@@ -213,9 +224,12 @@ def _resolve_location(lat: float, lng: float) -> dict:
     elif city:
         label = city
     else:
-        label = ((nominatim or {}).get("display_name") or "Current location").split(",")[0]
+        label = display_name.split(",")[0] if display_name else "Current location"
 
-    line1 = street or area_parts[0] if area_parts else label
+    if display_name and (not street or len(label) < 18):
+        label = display_name
+
+    line1 = street or (area_parts[0] if area_parts else label.split(",")[0])
     line2_parts = [part for part in area_parts if part.casefold() != line1.casefold()]
     line2 = ", ".join(line2_parts)
 

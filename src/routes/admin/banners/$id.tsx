@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { createFileRoute, useNavigate, useParams } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
+import { useAdminFn } from "@/hooks/use-admin-fn";
+import { getAdminCategoriesClient, getAdminBannersClient, saveAdminBannerClient } from "@/lib/admin-client.functions";
 import { toast } from "sonner";
 import { getAdminBanners, getAdminCategories, saveAdminBanner } from "@/lib/admin.functions";
 import { AdminFormShell } from "@/components/admin-form-shell";
@@ -20,9 +21,9 @@ function EditBanner() {
   const { id } = useParams({ from: "/admin/banners/$id" });
   const navigate = useNavigate();
   const qc = useQueryClient();
-  const fetchBanners = useServerFn(getAdminBanners);
-  const fetchCategories = useServerFn(getAdminCategories);
-  const save = useServerFn(saveAdminBanner);
+  const fetchBanners = useAdminFn(getAdminBanners, getAdminBannersClient);
+  const fetchCategories = useAdminFn(getAdminCategories, getAdminCategoriesClient);
+  const save = useAdminFn(saveAdminBanner, saveAdminBannerClient);
   const [form, setForm] = useState<BannerFormState | null>(null);
 
   const { data: banners = [], isLoading: bannersLoading } = useQuery({

@@ -55,10 +55,14 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
         <h1 className="text-xl font-semibold tracking-tight text-foreground">
-          This page didn't load
+          {typeof navigator !== "undefined" && navigator.onLine === false
+            ? "You're offline"
+            : "This page didn't load"}
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Something went wrong on our end. You can try refreshing or head back home.
+          {typeof navigator !== "undefined" && navigator.onLine === false
+            ? "Connect to the internet to refresh. Saved store data will show when the page can load from cache."
+            : "Something went wrong on our end. You can try refreshing or head back home."}
         </p>
         <div className="mt-6 flex flex-wrap justify-center gap-2">
           <button
@@ -80,6 +84,16 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
       </div>
     </div>
   );
+}
+
+declare global {
+  interface Window {
+    $_TSR?: unknown;
+  }
+}
+
+function shouldUseDocumentShell() {
+  return typeof window === "undefined" || Boolean(window.$_TSR);
 }
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
@@ -116,7 +130,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
     ],
   }),
-  shellComponent: RootShell,
+  shellComponent: shouldUseDocumentShell() ? RootShell : undefined,
   component: RootComponent,
   notFoundComponent: NotFoundComponent,
   errorComponent: ErrorComponent,

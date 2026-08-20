@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
+import { useAdminFn } from "@/hooks/use-admin-fn";
+import { getAdminCategoriesClient, saveAdminCategoryClient } from "@/lib/admin-client.functions";
 import { toast } from "sonner";
 import { getAdminCategories, saveAdminCategory } from "@/lib/admin.functions";
 import { AdminFormShell } from "@/components/admin-form-shell";
@@ -49,8 +50,8 @@ const slugify = (v: string) =>
 function NewCategory() {
   const navigate = useNavigate();
   const qc = useQueryClient();
-  const fetchCategories = useServerFn(getAdminCategories);
-  const save = useServerFn(saveAdminCategory);
+  const fetchCategories = useAdminFn(getAdminCategories, getAdminCategoriesClient);
+  const save = useAdminFn(saveAdminCategory, saveAdminCategoryClient);
   const [form, setForm] = useState<Form>(empty);
 
   const { data = [] } = useQuery({
