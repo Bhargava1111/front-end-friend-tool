@@ -1,13 +1,13 @@
 import { useState } from "react";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useRouterState, useSearch } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAdminFn } from "@/hooks/use-admin-fn";
-import { setOrderDeliveryClient, getAdminOrdersClient, setOrderStatusClient } from "@/lib/admin-client.functions";
+import { setOrderDeliveryClient, getAdminOrdersClient, setOrderStatusClient, getAdminCustomerDetailClient } from "@/lib/admin-client.functions";
 
 import { toast } from "sonner";
 import { CalendarClock, Check, Eye, Plus, X } from "lucide-react";
 import { setOrderDelivery } from "@/lib/admin-ops.functions";
-import { getAdminOrders, setOrderStatus } from "@/lib/admin.functions";
+import { getAdminOrders, getAdminCustomerDetail, setOrderStatus } from "@/lib/admin.functions";
 import { formatINR, formatDate } from "@/lib/format";
 import { STATUS_STYLES, STATUS_LABEL, OPEN_ORDER_STATUSES } from "@/lib/order-status";
 import type { OrderStatus } from "@/lib/types";
@@ -23,10 +23,18 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/admin/orders/")({
-  validateSearch: (search: Record<string, unknown>) => ({
-    customer: typeof search.customer === "string" ? search.customer : undefined,
-    open: search.open === "1" || search.open === 1 || search.open === true,
-  }),
+  validateSearch: (search: Record<string, unknown>) => {
+    const raw = search.customer ?? search.user_id;
+    const customer = Array.isArray(raw)
+      ? String(raw[0] ?? "")
+      : raw != null && raw !== ""
+        ? String(raw)
+        : undefined;
+    return {
+      customer: customer || undefined,
+      open: search.open === "1" || search.open === 1 || search.open === true,
+    };
+  },
   head: () => ({
     meta: [
       { title: "Order Management — Admin | Sri Mahalakshmi Stores" },
@@ -51,8 +59,29 @@ const STATUSES: OrderStatus[] = [
 
 function AdminOrders() {
   const qc = useQueryClient();
-  const { customer, open } = Route.useSearch();
+  const typedSearch = Route.useSearch();
+  const looseSearch = useSearch({ strict: false }) as Record<string, unknown>;
+  const href = useRouterState({ select: (s) => s.location.href });
+  const hrefCustomer = (() => {
+    try {
+      const fromHref = new URL(href, "http://localhost").searchParams.get("customer");
+      if (fromHref) return fromHref;
+    } catch {
+      /* ignore */
+    }
+    if (typeof window !== "undefined") {
+      return new URLSearchParams(window.location.search).get("customer") ?? undefined;
+    }
+    return undefined;
+  })();
+  const customer =
+    typedSearch.customer ||
+    (typeof looseSearch.customer === "string" ? looseSearch.customer : undefined) ||
+    hrefCustomer ||
+    undefined;
+  const open = Boolean(typedSearch.open);
   const fetchOrders = useAdminFn(getAdminOrders, getAdminOrdersClient);
+  const fetchCustomer = useAdminFn(getAdminCustomerDetail, getAdminCustomerDetailClient);
   const updateStatus = useAdminFn(setOrderStatus, setOrderStatusClient);
   const [filter, setFilter] = useState<"all" | OrderStatus>("all");
   const [dates, setDates] = useState<Record<string, string>>({});
@@ -61,6 +90,13 @@ function AdminOrders() {
   const { data = [], isLoading, isError, error, refetch } = useQuery({
     queryKey: ["admin-orders", customer, open],
     queryFn: () => fetchOrders({ data: { customer, open } }),
+    staleTime: 15_000,
+  });
+
+  const { data: customerDetail } = useQuery({
+    queryKey: ["admin-customer", customer],
+    queryFn: () => fetchCustomer({ data: { id: customer! } }),
+    enabled: Boolean(customer),
     staleTime: 30_000,
   });
 
@@ -88,7 +124,20 @@ function AdminOrders() {
 
   let orders = filter === "all" ? data : data.filter((o) => o.status === filter);
   if (customer) {
-    orders = orders.filter((o) => String(o.user_id ?? "") === String(customer));
+    const allowedIds = new Set(
+      ((customerDetail?.orders ?? []) as Array<{ id: string }>).map((o) => String(o.id)),
+    );
+    const phoneDigits = String(customerDetail?.profile?.phone ?? "").replace(/\D/g, "");
+    orders = orders.filter((o) => {
+      if (String(o.user_id ?? "") === String(customer)) return true;
+      if (allowedIds.has(String(o.id))) return true;
+      const orderPhone = String(o.phone ?? "").replace(/\D/g, "");
+      if (phoneDigits && orderPhone && phoneDigits === orderPhone) return true;
+      return false;
+    });
+    if (orders.length === 0 && allowedIds.size > 0) {
+      orders = (customerDetail?.orders ?? []) as typeof orders;
+    }
   }
   if (open) orders = orders.filter((o) => OPEN_ORDER_STATUSES.includes(o.status));
   const pendingCount = data.filter((o) => o.status === "pending").length;
@@ -96,13 +145,21 @@ function AdminOrders() {
   return (
     <div className="space-y-4">
       {(customer || open) && (
-        <div className="rounded-2xl border border-primary/20 bg-primary-soft/40 px-4 py-3 text-sm">
-          <p className="font-semibold text-foreground">
-            Filtered view
-            {customer && " · Customer orders"}
-            {open && " · Open orders only"}
-          </p>
-          <p className="text-xs text-muted-foreground">{orders.length} order(s) shown</p>
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-primary/20 bg-primary-soft/40 px-4 py-3 text-sm">
+          <div>
+            <p className="font-semibold text-foreground">
+              {customer ? "This customer's orders only" : "Filtered view"}
+              {open && " · Open orders"}
+            </p>
+            <p className="text-xs text-muted-foreground">{orders.length} order(s) shown</p>
+          </div>
+          <Link
+            to="/admin/orders/"
+            search={{ customer: undefined, open: false }}
+            className="rounded-full bg-background px-3 py-1 text-xs font-semibold text-foreground"
+          >
+            Show all orders
+          </Link>
         </div>
       )}
       <div className="flex flex-wrap items-center justify-between gap-2">

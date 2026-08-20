@@ -199,8 +199,8 @@ function CustomerDetail() {
               </a>
             )}
             <Link
-              to="/admin/orders"
-              search={{ customer: id, open: true }}
+              to="/admin/orders/"
+              search={{ customer: id }}
               className="rounded-full bg-secondary px-3 py-1 text-[11px] font-semibold text-foreground"
             >
               Open orders
@@ -379,7 +379,8 @@ function CustomerDetail() {
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <div>
                       <Link
-                        to="/admin/orders"
+                        to="/admin/orders/$id"
+                        params={{ id: o.id }}
                         className="text-sm font-semibold text-foreground hover:underline"
                       >
                         {o.order_number}
