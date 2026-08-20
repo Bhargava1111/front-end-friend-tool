@@ -278,7 +278,12 @@ export async function adminBroadcastNotificationClient(opts: {
 }
 
 export async function getAdminTicketsClient() {
-  return adminClient("/admin-api/tickets/");
+  const res = await adminClient("/admin-api/tickets/");
+  if (Array.isArray(res)) return res;
+  if (res && typeof res === "object" && Array.isArray((res as { results?: unknown[] }).results)) {
+    return (res as { results: unknown[] }).results;
+  }
+  return [];
 }
 
 export async function updateAdminTicketClient(opts: {

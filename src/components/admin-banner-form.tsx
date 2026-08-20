@@ -20,6 +20,7 @@ import {
 export const PLACEMENTS = [
   { value: "home", label: "Home" },
   { value: "offers", label: "Offers" },
+  { value: "festive", label: "Festival / pooja" },
   { value: "coupons", label: "Coupons" },
   { value: "brands", label: "Brands" },
   { value: "combos", label: "Combos" },

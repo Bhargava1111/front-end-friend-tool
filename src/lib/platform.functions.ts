@@ -39,7 +39,7 @@ export async function deleteAccountClient() {
   return apiFetch("/me/delete/", { method: "POST", token });
 }
 
-export async function submitSupportTicketClient(data: {
+type SupportTicketPayload = {
   name: string;
   email?: string;
   phone?: string;
@@ -47,7 +47,17 @@ export async function submitSupportTicketClient(data: {
   message: string;
   category?: string;
   order_id?: string;
-}) {
+};
+
+function unwrapPayload<T extends object>(input: T | { data: T }): T {
+  if (input && typeof input === "object" && "data" in input && input.data && typeof input.data === "object") {
+    return input.data as T;
+  }
+  return input as T;
+}
+
+export async function submitSupportTicketClient(input: SupportTicketPayload | { data: SupportTicketPayload }) {
+  const data = unwrapPayload(input);
   const token = await ensureValidAccessToken();
   return apiFetch("/support/tickets/", {
     method: "POST",
@@ -58,10 +68,18 @@ export async function submitSupportTicketClient(data: {
 
 export async function getMySupportTicketsClient() {
   const token = await requireAccessToken();
-  return apiFetch("/support/tickets/", { token });
+  const res = await apiFetch<unknown>("/support/tickets/", { token });
+  if (Array.isArray(res)) return res;
+  if (res && typeof res === "object" && Array.isArray((res as { results?: unknown[] }).results)) {
+    return (res as { results: unknown[] }).results;
+  }
+  return [];
 }
 
-export async function submitFeedbackClient(data: { rating: number; message: string; page?: string }) {
+export async function submitFeedbackClient(
+  input: { rating: number; message: string; page?: string } | { data: { rating: number; message: string; page?: string } },
+) {
+  const data = unwrapPayload(input);
   const token = await ensureValidAccessToken();
   return apiFetch("/support/feedback/", {
     method: "POST",

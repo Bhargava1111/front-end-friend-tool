@@ -2,9 +2,9 @@ import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Clock, Mail, MapPin, MessageCircle, Phone, Send } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
+import { useNativeFn } from "@/hooks/use-admin-fn";
 import { toast } from "sonner";
-import { submitSupportTicket } from "@/lib/platform.functions";
+import { submitSupportTicket, submitSupportTicketClient } from "@/lib/platform.functions";
 import { PageShell, TopBar } from "@/components/page-shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,7 +31,7 @@ export const Route = createFileRoute("/contact")({
 });
 
 function ContactPage() {
-  const send = useServerFn(submitSupportTicket);
+  const send = useNativeFn(submitSupportTicket, submitSupportTicketClient);
   const [sent, setSent] = useState(false);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");

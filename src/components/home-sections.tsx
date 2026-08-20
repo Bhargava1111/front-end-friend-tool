@@ -1,9 +1,9 @@
 import { Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getPlacementBanners } from "@/lib/storefront.functions";
 import { getCombos } from "@/lib/catalog.functions";
-import { Zap, Ticket, Check, Copy, ChevronRight, Clock, Truck, ShieldCheck, RefreshCcw, Leaf } from "lucide-react";
+import { Zap, Ticket, Check, Copy, ChevronRight, Clock, Truck, ShieldCheck, RefreshCcw, Leaf, Percent, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { ProductCard } from "./product-card";
 import { Reveal } from "./motion";
@@ -408,40 +408,117 @@ export function RecentlyViewedRail() {
   );
 }
 
-/** Secondary offer-banner carousel (compact, wide cards). */
+function BannerSlide({
+  banner,
+  className,
+  overlayClass,
+  badge,
+}: {
+  banner: Banner;
+  className: string;
+  overlayClass: string;
+  badge?: ReactNode;
+}) {
+  const body = (
+    <div className={cn("relative shrink-0 overflow-hidden card-elevated", className)}>
+      {banner.image_url ? (
+        <img src={banner.image_url} alt={banner.title} loading="lazy" className="h-full w-full object-cover" />
+      ) : (
+        <div className="h-full w-full bg-secondary" />
+      )}
+      <div className={cn("absolute inset-0", overlayClass)} />
+      <div className="absolute inset-y-0 left-0 flex w-[72%] flex-col justify-end p-4">
+        {badge}
+        <p className="text-sm font-bold leading-tight text-white drop-shadow-sm">{banner.title}</p>
+        {banner.subtitle && (
+          <p className="mt-1 line-clamp-2 text-[11px] text-white/85">{banner.subtitle}</p>
+        )}
+      </div>
+    </div>
+  );
+  if (banner.link_slug) {
+    return (
+      <Link to="/category/$slug" params={{ slug: banner.link_slug }} className="shrink-0">
+        {body}
+      </Link>
+    );
+  }
+  return <div className="shrink-0">{body}</div>;
+}
+
+/** Deal / discount banners only — not mixed with festive creatives. */
 export function OfferBannerCarousel({ banners }: { banners: Banner[] }) {
   const ref = useAutoScroll<HTMLDivElement>(banners.length > 1);
   if (banners.length === 0) return null;
   return (
     <Reveal className="mt-7">
-      <div className="flex items-center justify-between px-4">
-        <h2 className="text-base font-bold text-foreground">Offers &amp; festive picks</h2>
-        <SeeAll to="/offers" />
+      <div className="px-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="grid h-8 w-8 place-items-center rounded-xl bg-primary text-primary-foreground">
+              <Percent className="h-4 w-4" />
+            </span>
+            <div>
+              <h2 className="text-base font-bold text-foreground">Today's offers</h2>
+              <p className="text-[11px] text-muted-foreground">Deals, combos and savings</p>
+            </div>
+          </div>
+          <SeeAll to="/offers" />
+        </div>
       </div>
       <div ref={ref} className="no-scrollbar mt-3 flex gap-3 overflow-x-auto px-4 pb-1">
-        {banners.map((b) => {
-          const body = (
-            <div className="relative h-[120px] w-[280px] shrink-0 overflow-hidden rounded-2xl card-elevated">
-              <img src={b.image_url} alt={b.title} loading="lazy" className="h-full w-full object-cover" />
-              <div className="absolute inset-0 bg-gradient-to-r from-foreground/75 to-transparent" />
-              <div className="absolute inset-y-0 left-0 flex w-2/3 flex-col justify-center p-4">
-                <p className="text-sm font-bold leading-tight text-background">{b.title}</p>
-                {b.subtitle && (
-                  <p className="mt-1 line-clamp-2 text-[11px] text-background/80">{b.subtitle}</p>
-                )}
-              </div>
+        {banners.map((b) => (
+          <BannerSlide
+            key={b.id}
+            banner={b}
+            className="h-[132px] w-[270px] rounded-2xl ring-1 ring-primary/20"
+            overlayClass="bg-gradient-to-r from-primary/90 via-primary/55 to-transparent"
+            badge={
+              <span className="mb-1.5 w-fit rounded-full bg-accent px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-accent-foreground">
+                Offer
+              </span>
+            }
+          />
+        ))}
+      </div>
+    </Reveal>
+  );
+}
+
+/** Festival / pooja campaign banners — separate from grocery offers. */
+export function FestivalBannerCarousel({ banners }: { banners: Banner[] }) {
+  const ref = useAutoScroll<HTMLDivElement>(banners.length > 1);
+  if (banners.length === 0) return null;
+  return (
+    <Reveal className="mt-7">
+      <div className="mx-4 overflow-hidden rounded-3xl bg-gradient-to-br from-amber-950 via-amber-900 to-orange-800 px-4 pb-4 pt-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2 text-amber-50">
+            <span className="grid h-8 w-8 place-items-center rounded-xl bg-amber-400/20 text-amber-200">
+              <Sparkles className="h-4 w-4" />
+            </span>
+            <div>
+              <h2 className="text-base font-bold">Festival picks</h2>
+              <p className="text-[11px] text-amber-100/75">Pooja kits, lamps and seasonal specials</p>
             </div>
-          );
-          return b.link_slug ? (
-            <Link key={b.id} to="/category/$slug" params={{ slug: b.link_slug }} className="shrink-0">
-              {body}
-            </Link>
-          ) : (
-            <div key={b.id} className="shrink-0">
-              {body}
-            </div>
-          );
-        })}
+          </div>
+          <SeeAll to="/offers" tone="onDark" />
+        </div>
+        <div ref={ref} className="no-scrollbar mt-3 flex gap-3 overflow-x-auto pb-1">
+          {banners.map((b) => (
+            <BannerSlide
+              key={b.id}
+              banner={b}
+              className="h-[148px] w-[240px] rounded-2xl ring-1 ring-amber-200/30"
+              overlayClass="bg-gradient-to-t from-amber-950/90 via-amber-950/25 to-transparent"
+              badge={
+                <span className="mb-1.5 w-fit rounded-full bg-amber-300 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-950">
+                  Festive
+                </span>
+              }
+            />
+          ))}
+        </div>
       </div>
     </Reveal>
   );

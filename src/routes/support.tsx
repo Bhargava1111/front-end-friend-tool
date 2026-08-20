@@ -1,10 +1,15 @@
 import { useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import { LifeBuoy, Send, Ticket } from "lucide-react";
+import { useNativeFn } from "@/hooks/use-admin-fn";
 import { toast } from "sonner";
-import { getMySupportTickets, submitSupportTicket } from "@/lib/platform.functions";
+import {
+  getMySupportTickets,
+  getMySupportTicketsClient,
+  submitSupportTicket,
+  submitSupportTicketClient,
+} from "@/lib/platform.functions";
 import { useSession } from "@/hooks/use-shop";
 import { PageShell, TopBar } from "@/components/page-shell";
 import { SuccessState } from "@/components/state-blocks";
@@ -78,8 +83,8 @@ function SupportPage() {
   const { orderId } = Route.useSearch();
   const { user, session } = useSession();
   const qc = useQueryClient();
-  const send = useServerFn(submitSupportTicket);
-  const fetchTickets = useServerFn(getMySupportTickets);
+  const send = useNativeFn(submitSupportTicket, submitSupportTicketClient);
+  const fetchTickets = useNativeFn(getMySupportTickets, getMySupportTicketsClient);
 
   const [sent, setSent] = useState(false);
   const [name, setName] = useState("");
@@ -97,7 +102,10 @@ function SupportPage() {
 
   const { data: tickets = [], isLoading: ticketsLoading } = useQuery({
     queryKey: ["my-tickets"],
-    queryFn: () => fetchTickets() as Promise<TicketRow[]>,
+    queryFn: async () => {
+      const rows = await fetchTickets();
+      return (Array.isArray(rows) ? rows : []) as TicketRow[];
+    },
     enabled: !!session,
   });
 

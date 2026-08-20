@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
+import { useNativeFn } from "@/hooks/use-admin-fn";
 import { toast } from "sonner";
-import { submitFeedback } from "@/lib/platform.functions";
+import { submitFeedback, submitFeedbackClient } from "@/lib/platform.functions";
 import { PageShell, TopBar } from "@/components/page-shell";
 import { StarRating } from "@/components/star-rating";
 import { SuccessState } from "@/components/state-blocks";
@@ -32,7 +32,7 @@ export const Route = createFileRoute("/feedback")({
 const AREAS = ["Delivery speed", "Product quality", "Pricing", "App experience", "Support"];
 
 function FeedbackPage() {
-  const send = useServerFn(submitFeedback);
+  const send = useNativeFn(submitFeedback, submitFeedbackClient);
   const [rating, setRating] = useState(5);
   const [areas, setAreas] = useState<string[]>([]);
   const [notes, setNotes] = useState("");

@@ -49,7 +49,10 @@ function AdminTickets() {
 
   const { data = [], isLoading, isError } = useQuery({
     queryKey: ["admin-tickets"],
-    queryFn: () => fetch() as Promise<AdminTicket[]>,
+    queryFn: async () => {
+      const rows = await fetch();
+      return (Array.isArray(rows) ? rows : []) as AdminTicket[];
+    },
     refetchInterval: 20_000,
   });
 

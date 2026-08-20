@@ -17,7 +17,7 @@ export async function getStorefrontMeta() {
 export async function getPlacementBanners({
   data,
 }: {
-  data: { placement: "home" | "offers" | "coupons" | "brands" | "combos" };
+  data: { placement: "home" | "offers" | "festive" | "coupons" | "brands" | "combos" };
 }) {
   return apiFetch(`/banners/?placement=${data.placement}`);
 }

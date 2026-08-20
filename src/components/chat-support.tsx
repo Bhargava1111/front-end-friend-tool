@@ -1,8 +1,11 @@
 import { useEffect, useRef, useState } from "react";
+import { useRouterState } from "@tanstack/react-router";
 import { MessageCircle, Send, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SUPPORT_PHONE_DISPLAY } from "@/lib/support-contact";
+import { useCartCount } from "@/hooks/use-shop";
+import { cn } from "@/lib/utils";
 
 type Message = { id: number; from: "bot" | "you"; text: string };
 
@@ -35,6 +38,12 @@ export function ChatSupport() {
     { id: 1, from: "bot", text: "Hi! I'm the Sri Mahalakshmi assistant. How can I help today?" },
   ]);
   const endRef = useRef<HTMLDivElement>(null);
+  const cartCount = useCartCount();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const hideFab =
+    pathname.startsWith("/cart") ||
+    pathname.startsWith("/checkout") ||
+    pathname.startsWith("/admin");
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -53,14 +62,21 @@ export function ChatSupport() {
 
   return (
     <>
+      {!hideFab && !open && (
       <button
         type="button"
         onClick={() => setOpen(true)}
         aria-label="Open chat support"
-        className="fixed bottom-24 right-4 z-40 grid h-12 w-12 place-items-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform active:scale-95"
+        className={cn(
+          "fixed right-4 z-30 grid h-12 w-12 place-items-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform active:scale-95",
+          cartCount > 0
+            ? "bottom-[calc(13.5rem+env(safe-area-inset-bottom,0px))]"
+            : "bottom-[calc(5.75rem+env(safe-area-inset-bottom,0px))]",
+        )}
       >
         <MessageCircle className="h-5 w-5" />
       </button>
+      )}
 
       {open && (
         <div

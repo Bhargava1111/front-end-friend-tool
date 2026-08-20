@@ -1,6 +1,7 @@
 from decimal import Decimal
 
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.utils import timezone
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -55,32 +56,56 @@ class SupportTicketView(APIView):
 
     def post(self, request):
         data = request.data
+        nested = data.get("data") if hasattr(data, "get") else None
+        if isinstance(nested, dict) and not (data.get("message") or data.get("subject")):
+            data = nested
+        user = request.user if getattr(request.user, "is_authenticated", False) else None
         order = None
         order_id = data.get("order_id")
-        if order_id and request.user.is_authenticated:
-            order = Order.objects.filter(id=order_id, user=request.user).first()
+        if order_id and user:
+            try:
+                order = Order.objects.filter(id=order_id, user=user).first()
+            except (ValueError, TypeError, ValidationError):
+                order = None
+
+        name = (data.get("name") or (user.full_name if user else "") or "").strip()[:120]
+        email = (data.get("email") or (user.email if user else "") or "").strip()[:254]
+        phone = (data.get("phone") or (user.phone if user else "") or "").strip()[:15]
+        subject = (data.get("subject") or "Support request").strip()[:255]
+        message = (data.get("message") or "").strip()
+        category = data.get("category") or "other"
+        valid_categories = {c[0] for c in SupportTicket.Category.choices}
+        if category not in valid_categories:
+            category = "other"
+        if len(message) < 8:
+            return Response({"detail": "Please describe the issue in a bit more detail."}, status=400)
+        if not name:
+            return Response({"detail": "Please enter your name."}, status=400)
 
         ticket = SupportTicket.objects.create(
-            user=request.user if request.user.is_authenticated else None,
-            name=(data.get("name") or "").strip()[:120],
-            email=(data.get("email") or "").strip()[:254],
-            phone=(data.get("phone") or "").strip()[:15],
-            subject=(data.get("subject") or "Support request").strip()[:255],
-            message=(data.get("message") or "").strip(),
-            category=data.get("category", "other"),
+            user=user,
+            name=name,
+            email=email,
+            phone=phone,
+            subject=subject or "Support request",
+            message=message,
+            category=category,
             order=order,
         )
 
-        for admin in User.objects.filter(role="admin"):
-            notify_user(
-                admin,
-                "New support ticket",
-                f"{ticket.name}: {ticket.subject}",
-                "system",
-                link="/admin/tickets",
-            )
+        try:
+            for admin in User.objects.filter(role="admin", is_active=True):
+                notify_user(
+                    admin,
+                    "New support ticket",
+                    f"{ticket.name}: {ticket.subject}",
+                    "system",
+                    link="/admin/tickets",
+                )
+        except Exception:
+            pass
 
-        return Response({"id": str(ticket.id), "ok": True}, status=201)
+        return Response({"id": str(ticket.id), "ok": True, "status": ticket.status}, status=201)
 
 
 class FeedbackView(APIView):

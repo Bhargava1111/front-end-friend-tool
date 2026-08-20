@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { Search, MapPin, Sparkles } from "lucide-react";
 import { getHomeData } from "@/lib/catalog.functions";
+import { splitHomeBanners } from "@/lib/home-banners";
 import type { OfferSectionsMap } from "@/lib/offer-sections";
 import { PageShell } from "@/components/page-shell";
 import { BannerSlider } from "@/components/banner-slider";
@@ -17,6 +18,7 @@ import {
   BudgetRail,
   CouponStrip,
   DealOfTheDay,
+  FestivalBannerCarousel,
   FestivalPicks,
   FlashSaleRail,
   OfferBannerCarousel,
@@ -93,9 +95,7 @@ function Home() {
   const trending = (data.bestSelling?.length ? data.bestSelling : data.newest) ?? [];
   const categoryScrollRef = useAutoScroll<HTMLDivElement>(data.categories.length > 3);
   const sections = (data as { sections?: OfferSectionsMap }).sections ?? {};
-  // All home banners feed the hero carousel — it paginates cleanly past 10 slides.
-  const heroBanners = data.banners;
-  const offerBanners = data.banners.length > 3 ? data.banners.slice(3) : data.banners;
+  const { heroBanners, offerBanners, festiveBanners } = splitHomeBanners(data);
 
 
 
@@ -199,6 +199,7 @@ function Home() {
 
       <CouponStrip />
 
+      <FestivalBannerCarousel banners={festiveBanners} />
       <FestivalPicks
         categories={data.categories}
         products={allProducts}

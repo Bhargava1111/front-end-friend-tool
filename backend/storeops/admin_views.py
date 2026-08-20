@@ -39,7 +39,7 @@ class AdminModulePermission(IsAdminRole):
 
 
 class AdminTicketView(APIView):
-    permission_classes = [AdminModulePermission]
+    permission_classes = [IsAdminRole]
     admin_module = "tickets"
 
     def get(self, request):

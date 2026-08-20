@@ -56,7 +56,7 @@ export function PageShell({
         className={cn(
           "mx-auto w-full lg:px-6",
           isNativePlatform() ? "max-w-lg" : "max-w-lg lg:max-w-7xl",
-          withNav && (isNativePlatform() ? "pb-36" : "pb-36 lg:pb-16"),
+          withNav && (isNativePlatform() ? "pb-52" : "pb-52 lg:pb-16"),
           className,
         )}
       >

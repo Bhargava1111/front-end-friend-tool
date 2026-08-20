@@ -23,12 +23,16 @@ def active_products():
 class HomeView(APIView):
     def get(self, request):
         banners = Banner.objects.filter(is_active=True, placement="home").order_by("sort_order")
+        offer_banners = Banner.objects.filter(is_active=True, placement="offers").order_by("sort_order")
+        festive_banners = Banner.objects.filter(is_active=True, placement="festive").order_by("sort_order")
         categories = Category.objects.filter(is_active=True).order_by("sort_order")
         products = active_products().order_by("-created_at")
         all_products = ProductSerializer(products[:40], many=True).data
         sections = all_section_products(limit=20)
         return Response({
             "banners": BannerSerializer(banners, many=True).data,
+            "offer_banners": BannerSerializer(offer_banners, many=True).data,
+            "festive_banners": BannerSerializer(festive_banners, many=True).data,
             "categories": CategorySerializer(categories, many=True).data,
             "featured": sections["todays_deals"] or [p for p in all_products if p.get("is_featured")][:10],
             "best_sellers": [p for p in all_products if p.get("is_best_seller")][:10],
@@ -168,6 +172,7 @@ class DealsView(APIView):
 class OffersView(APIView):
     def get(self, request):
         banners = Banner.objects.filter(is_active=True, placement="offers").order_by("sort_order")
+        festive_banners = Banner.objects.filter(is_active=True, placement="festive").order_by("sort_order")
         categories = Category.objects.filter(is_active=True).order_by("sort_order")[:8]
         festive = section_products("festive_picks", limit=12)
         custom = section_products("custom_offers", limit=12)
@@ -182,6 +187,7 @@ class OffersView(APIView):
         ).data
         return Response({
             "banners": BannerSerializer(banners, many=True).data,
+            "festive_banners": BannerSerializer(festive_banners, many=True).data,
             "categories": CategorySerializer(categories, many=True).data,
             "products": featured,
             "sections": {

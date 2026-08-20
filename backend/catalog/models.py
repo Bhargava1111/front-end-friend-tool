@@ -92,6 +92,7 @@ class Banner(models.Model):
     class Placement(models.TextChoices):
         HOME = "home", "Home"
         OFFERS = "offers", "Offers"
+        FESTIVE = "festive", "Festive"
         COUPONS = "coupons", "Coupons"
         BRANDS = "brands", "Brands"
         COMBOS = "combos", "Combos"
