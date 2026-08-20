@@ -98,20 +98,51 @@ function UserDetail() {
       title={user.full_name ?? "Unnamed shopper"}
     >
       <div className="space-y-4">
-        <span
-          className={cn(
-            "inline-block rounded-full px-2.5 py-1 text-[11px] font-semibold capitalize",
-            BADGES[status] ?? BADGES.pending,
+        <div className="flex items-center gap-4">
+          {user.avatar_url ? (
+            <img src={user.avatar_url} alt="" className="h-16 w-16 rounded-full object-cover" />
+          ) : (
+            <span className="grid h-16 w-16 place-items-center rounded-full bg-primary-soft text-lg font-bold text-primary">
+              {(user.full_name ?? "U").slice(0, 1).toUpperCase()}
+            </span>
           )}
-        >
-          {STATUS_LABEL[status] ?? status}
-        </span>
+          <span
+            className={cn(
+              "inline-block rounded-full px-2.5 py-1 text-[11px] font-semibold capitalize",
+              BADGES[status] ?? BADGES.pending,
+            )}
+          >
+            {STATUS_LABEL[status] ?? status}
+          </span>
+        </div>
 
         <dl className="space-y-3 text-sm">
           <div className="grid grid-cols-[100px_1fr] gap-2">
             <dt className="text-muted-foreground">Phone</dt>
             <dd className="font-medium text-foreground">{user.phone ?? "—"}</dd>
           </div>
+          {user.email && (
+            <div className="grid grid-cols-[100px_1fr] gap-2">
+              <dt className="text-muted-foreground">Email</dt>
+              <dd className="font-medium text-foreground">{user.email}</dd>
+            </div>
+          )}
+          <div className="grid grid-cols-[100px_1fr] gap-2">
+            <dt className="text-muted-foreground">GST number</dt>
+            <dd className="font-medium text-foreground">{user.gst_number || "—"}</dd>
+          </div>
+          {user.alt_phone && (
+            <div className="grid grid-cols-[100px_1fr] gap-2">
+              <dt className="text-muted-foreground">Alt. phone</dt>
+              <dd className="font-medium text-foreground">{user.alt_phone}</dd>
+            </div>
+          )}
+          {user.dob && (
+            <div className="grid grid-cols-[100px_1fr] gap-2">
+              <dt className="text-muted-foreground">Date of birth</dt>
+              <dd className="text-foreground">{formatDate(user.dob)}</dd>
+            </div>
+          )}
           <div className="grid grid-cols-[100px_1fr] gap-2">
             <dt className="text-muted-foreground">Joined</dt>
             <dd className="text-foreground">{formatDate(user.created_at)}</dd>

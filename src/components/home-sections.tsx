@@ -31,10 +31,22 @@ function useCountdown(target: number) {
   return [h, m, s].map((n) => String(n).padStart(2, "0"));
 }
 
-export function SeeAll({ to, tone = "primary" }: { to: string; tone?: "primary" | "onDark" }) {
+export function SeeAll({
+  to,
+  search,
+  params,
+  tone = "primary",
+}: {
+  to: string;
+  search?: Record<string, string>;
+  params?: Record<string, string>;
+  tone?: "primary" | "onDark";
+}) {
   return (
     <Link
       to={to as never}
+      search={search as never}
+      params={params as never}
       className={cn(
         "flex shrink-0 items-center gap-0.5 text-xs font-semibold",
         tone === "onDark" ? "text-primary-foreground/90" : "text-primary",
@@ -90,7 +102,7 @@ export function FlashSaleRail({
           </h2>
           <div className="flex items-center gap-2">
             <CountdownPill />
-            <SeeAll to="/deals" tone="onDark" />
+            <SeeAll to="/deals" search={{ tab: "flash" }} tone="onDark" />
           </div>
         </div>
         <p className="mt-1 px-4 text-xs text-primary-foreground/70">
@@ -202,7 +214,7 @@ export function OfferCards() {
       <Reveal className="mt-7">
         <div className="flex items-center justify-between px-4">
           <h2 className="text-base font-bold text-foreground">Combo packs</h2>
-          <SeeAll to="/offers" />
+          <SeeAll to="/deals" search={{ tab: "combo" }} />
         </div>
         <div className="no-scrollbar mt-3 flex gap-3 overflow-x-auto px-4 pb-1">
           {combos.map((product) => (
@@ -526,7 +538,7 @@ export function FestivalBannerCarousel({ banners }: { banners: Banner[] }) {
               <p className="text-[11px] text-amber-100/75">Pooja kits, lamps and seasonal specials</p>
             </div>
           </div>
-          <SeeAll to="/category/pooja-essentials" tone="onDark" />
+          <SeeAll to="/deals" search={{ tab: "festive" }} tone="onDark" />
         </div>
         <div ref={ref} className="no-scrollbar mt-3 flex gap-3 overflow-x-auto pb-1">
           {banners.map((b) => (
@@ -579,7 +591,7 @@ export function DealOfTheDay({
         <span className="rounded-full bg-primary-soft px-2.5 py-1 text-[11px] font-semibold tabular-nums text-primary">
           {hydrated ? `${h}:${m}:${s}` : "--:--:--"}
         </span>
-        <SeeAll to="/deals" />
+        <SeeAll to="/deals" search={{ tab: "today" }} />
         </div>
       </div>
       <Link
@@ -624,6 +636,7 @@ export function FestivalPicks({
 }) {
   const tabs = categories.slice(0, 6);
   const [active, setActive] = useState(tabs[0]?.id ?? "");
+  const activeTab = tabs.find((t) => t.id === (active || tabs[0]?.id));
   const categoryList = products.filter((p) => p.category_id === (active || tabs[0]?.id)).slice(0, 10);
   const list = curated && curated.length > 0 ? curated : categoryList;
   const ref = useAutoScroll<HTMLDivElement>(list.length > 3);
@@ -634,7 +647,13 @@ export function FestivalPicks({
     <Reveal className="mt-7">
       <div className="flex items-center justify-between px-4">
         <h2 className="text-base font-bold text-foreground">{title}</h2>
-        <SeeAll to="/offers" />
+        {curated?.length ? (
+          <SeeAll to="/deals" search={{ tab: "festive" }} />
+        ) : activeTab ? (
+          <SeeAll to="/category/$slug" params={{ slug: activeTab.slug }} />
+        ) : (
+          <SeeAll to="/deals" search={{ tab: "festive" }} />
+        )}
       </div>
       {!curated?.length && tabs.length > 0 && (
         <div className="no-scrollbar mt-3 flex gap-2 overflow-x-auto px-4">
@@ -690,7 +709,7 @@ export function BudgetRail({
       <div className="mx-4 rounded-3xl bg-gradient-to-br from-accent-soft to-accent-soft/40 p-4">
         <div className="flex items-center justify-between">
           <h2 className="text-base font-bold text-accent-foreground">Under {formatINR(ceiling)} store</h2>
-          <SeeAll to="/deals" />
+          <SeeAll to="/deals" search={{ tab: "budget" }} />
         </div>
         <p className="mt-0.5 text-xs text-accent-foreground/75">Small basket, big savings</p>
         <div ref={ref} className="no-scrollbar mt-3 flex gap-3 overflow-x-auto pb-1">

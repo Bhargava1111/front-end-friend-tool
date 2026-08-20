@@ -47,7 +47,10 @@ function AdminCustomers() {
   const rows = term
     ? data.filter(
         (c) =>
-          (c.full_name ?? "").toLowerCase().includes(term) || (c.phone ?? "").includes(term),
+          (c.full_name ?? "").toLowerCase().includes(term) ||
+          (c.phone ?? "").includes(term) ||
+          (c.gst_number ?? "").toLowerCase().includes(term) ||
+          (c.email ?? "").toLowerCase().includes(term),
       )
     : data;
 
@@ -78,7 +81,7 @@ function AdminCustomers() {
         <Input
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder="Search name or phone"
+          placeholder="Search name, phone, GST or email"
           className="max-w-[220px]"
           aria-label="Search customers"
         />
@@ -111,10 +114,24 @@ function AdminCustomers() {
                   params={{ id: c.id }}
                   onMouseEnter={() => prefetchCustomer(c.id)}
                   onFocus={() => prefetchCustomer(c.id)}
-                  className="flex items-center gap-1 hover:underline"
+                  className="flex items-center gap-2 hover:underline"
                 >
-                  {c.full_name ?? "Guest"}
-                  <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
+                  {c.avatar_url ? (
+                    <img src={c.avatar_url} alt="" className="h-8 w-8 rounded-full object-cover" />
+                  ) : (
+                    <span className="grid h-8 w-8 place-items-center rounded-full bg-primary-soft text-xs font-bold text-primary">
+                      {(c.full_name ?? "G").slice(0, 1).toUpperCase()}
+                    </span>
+                  )}
+                  <span className="min-w-0">
+                    <span className="block truncate">{c.full_name ?? "Guest"}</span>
+                    {c.gst_number && (
+                      <span className="block truncate text-[11px] font-normal text-muted-foreground">
+                        GST: {c.gst_number}
+                      </span>
+                    )}
+                  </span>
+                  <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                 </Link>
               </td>
               <td className="px-4 py-3 text-muted-foreground">{c.phone ?? "—"}</td>

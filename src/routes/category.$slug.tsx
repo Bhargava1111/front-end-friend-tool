@@ -114,7 +114,15 @@ function CategoryPage() {
       />
 
       <div className="flex">
-        <CategorySideRail categories={data.categories} activeSlug={slug} />
+        <CategorySideRail
+          categories={data.categories}
+          activeSlug={slug}
+          parentCategory={
+            data.category?.parent_id && data.parent
+              ? { name: data.parent.name, slug: data.parent.slug }
+              : null
+          }
+        />
         <div className="min-w-0 flex-1">
           {visible.length === 0 ? (
             <EmptyState

@@ -102,13 +102,13 @@ function OffersPage() {
       <OfferCards />
       <CouponStrip />
       {sections.combo_packs && sections.combo_packs.length > 0 && (
-        <ProductRail title="Combo packs" products={sections.combo_packs} href={{ to: "/deals" }} />
+        <ProductRail title="Combo packs" products={sections.combo_packs} href={{ to: "/deals", search: { tab: "combo" } }} />
       )}
       {sections.custom_offers && sections.custom_offers.length > 0 && (
-        <ProductRail title="Custom offers" products={sections.custom_offers} href={{ to: "/deals" }} />
+        <ProductRail title="Custom offers" products={sections.custom_offers} href={{ to: "/deals", search: { tab: "today" } }} />
       )}
       <FestivalPicks
-        categories={data.categories}
+        categories={data.categories.filter((c) => !c.parent_id)}
         products={all}
         curated={sections.festive_picks}
         title="Festive collections"

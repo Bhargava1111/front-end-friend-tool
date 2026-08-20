@@ -25,7 +25,7 @@ class HomeView(APIView):
         banners = Banner.objects.filter(is_active=True, placement="home").order_by("sort_order")
         offer_banners = Banner.objects.filter(is_active=True, placement="offers").order_by("sort_order")
         festive_banners = Banner.objects.filter(is_active=True, placement="festive").order_by("sort_order")
-        categories = Category.objects.filter(is_active=True).order_by("sort_order")
+        categories = Category.objects.filter(is_active=True, parent__isnull=True).order_by("sort_order")
         products = active_products().order_by("-created_at")
         all_products = ProductSerializer(products[:40], many=True).data
         sections = all_section_products(limit=20)
@@ -68,14 +68,13 @@ class CategoryProductsView(APIView):
             rail_categories = children
         else:
             product_category_ids = [category.id]
-            rail_categories = Category.objects.filter(parent__isnull=True, is_active=True).order_by(
-                "sort_order"
-            )
+            rail_categories = Category.objects.filter(id=category.id)
 
         products = active_products().filter(category_id__in=product_category_ids).order_by("name")
         brands = Brand.objects.filter(is_active=True).order_by("name")
         return Response({
             "category": CategorySerializer(category).data,
+            "parent": CategorySerializer(category.parent).data if category.parent_id else None,
             "products": ProductSerializer(products, many=True).data,
             "categories": CategorySerializer(rail_categories, many=True).data,
             "brands": [{"id": b.id, "name": b.name, "slug": b.slug} for b in brands],

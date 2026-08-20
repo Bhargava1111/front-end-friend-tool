@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAdminFn } from "@/hooks/use-admin-fn";
 import { getAdminCustomerDetailClient, manageAdminUserClient, setUserVerificationClient } from "@/lib/admin-client.functions";
 
-import { ArrowLeft, Ban, MoreHorizontal, Phone, Calendar, ShoppingBag, IndianRupee, Star, Mail, MapPin, BadgeCheck, X, Unlock } from "lucide-react";
+import { ArrowLeft, Ban, MoreHorizontal, Phone, Calendar, ShoppingBag, IndianRupee, Star, Mail, MapPin, BadgeCheck, X, Unlock, Copy, FileText } from "lucide-react";
 import { toast } from "sonner";
 import { getAdminCustomerDetail } from "@/lib/admin.functions";
 import { manageAdminUser } from "@/lib/admin-platform.functions";
@@ -115,6 +115,11 @@ function CustomerDetail() {
       : verifyStatus === "pending"
         ? "Not submitted"
         : verifyStatus;
+
+  const copyText = (label: string, value: string) => {
+    void navigator.clipboard.writeText(value);
+    toast.success(`${label} copied`);
+  };
 
   const cards = [
     { label: "Orders", value: String(stats?.orders ?? 0), icon: ShoppingBag },
@@ -279,6 +284,84 @@ function CustomerDetail() {
             </DropdownMenu>
           </div>
         </div>
+      </div>
+
+      <div className="rounded-2xl border border-border bg-card p-4">
+        <h2 className="text-sm font-semibold text-foreground">Profile details</h2>
+        <dl className="mt-3 grid gap-3 text-sm sm:grid-cols-2">
+          <div>
+            <dt className="text-xs text-muted-foreground">GST number</dt>
+            <dd className="mt-0.5 flex items-center gap-2 font-medium text-foreground">
+              {profile.gst_number ? (
+                <>
+                  <FileText className="h-3.5 w-3.5 text-primary" />
+                  {profile.gst_number}
+                  <button
+                    type="button"
+                    aria-label="Copy GST number"
+                    onClick={() => copyText("GST number", profile.gst_number!)}
+                    className="text-muted-foreground hover:text-foreground"
+                  >
+                    <Copy className="h-3.5 w-3.5" />
+                  </button>
+                </>
+              ) : (
+                "Not provided"
+              )}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-xs text-muted-foreground">Alt. phone</dt>
+            <dd className="mt-0.5 font-medium text-foreground">{profile.alt_phone || "—"}</dd>
+          </div>
+          <div>
+            <dt className="text-xs text-muted-foreground">Date of birth</dt>
+            <dd className="mt-0.5 font-medium text-foreground">
+              {profile.dob ? formatDate(profile.dob) : "—"}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-xs text-muted-foreground">Pincode</dt>
+            <dd className="mt-0.5 font-medium text-foreground">{profile.pincode || "—"}</dd>
+          </div>
+          {profile.submitted_at && (
+            <div>
+              <dt className="text-xs text-muted-foreground">Submitted for review</dt>
+              <dd className="mt-0.5 font-medium text-foreground">{formatDate(profile.submitted_at)}</dd>
+            </div>
+          )}
+          {profile.verified_at && (
+            <div>
+              <dt className="text-xs text-muted-foreground">Verified on</dt>
+              <dd className="mt-0.5 font-medium text-foreground">{formatDate(profile.verified_at)}</dd>
+            </div>
+          )}
+          {profile.rejection_reason && (
+            <div className="sm:col-span-2">
+              <dt className="text-xs text-muted-foreground">Rejection reason</dt>
+              <dd className="mt-0.5 text-foreground">{profile.rejection_reason}</dd>
+            </div>
+          )}
+          {profile.latitude != null && profile.longitude != null && (
+            <div className="sm:col-span-2">
+              <dt className="text-xs text-muted-foreground">Captured location</dt>
+              <dd className="mt-0.5">
+                <a
+                  href={`https://www.google.com/maps?q=${profile.latitude},${profile.longitude}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1 font-semibold text-primary"
+                >
+                  <MapPin className="h-3.5 w-3.5" />
+                  {profile.latitude.toFixed(5)}, {profile.longitude.toFixed(5)}
+                  {profile.location_accuracy_m != null
+                    ? ` · ±${Math.round(profile.location_accuracy_m)} m`
+                    : ""}
+                </a>
+              </dd>
+            </div>
+          )}
+        </dl>
       </div>
 
       <div className="grid gap-3 lg:grid-cols-2">

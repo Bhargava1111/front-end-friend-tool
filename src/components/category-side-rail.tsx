@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import { ChevronUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export type RailCategory = {
@@ -6,15 +7,19 @@ export type RailCategory = {
   name: string;
   slug: string;
   image_url?: string | null;
+  parent_id?: string | null;
+  parent?: { name: string; slug: string } | null;
 };
 
 /** Vertical category rail shown to the left of a product grid. */
 export function CategorySideRail({
   categories,
   activeSlug,
+  parentCategory,
 }: {
   categories: RailCategory[];
   activeSlug: string;
+  parentCategory?: { name: string; slug: string } | null;
 }) {
   if (categories.length === 0) return null;
   return (
@@ -22,6 +27,16 @@ export function CategorySideRail({
       aria-label="Categories"
       className="no-scrollbar sticky top-[110px] max-h-[calc(100vh-140px)] w-[84px] shrink-0 overflow-y-auto border-r border-border bg-secondary/40"
     >
+      {parentCategory && (
+        <Link
+          to="/category/$slug"
+          params={{ slug: parentCategory.slug }}
+          className="flex flex-col items-center gap-1 border-b border-border px-1.5 py-2 text-center text-[9px] font-semibold text-muted-foreground hover:bg-background/60"
+        >
+          <ChevronUp className="h-3.5 w-3.5" />
+          <span className="line-clamp-2 leading-tight">{parentCategory.name}</span>
+        </Link>
+      )}
       <ul>
         {categories.map((c) => {
           const active = c.slug === activeSlug;

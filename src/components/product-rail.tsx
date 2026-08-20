@@ -10,7 +10,7 @@ export function ProductRail({
 }: {
   title: string;
   products: Product[];
-  href?: { to: string; params?: Record<string, string> };
+  href?: { to: string; params?: Record<string, string>; search?: Record<string, string> };
 }) {
   if (products.length === 0) return null;
   return (
@@ -21,6 +21,7 @@ export function ProductRail({
           <Link
             to={href.to}
             params={href.params as never}
+            search={href.search as never}
             className="flex items-center gap-0.5 text-xs font-medium text-primary sm:text-sm"
           >
             View all <ChevronRight className="h-3.5 w-3.5" />

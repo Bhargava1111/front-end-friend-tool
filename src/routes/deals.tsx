@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { z } from "zod";
 import { queryOptions, useQuery, useSuspenseQuery } from "@tanstack/react-query";
-import { useState } from "react";
 import { Zap, Percent, IndianRupee } from "lucide-react";
 import { getDeals, getHomeData } from "@/lib/catalog.functions";
 import type { OfferSectionsMap } from "@/lib/offer-sections";
@@ -25,9 +25,16 @@ const TABS = [
   { key: "flash", label: "Flash sale" },
   { key: "today", label: "Today's deals" },
   { key: "budget", label: "Under ₹99" },
+  { key: "festive", label: "Festive picks" },
+  { key: "combo", label: "Combo packs" },
 ] as const;
 
+const searchSchema = z.object({
+  tab: z.enum(["all", "flash", "today", "budget", "festive", "combo"]).catch("all").default("all"),
+});
+
 export const Route = createFileRoute("/deals")({
+  validateSearch: searchSchema,
   head: () => ({
     meta: [
       { title: "Today's Deals & Flash Sale — Sri Mahalakshmi Stores" },
@@ -70,7 +77,9 @@ function discount(p: Product) {
 
 function DealsPage() {
   const { data } = useSuspenseQuery(dealsQuery);
-  const [tab, setTab] = useState<(typeof TABS)[number]["key"]>("all");
+  const { tab: initialTab } = Route.useSearch();
+  const navigate = Route.useNavigate();
+  const tab = initialTab;
   const { data: tabData } = useQuery({
     ...tabQuery(tab),
     enabled: tab !== "all",
@@ -91,7 +100,11 @@ function DealsPage() {
         ? data.featured
         : tab === "budget"
           ? all.filter((p) => Number(p.price) <= 99)
-          : discounted;
+          : tab === "festive"
+            ? sections.festive_picks ?? []
+            : tab === "combo"
+              ? sections.combo_packs ?? []
+              : discounted;
 
   const sectionFallback =
     tab === "flash"
@@ -100,7 +113,11 @@ function DealsPage() {
         ? sections.todays_deals
         : tab === "budget"
           ? sections.under_99
-          : undefined;
+          : tab === "festive"
+            ? sections.festive_picks
+            : tab === "combo"
+              ? sections.combo_packs
+              : undefined;
 
   const list =
     (tabData as { results?: Product[] })?.results?.length
@@ -136,7 +153,7 @@ function DealsPage() {
           <button
             key={t.key}
             type="button"
-            onClick={() => setTab(t.key)}
+            onClick={() => navigate({ search: { tab: t.key }, replace: true })}
             aria-pressed={tab === t.key}
             className={cn(
               "h-9 shrink-0 rounded-full border px-4 text-xs font-semibold transition-colors",

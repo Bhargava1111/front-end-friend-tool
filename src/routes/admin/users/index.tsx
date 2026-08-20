@@ -164,7 +164,14 @@ function AdminUsers() {
           const blocked = u.is_active === false;
           return (
             <div key={u.id} className="rounded-2xl border border-border bg-card p-4">
-              <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
+              <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-3">
+                {u.avatar_url ? (
+                  <img src={u.avatar_url} alt="" className="h-12 w-12 rounded-full object-cover" />
+                ) : (
+                  <span className="grid h-12 w-12 place-items-center rounded-full bg-primary-soft text-sm font-bold text-primary">
+                    {(u.full_name ?? "U").slice(0, 1).toUpperCase()}
+                  </span>
+                )}
                 <div className="min-w-0">
                   <p className="truncate text-sm font-semibold text-foreground">
                     {u.full_name ?? "Unnamed shopper"}
@@ -172,6 +179,9 @@ function AdminUsers() {
                   <p className="truncate text-xs text-muted-foreground">
                     {u.phone ?? "No phone"} · joined {formatDate(u.created_at)}
                   </p>
+                  {u.gst_number && (
+                    <p className="mt-0.5 truncate text-xs text-muted-foreground">GST: {u.gst_number}</p>
+                  )}
                   {u.address_text && (
                     <p className="mt-1 text-xs text-muted-foreground">
                       {u.address_text}

@@ -93,7 +93,8 @@ function Home() {
     ).values(),
   );
   const trending = (data.bestSelling?.length ? data.bestSelling : data.newest) ?? [];
-  const categoryScrollRef = useAutoScroll<HTMLDivElement>(data.categories.length > 3);
+  const topCategories = data.categories.filter((c) => !c.parent_id);
+  const categoryScrollRef = useAutoScroll<HTMLDivElement>(topCategories.length > 3);
   const sections = (data as { sections?: OfferSectionsMap }).sections ?? {};
   const { heroBanners, offerBanners, festiveBanners } = splitHomeBanners(data);
 
@@ -158,7 +159,7 @@ function Home() {
           ref={categoryScrollRef}
           className="no-scrollbar mt-3 flex gap-3 overflow-x-auto px-4 pb-1"
         >
-          {data.categories.map((c) => (
+          {topCategories.map((c) => (
             <Link
               key={c.id}
               to="/category/$slug"
@@ -193,7 +194,7 @@ function Home() {
         <ProductRail
           title="Today's deals"
           products={sections.todays_deals?.length ? sections.todays_deals : data.featured}
-          href={{ to: "/deals" }}
+          href={{ to: "/deals", search: { tab: "today" } }}
         />
       </Reveal>
 
@@ -201,14 +202,14 @@ function Home() {
 
       <FestivalBannerCarousel banners={festiveBanners} />
       <FestivalPicks
-        categories={data.categories}
+        categories={topCategories}
         products={allProducts}
         curated={sections.festive_picks}
         title="Pooja & festive store"
       />
 
       <Reveal>
-        <ProductRail title="Trending now" products={trending} href={{ to: "/deals" }} />
+        <ProductRail title="Trending now" products={trending} href={{ to: "/deals", search: { tab: "flash" } }} />
       </Reveal>
 
       <BudgetRail products={allProducts} curated={sections.under_99} />
@@ -217,7 +218,7 @@ function Home() {
         <ProductRail title="Best sellers" products={data.bestSelling} href={{ to: "/search" }} />
       </Reveal>
 
-      <ShopByNeed categories={data.categories} />
+      <ShopByNeed categories={topCategories} />
 
       <RecentlyViewedRail />
 
@@ -230,7 +231,7 @@ function Home() {
       <ServicePromises />
 
       <Reveal>
-        <ProductRail title="Newly added" products={data.newest} href={{ to: "/categories" }} />
+        <ProductRail title="Newly added" products={data.newest} href={{ to: "/search" }} />
       </Reveal>
 
 
