@@ -246,17 +246,33 @@ class AdminOrderListView(APIView):
     permission_classes = [IsAdminRole]
 
     def get(self, request):
-        qs = Order.objects.select_related("user").prefetch_related("order_items").order_by("-created_at")
+        qs = Order.objects.select_related("user").prefetch_related("order_items")
         status = request.query_params.get("status")
         user_id = request.query_params.get("user_id") or request.query_params.get("customer")
         open_only = request.query_params.get("open") in ("1", "true", "yes")
+        sort = request.query_params.get("sort", "newest")
+        date = request.query_params.get("date")
+        day = request.query_params.get("day")
+
         if status:
             qs = qs.filter(status=status)
         if user_id:
             qs = qs.filter(user_id=user_id)
         if open_only:
             qs = qs.filter(status__in=["pending", "confirmed", "packed", "out_for_delivery"])
-        return Response(OrderSerializer(qs[:100], many=True).data)
+
+        today = timezone.localdate()
+        if day == "today":
+            qs = qs.filter(created_at__date=today)
+        elif day == "yesterday":
+            qs = qs.filter(created_at__date=today - timedelta(days=1))
+        elif day == "week":
+            qs = qs.filter(created_at__date__gte=today - timedelta(days=7))
+        elif date:
+            qs = qs.filter(created_at__date=date)
+
+        qs = qs.order_by("created_at" if sort == "oldest" else "-created_at")
+        return Response(OrderSerializer(qs[:200], many=True).data)
 
     def post(self, request):
         user_id = request.data.get("user_id")
@@ -273,6 +289,60 @@ class AdminOrderListView(APIView):
             status="pending",
         )
         return Response({"id": order.id}, status=201)
+
+
+class AdminOrderBulkView(APIView):
+    permission_classes = [IsAdminRole]
+
+    def post(self, request):
+        from storeops.services.audit import log_activity
+        from storeops.services.notifications import notify_order_status
+
+        order_ids = request.data.get("order_ids") or []
+        action = request.data.get("action", "approve")
+        delivery_date = request.data.get("delivery_date")
+
+        status_map = {
+            "approve": "confirmed",
+            "confirm": "confirmed",
+            "reject": "cancelled",
+            "cancel": "cancelled",
+            "pack": "packed",
+            "deliver": "delivered",
+            "out_for_delivery": "out_for_delivery",
+        }
+        new_status = status_map.get(action, action)
+        if new_status not in dict(Order.Status.choices):
+            return Response({"detail": f"Invalid action: {action}"}, status=400)
+
+        if not order_ids:
+            if action in ("approve", "confirm"):
+                qs = Order.objects.filter(status="pending")
+            else:
+                return Response({"detail": "order_ids required"}, status=400)
+        else:
+            qs = Order.objects.filter(id__in=order_ids)
+
+        updated = 0
+        for order in qs:
+            old_status = order.status
+            order.status = new_status
+            if delivery_date and action in ("approve", "confirm"):
+                order.delivery_date = delivery_date
+            order.save()
+            if old_status != order.status:
+                notify_order_status(order)
+            updated += 1
+
+        log_activity(
+            request.user,
+            "order.bulk_update",
+            "order",
+            "",
+            {"action": action, "count": updated, "order_ids": [str(i) for i in order_ids]},
+            request,
+        )
+        return Response({"ok": True, "updated": updated, "status": new_status})
 
 
 class AdminOrderDetailView(APIView):
@@ -510,6 +580,36 @@ class AdminHomeSectionView(APIView):
         ProductOfferPlacement.objects.filter(section=key).delete()
         invalidate_catalog_cache()
         return Response(status=204)
+
+    def patch(self, request):
+        action = request.data.get("action")
+        if action == "move":
+            section_id = request.data.get("id")
+            direction = request.data.get("direction")
+            sections = list(HomeOfferSection.objects.all().order_by("sort_order", "title"))
+            idx = next((i for i, s in enumerate(sections) if str(s.id) == str(section_id)), None)
+            if idx is None:
+                return Response({"detail": "Section not found"}, status=404)
+            if direction == "up" and idx > 0:
+                swap_idx = idx - 1
+            elif direction == "down" and idx < len(sections) - 1:
+                swap_idx = idx + 1
+            else:
+                return Response({"ok": True, "moved": False})
+            a, b = sections[idx], sections[swap_idx]
+            a.sort_order, b.sort_order = b.sort_order, a.sort_order
+            HomeOfferSection.objects.bulk_update([a, b], ["sort_order"])
+            invalidate_catalog_cache()
+            return Response({"ok": True, "moved": True})
+
+        if action == "reorder":
+            ordered_ids = request.data.get("ordered_ids") or []
+            for i, sid in enumerate(ordered_ids):
+                HomeOfferSection.objects.filter(id=sid).update(sort_order=i)
+            invalidate_catalog_cache()
+            return Response({"ok": True, "reordered": len(ordered_ids)})
+
+        return Response({"detail": "Unknown action"}, status=400)
 
 
 class AdminCategoryView(APIView):

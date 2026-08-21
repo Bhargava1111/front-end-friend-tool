@@ -209,3 +209,42 @@ export const addPriceWatch = createServerFn({ method: "POST" })
       body: toJsonBody(data),
     }),
   );
+
+export async function addPriceWatchClient(data: { product_id: string; target_price?: number }) {
+  const token = await requireAccessToken();
+  return apiFetch("/price-watches/", {
+    method: "POST",
+    token,
+    body: toJsonBody(data),
+  });
+}
+
+export async function getPriceWatchesClient() {
+  const token = await requireAccessToken();
+  const res = await apiFetch<unknown>("/price-watches/", { token });
+  if (Array.isArray(res)) return res;
+  if (res && typeof res === "object" && Array.isArray((res as { results?: unknown[] }).results)) {
+    return (res as { results: unknown[] }).results;
+  }
+  return [];
+}
+
+export async function removePriceWatchClient(id: string) {
+  const token = await requireAccessToken();
+  await apiFetch(`/price-watches/${id}/`, { method: "DELETE", token });
+  return { ok: true };
+}
+
+export async function submitBulkOrderClient(data: {
+  name: string;
+  phone: string;
+  items_text: string;
+  estimated_qty?: number;
+}) {
+  const token = await ensureValidAccessToken();
+  return apiFetch<{ id: string; ok: boolean }>("/bulk-orders/", {
+    method: "POST",
+    token: token ?? null,
+    body: toJsonBody(data),
+  });
+}

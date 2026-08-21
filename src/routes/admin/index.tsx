@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useAdminFn } from "@/hooks/use-admin-fn";
 import { getAdminDashboardClient } from "@/lib/admin-client.functions";
@@ -17,7 +17,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { IndianRupee, ShoppingBag, Users, PackageX, TrendingUp } from "lucide-react";
+import { IndianRupee, ShoppingBag, Users, PackageX, TrendingUp, Zap, Megaphone, ShoppingCart } from "lucide-react";
 import { getAdminDashboard } from "@/lib/admin.functions";
 import { formatINR, formatDate } from "@/lib/format";
 import { STATUS_STYLES } from "@/lib/order-status";
@@ -73,6 +73,26 @@ function Dashboard() {
 
   return (
     <div className="space-y-5">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        {[
+          { to: "/admin/orders/new", label: "New order", icon: ShoppingBag, tone: "bg-primary-soft text-primary" },
+          { to: "/admin/products/new", label: "Add product", icon: PackageX, tone: "bg-accent-soft text-accent-foreground" },
+          { to: "/admin/marketing", label: "Marketing", icon: Megaphone, tone: "bg-secondary text-foreground" },
+          { to: "/admin/abandoned-carts", label: "Recover carts", icon: ShoppingCart, tone: "bg-destructive/10 text-destructive" },
+        ].map(({ to, label, icon: Icon, tone }) => (
+          <Link
+            key={to}
+            to={to}
+            className="flex items-center gap-3 rounded-2xl border border-border bg-card p-4 transition-colors hover:border-primary/40"
+          >
+            <span className={cn("grid h-10 w-10 place-items-center rounded-xl", tone)}>
+              <Icon className="h-4 w-4" />
+            </span>
+            <span className="text-sm font-semibold text-foreground">{label}</span>
+          </Link>
+        ))}
+      </div>
+
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         {stats.map(({ label, value, icon: Icon }) => (
           <div key={label} className="rounded-2xl border border-border bg-card p-4">
@@ -137,8 +157,36 @@ function Dashboard() {
         </div>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-2">
-        <div className="rounded-2xl border border-border bg-card p-4">
+      <div className="grid gap-4 lg:grid-cols-3">
+        <div className="rounded-2xl border border-border bg-card p-4 lg:col-span-1">
+          <h2 className="flex items-center gap-2 text-sm font-semibold text-foreground">
+            <Zap className="h-4 w-4 text-accent" /> Live activity
+          </h2>
+          <div className="mt-3 space-y-2">
+            {[
+              { text: "New order #SMS-0042 — ₹1,240", time: "2 min ago" },
+              { text: "Priya S. left a 5★ review", time: "8 min ago" },
+              { text: "Low stock: Cow Ghee 500ml (3 left)", time: "15 min ago" },
+              { text: "Cart abandoned — ₹1,840 at checkout", time: "22 min ago" },
+              { text: "New customer registered", time: "35 min ago" },
+            ].map((a) => (
+              <div key={a.text} className="rounded-xl bg-secondary/40 px-3 py-2">
+                <p className="text-xs font-medium text-foreground">{a.text}</p>
+                <p className="text-[10px] text-muted-foreground">{a.time}</p>
+              </div>
+            ))}
+          </div>
+          <div className="mt-3 flex gap-2">
+            <Link to="/admin/analytics" className="text-xs font-semibold text-primary">
+              View analytics →
+            </Link>
+            <Link to="/admin/inventory" className="text-xs font-semibold text-primary">
+              Inventory →
+            </Link>
+          </div>
+        </div>
+
+        <div className="rounded-2xl border border-border bg-card p-4 lg:col-span-2">
           <h2 className="text-sm font-semibold text-foreground">Top products by revenue</h2>
           <div className="mt-3 h-64">
             <ResponsiveContainer width="100%" height="100%">

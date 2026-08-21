@@ -119,6 +119,66 @@ export const useSaveForLater = create<SaveForLaterState>()(
   ),
 );
 
+/* ----------------------------- COMPARE LIST --------------------------- */
+
+const MAX_COMPARE = 4;
+
+type CompareListState = {
+  items: Product[];
+  add: (product: Product) => boolean;
+  remove: (id: string) => void;
+  clear: () => void;
+  has: (id: string) => boolean;
+};
+
+export const useCompareList = create<CompareListState>()(
+  persist(
+    (set, get) => ({
+      items: [],
+      add: (product) => {
+        const current = get().items;
+        if (current.some((p) => p.id === product.id)) return true;
+        if (current.length >= MAX_COMPARE) return false;
+        set({ items: [...current, product] });
+        return true;
+      },
+      remove: (id) => set((state) => ({ items: state.items.filter((p) => p.id !== id) })),
+      clear: () => set({ items: [] }),
+      has: (id) => get().items.some((p) => p.id === id),
+    }),
+    { name: "sms-compare-list", storage: persistStorage },
+  ),
+);
+
+/* ----------------------------- NOTIFICATION PREFS --------------------- */
+
+type NotificationPrefs = {
+  orderUpdates: boolean;
+  deliveryAlerts: boolean;
+  offersDeals: boolean;
+  priceDrops: boolean;
+  newArrivals: boolean;
+  newsletter: boolean;
+};
+
+type NotificationPrefsState = NotificationPrefs & {
+  set: (patch: Partial<NotificationPrefs>) => void;
+};
+
+export const useNotificationPrefs = create<NotificationPrefsState>()(
+  persist(
+    (set) => ({
+      orderUpdates: true,
+      deliveryAlerts: true,
+      offersDeals: true,
+      priceDrops: true,
+      newArrivals: false,
+      newsletter: false,
+      set: (patch) => set((state) => ({ ...state, ...patch })),
+    }),
+    { name: "sms-notification-prefs", storage: persistStorage },
+  ),
+);
 
 /* ----------------------------- APPLIED COUPON ------------------------- */
 

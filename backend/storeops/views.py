@@ -15,6 +15,7 @@ from storeops.models import (
     BOGOPromotion,
     CategoryDiscount,
     Feedback,
+    BulkOrderRequest,
     LoyaltyAccount,
     PriceWatch,
     PushSubscription,
@@ -118,6 +119,35 @@ class FeedbackView(APIView):
             page=data.get("page", "feedback"),
         )
         return Response({"ok": True}, status=201)
+
+
+class BulkOrderView(APIView):
+    def post(self, request):
+        data = request.data
+        name = (data.get("name") or "").strip()
+        phone = (data.get("phone") or "").strip()
+        items_text = (data.get("items_text") or data.get("items") or "").strip()
+        if not name or not phone or not items_text:
+            return Response({"detail": "Name, phone and items are required."}, status=400)
+        req = BulkOrderRequest.objects.create(
+            user=request.user if request.user.is_authenticated else None,
+            name=name,
+            phone=phone,
+            items_text=items_text,
+            estimated_qty=int(data.get("estimated_qty") or data.get("quantity") or 0),
+        )
+        try:
+            for admin in User.objects.filter(role="admin", is_active=True):
+                notify_user(
+                    admin,
+                    "New bulk order request",
+                    f"{req.name} — {req.estimated_qty or '?'} units",
+                    "system",
+                    link="/admin/bulk-orders",
+                )
+        except Exception:
+            pass
+        return Response({"id": str(req.id), "ok": True}, status=201)
 
 
 class PincodeCheckView(APIView):

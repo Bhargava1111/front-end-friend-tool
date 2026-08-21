@@ -50,6 +50,16 @@ export const adminDeleteHomeSection = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+export const adminReorderHomeSection = createServerFn({ method: "POST" })
+  .middleware([requireAuth])
+  .inputValidator((data: { id: string; direction: "up" | "down" }) => data)
+  .handler(async ({ data, context }) => {
+    return admin(context.accessToken, "/admin-api/home-sections/", {
+      method: "PATCH",
+      body: toJsonBody({ action: "move", id: data.id, direction: data.direction }),
+    }) as Promise<{ ok: boolean; moved: boolean }>;
+  });
+
 export const adminListCoupons = createServerFn({ method: "GET" })
   .middleware([requireAuth])
   .handler(async ({ context }) => admin(context.accessToken, "/admin-api/coupons/"));

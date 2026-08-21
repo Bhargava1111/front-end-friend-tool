@@ -41,6 +41,28 @@ class Feedback(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
 
+class BulkOrderRequest(models.Model):
+    class Status(models.TextChoices):
+        PENDING = "pending", "Pending"
+        APPROVED = "approved", "Approved"
+        CONTACTED = "contacted", "Contacted"
+        REJECTED = "rejected", "Rejected"
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey("accounts.User", on_delete=models.SET_NULL, null=True, blank=True)
+    name = models.CharField(max_length=120)
+    phone = models.CharField(max_length=20)
+    items_text = models.TextField()
+    estimated_qty = models.PositiveIntegerField(default=0)
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.PENDING)
+    admin_notes = models.TextField(blank=True, default="")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+
 class UserActivityLog(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     actor = models.ForeignKey("accounts.User", on_delete=models.SET_NULL, null=True, blank=True)

@@ -10,6 +10,7 @@ from accounts.permissions import IsAdminRole
 from orders.models import Order, OrderReturn
 from storeops.models import (
     BOGOPromotion,
+    BulkOrderRequest,
     CategoryDiscount,
     DeliveryAssignment,
     DeliveryRider,
@@ -112,6 +113,61 @@ class AdminFeedbackView(APIView):
             "user": f.user.full_name if f.user_id else "Guest",
             "created_at": f.created_at.isoformat(),
         } for f in rows])
+
+
+class AdminBulkOrderView(APIView):
+    permission_classes = [IsAdminRole]
+
+    def get(self, request):
+        status = request.query_params.get("status")
+        qs = BulkOrderRequest.objects.select_related("user").order_by("-created_at")
+        if status:
+            qs = qs.filter(status=status)
+        return Response([{
+            "id": str(r.id),
+            "name": r.name,
+            "phone": r.phone,
+            "items_text": r.items_text,
+            "estimated_qty": r.estimated_qty,
+            "status": r.status,
+            "admin_notes": r.admin_notes,
+            "user_id": str(r.user_id) if r.user_id else None,
+            "created_at": r.created_at.isoformat(),
+        } for r in qs[:200]])
+
+    def patch(self, request):
+        req_id = request.data.get("id")
+        req = BulkOrderRequest.objects.filter(id=req_id).first()
+        if not req:
+            return Response({"detail": "Not found"}, status=404)
+        if "status" in request.data:
+            req.status = request.data["status"]
+        if "admin_notes" in request.data:
+            req.admin_notes = request.data["admin_notes"]
+        req.save()
+        log_activity(request.user, "bulk_order.update", "bulk_order", str(req.id), request.data, request)
+        return Response({"ok": True, "status": req.status})
+
+    def post(self, request):
+        """Bulk approve all pending bulk order requests."""
+        action = request.data.get("action", "approve")
+        ids = request.data.get("ids") or []
+        status_map = {"approve": "approved", "reject": "rejected", "contact": "contacted"}
+        new_status = status_map.get(action, action)
+        if ids:
+            qs = BulkOrderRequest.objects.filter(id__in=ids)
+        else:
+            qs = BulkOrderRequest.objects.filter(status="pending")
+        updated = qs.update(status=new_status)
+        log_activity(
+            request.user,
+            "bulk_order.bulk_update",
+            "bulk_order",
+            "",
+            {"action": action, "count": updated},
+            request,
+        )
+        return Response({"ok": True, "updated": updated, "status": new_status})
 
 
 class AdminActivityLogView(APIView):

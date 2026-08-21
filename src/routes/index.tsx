@@ -28,6 +28,8 @@ import {
   ServicePromises,
   ShopByNeed,
 } from "@/components/home-sections";
+import { QuickLinks } from "@/components/quick-links";
+import { LiveActivityTicker } from "@/components/live-activity-ticker";
 
 
 const homeQuery = queryOptions({
@@ -146,6 +148,14 @@ function Home() {
           </Link>
         </FadeIn>
       </header>
+
+      <Reveal className="mt-4">
+        <QuickLinks />
+      </Reveal>
+
+      <Reveal className="mt-4">
+        <LiveActivityTicker />
+      </Reveal>
 
       <Reveal className="mt-5">
         <BannerSlider banners={heroBanners} />

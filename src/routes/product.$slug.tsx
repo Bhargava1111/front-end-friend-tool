@@ -13,6 +13,7 @@ import {
   Star,
   Leaf,
   Check,
+  GitCompareArrows,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -35,7 +36,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { formatINR } from "@/lib/format";
-import { useRecentlyViewed, useSaveForLater } from "@/lib/client-store";
+import { useRecentlyViewed, useSaveForLater, useCompareList } from "@/lib/client-store";
 import { cn } from "@/lib/utils";
 
 const productQuery = (slug: string) =>
@@ -147,6 +148,7 @@ function ProductPage() {
   const activeUnitPrice = unitPriceForQty(qty, price, product.price_tiers);
   const trackViewed = useRecentlyViewed((s) => s.add);
   const saveLater = useSaveForLater();
+  const compareList = useCompareList();
 
   useEffect(() => {
     trackViewed(product);
@@ -154,6 +156,7 @@ function ProductPage() {
 
   const wishlisted = (wishlist ?? []).some((w) => w.product?.id === product.id);
   const saved = saveLater.items.some((p) => p.id === product.id);
+  const inCompare = compareList.has(product.id);
   const discount = mrp && mrp > price ? Math.round(((mrp - price) / mrp) * 100) : 0;
 
   const bundle = (data.related ?? []).slice(0, 2);
@@ -217,6 +220,26 @@ function ProductPage() {
         backTo="/"
         action={
           <div className="flex items-center gap-1.5">
+            <button
+              type="button"
+              aria-label="Compare product"
+              onClick={() => {
+                if (inCompare) {
+                  compareList.remove(product.id);
+                  toast.success("Removed from compare");
+                } else {
+                  const ok = compareList.add(product);
+                  if (ok) toast.success("Added to compare");
+                  else toast.error("Compare list full (max 4 items)");
+                }
+              }}
+              className={cn(
+                "grid h-9 w-9 place-items-center rounded-full bg-secondary",
+                inCompare && "text-primary",
+              )}
+            >
+              <GitCompareArrows className="h-4 w-4" />
+            </button>
             <button
               type="button"
               aria-label="Share product"
@@ -475,17 +498,39 @@ function ProductPage() {
           </dl>
         </div>
 
-        <button
-          type="button"
-          onClick={() => {
-            saveLater.toggle(product);
-            toast.success(saved ? "Removed from saved items" : "Saved for later");
-          }}
-          className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl border border-border py-2.5 text-sm font-medium"
-        >
-          <Bookmark className={cn("h-4 w-4", saved && "fill-primary text-primary")} />
-          {saved ? "Saved for later" : "Save for later"}
-        </button>
+        <div className="mt-4 grid grid-cols-2 gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              saveLater.toggle(product);
+              toast.success(saved ? "Removed from saved items" : "Saved for later");
+            }}
+            className="flex items-center justify-center gap-2 rounded-xl border border-border py-2.5 text-sm font-medium"
+          >
+            <Bookmark className={cn("h-4 w-4", saved && "fill-primary text-primary")} />
+            {saved ? "Saved" : "Save"}
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              if (inCompare) {
+                compareList.remove(product.id);
+                toast.success("Removed from compare");
+              } else {
+                const ok = compareList.add(product);
+                if (ok) toast.success("Added to compare");
+                else toast.error("Compare list full (max 4)");
+              }
+            }}
+            className={cn(
+              "flex items-center justify-center gap-2 rounded-xl border border-border py-2.5 text-sm font-medium",
+              inCompare && "border-primary text-primary",
+            )}
+          >
+            <GitCompareArrows className="h-4 w-4" />
+            {inCompare ? "Comparing" : "Compare"}
+          </button>
+        </div>
       </div>
 
       {bundle.length > 0 && (

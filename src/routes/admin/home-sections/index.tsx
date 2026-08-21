@@ -4,10 +4,15 @@ import { useAdminFn } from "@/hooks/use-admin-fn";
 import {
   adminListHomeSectionsClient,
   adminDeleteHomeSectionClient,
+  adminReorderHomeSectionClient,
 } from "@/lib/admin-client.functions";
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { Pencil, Plus, Trash2, ChevronUp, ChevronDown, GripVertical } from "lucide-react";
 import { toast } from "sonner";
-import { adminListHomeSections, adminDeleteHomeSection } from "@/lib/admin-extra.functions";
+import {
+  adminListHomeSections,
+  adminDeleteHomeSection,
+  adminReorderHomeSection,
+} from "@/lib/admin-extra.functions";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/skeletons";
 import { ErrorState } from "@/components/state-blocks";
@@ -21,12 +26,15 @@ export const Route = createFileRoute("/admin/home-sections/")({
 function AdminHomeSectionsPage() {
   const list = useAdminFn(adminListHomeSections, adminListHomeSectionsClient);
   const remove = useAdminFn(adminDeleteHomeSection, adminDeleteHomeSectionClient);
+  const reorder = useAdminFn(adminReorderHomeSection, adminReorderHomeSectionClient);
   const queryClient = useQueryClient();
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["admin-home-sections"],
     queryFn: () => list() as Promise<HomeOfferSectionDef[]>,
   });
+
+  const sections = data ?? [];
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => remove({ data: { id } }),
@@ -35,6 +43,18 @@ function AdminHomeSectionsPage() {
       queryClient.invalidateQueries({ queryKey: ["admin-products"] });
       queryClient.invalidateQueries({ queryKey: ["home"] });
       toast.success("Section deleted");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const moveMutation = useMutation({
+    mutationFn: (vars: { id: string; direction: "up" | "down" }) => reorder({ data: vars }),
+    onSuccess: (res) => {
+      if (res.moved) {
+        queryClient.invalidateQueries({ queryKey: ["admin-home-sections"] });
+        queryClient.invalidateQueries({ queryKey: ["home"] });
+        toast.success("Section moved");
+      }
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -48,7 +68,7 @@ function AdminHomeSectionsPage() {
         <div>
           <h1 className="text-lg font-bold text-foreground">Home sections</h1>
           <p className="text-xs text-muted-foreground">
-            Create offer rails shown on the home page — assign products from the Products screen
+            Drag order with ↑ ↓ — sections appear on the home page top to bottom
           </p>
         </div>
         <Button size="sm" className="rounded-xl" asChild>
@@ -68,11 +88,37 @@ function AdminHomeSectionsPage() {
         </div>
       ) : (
         <div className="space-y-2">
-          {(data ?? []).map((s) => (
+          {sections.map((s, index) => (
             <div
               key={s.id}
               className="flex flex-wrap items-center gap-3 rounded-2xl border border-border bg-card p-4 card-elevated"
             >
+              <div className="flex shrink-0 flex-col items-center gap-0.5">
+                <GripVertical className="h-4 w-4 text-muted-foreground" />
+                <span className="text-[10px] font-bold text-muted-foreground">#{index + 1}</span>
+              </div>
+              <div className="flex shrink-0 flex-col gap-0.5">
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-7 w-7"
+                  disabled={index === 0 || moveMutation.isPending}
+                  aria-label="Move up"
+                  onClick={() => moveMutation.mutate({ id: s.id, direction: "up" })}
+                >
+                  <ChevronUp className="h-4 w-4" />
+                </Button>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-7 w-7"
+                  disabled={index === sections.length - 1 || moveMutation.isPending}
+                  aria-label="Move down"
+                  onClick={() => moveMutation.mutate({ id: s.id, direction: "down" })}
+                >
+                  <ChevronDown className="h-4 w-4" />
+                </Button>
+              </div>
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-semibold text-foreground">{s.title}</p>
                 <p className="text-xs text-muted-foreground">
@@ -81,6 +127,8 @@ function AdminHomeSectionsPage() {
                 </p>
                 <p className="text-xs text-muted-foreground">
                   {s.placed_count ?? 0} manually placed · {s.display_count ?? 0} shown on store
+                  {" · sort "}
+                  {s.sort_order ?? index}
                 </p>
                 {s.subtitle ? <p className="mt-0.5 text-xs text-muted-foreground">{s.subtitle}</p> : null}
               </div>
@@ -116,7 +164,7 @@ function AdminHomeSectionsPage() {
               </Button>
             </div>
           ))}
-          {(data ?? []).length === 0 && (
+          {sections.length === 0 && (
             <p className="rounded-2xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
               No sections yet. Create one to show product rails on the home page.
             </p>

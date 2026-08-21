@@ -21,6 +21,12 @@ import {
   BarChart3,
   Newspaper,
   Menu,
+  LineChart,
+  Warehouse,
+  Megaphone,
+  ShoppingCart,
+  Zap,
+  UsersRound,
 } from "lucide-react";
 import { getAdminStatus, getAdminPanelSessionStatus, revokeAdminPanelSession } from "@/lib/admin.functions";
 import { useAdminFn } from "@/hooks/use-admin-fn";
@@ -53,6 +59,7 @@ const groups = [
     label: "Overview",
     links: [
       { to: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
+      { to: "/admin/analytics", label: "Analytics", icon: LineChart },
       { to: "/admin/reports", label: "Reports", icon: BarChart3 },
     ],
   },
@@ -60,6 +67,7 @@ const groups = [
     label: "Selling",
     links: [
       { to: "/admin/orders", label: "Orders", icon: ShoppingBag },
+      { to: "/admin/bulk-orders", label: "Bulk orders", icon: Package },
       { to: "/admin/returns", label: "Returns", icon: PackageX },
       { to: "/admin/coupons", label: "Coupons", icon: TicketPercent },
     ],
@@ -68,6 +76,7 @@ const groups = [
     label: "Catalogue",
     links: [
       { to: "/admin/products", label: "Products", icon: Package },
+      { to: "/admin/inventory", label: "Inventory", icon: Warehouse },
       { to: "/admin/categories", label: "Categories", icon: LayoutGrid },
       { to: "/admin/brands", label: "Brands", icon: Tag },
       { to: "/admin/banners", label: "Banners", icon: Images },
@@ -80,6 +89,7 @@ const groups = [
     links: [
       { to: "/admin/users", label: "Users", icon: UserCheck },
       { to: "/admin/customers", label: "Customers", icon: Users },
+      { to: "/admin/segments", label: "Segments", icon: UsersRound },
       { to: "/admin/tickets", label: "Support", icon: ShieldAlert },
       { to: "/admin/blog", label: "Blog", icon: Newspaper },
       { to: "/admin/notifications", label: "Notify", icon: Bell },
@@ -91,6 +101,9 @@ const groups = [
       { to: "/admin/delivery", label: "Delivery", icon: StoreIcon },
       { to: "/admin/payments", label: "Payments", icon: BarChart3 },
       { to: "/admin/promotions", label: "Promotions", icon: TicketPercent },
+      { to: "/admin/flash-sales", label: "Flash sales", icon: Zap },
+      { to: "/admin/marketing", label: "Marketing", icon: Megaphone },
+      { to: "/admin/abandoned-carts", label: "Abandoned carts", icon: ShoppingCart },
     ],
   },
   {

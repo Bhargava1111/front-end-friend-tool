@@ -88,13 +88,40 @@ export const getAdminDashboard = createServerFn({ method: "GET" })
 
 export const getAdminOrders = createServerFn({ method: "GET" })
   .middleware([requireAuth])
-  .inputValidator((data?: { customer?: string; open?: boolean }) => data ?? {})
+  .inputValidator(
+    (data?: {
+      customer?: string;
+      open?: boolean;
+      sort?: "newest" | "oldest";
+      day?: "today" | "yesterday" | "week";
+      date?: string;
+    }) => data ?? {},
+  )
   .handler(async ({ data, context }) => {
     const params = new URLSearchParams();
     if (data.customer) params.set("user_id", data.customer);
     if (data.open) params.set("open", "1");
+    if (data.sort) params.set("sort", data.sort);
+    if (data.day) params.set("day", data.day);
+    if (data.date) params.set("date", data.date);
     const qs = params.toString();
     return admin(context.accessToken, `/admin-api/orders/${qs ? `?${qs}` : ""}`);
+  });
+
+export const bulkUpdateOrders = createServerFn({ method: "POST" })
+  .middleware([requireAuth])
+  .inputValidator(
+    (data: {
+      order_ids?: string[];
+      action: "approve" | "reject" | "confirm" | "cancel" | "pack" | "deliver";
+      delivery_date?: string;
+    }) => data,
+  )
+  .handler(async ({ data, context }) => {
+    return admin(context.accessToken, "/admin-api/orders/bulk/", {
+      method: "POST",
+      body: toJsonBody(data),
+    }) as Promise<{ ok: boolean; updated: number; status: string }>;
   });
 
 export const setOrderStatus = createServerFn({ method: "POST" })

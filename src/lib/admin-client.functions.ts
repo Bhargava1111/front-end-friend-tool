@@ -78,13 +78,35 @@ export async function getAdminDashboardClient() {
 }
 
 export async function getAdminOrdersClient(opts?: {
-  data?: { customer?: string; open?: boolean };
+  data?: {
+    customer?: string;
+    open?: boolean;
+    sort?: "newest" | "oldest";
+    day?: "today" | "yesterday" | "week";
+    date?: string;
+  };
 }) {
   const params = new URLSearchParams();
   if (opts?.data?.customer) params.set("user_id", opts.data.customer);
   if (opts?.data?.open) params.set("open", "1");
+  if (opts?.data?.sort) params.set("sort", opts.data.sort);
+  if (opts?.data?.day) params.set("day", opts.data.day);
+  if (opts?.data?.date) params.set("date", opts.data.date);
   const qs = params.toString();
   return adminClient(`/admin-api/orders/${qs ? `?${qs}` : ""}`);
+}
+
+export async function bulkUpdateOrdersClient(opts: {
+  data: {
+    order_ids?: string[];
+    action: string;
+    delivery_date?: string;
+  };
+}) {
+  return adminClient("/admin-api/orders/bulk/", {
+    method: "POST",
+    body: toJsonBody(opts.data),
+  }) as Promise<{ ok: boolean; updated: number; status: string }>;
 }
 
 export async function setOrderStatusClient(opts: { data: { id: string; status: string } }) {
@@ -231,6 +253,40 @@ export async function adminSaveHomeSectionClient(opts: { data: Record<string, un
 export async function adminDeleteHomeSectionClient(opts: { data: { id: string } }) {
   await adminClient("/admin-api/home-sections/", { method: "DELETE", body: toJsonBody(opts.data) });
   return { ok: true };
+}
+
+export async function adminReorderHomeSectionClient(opts: {
+  data: { id: string; direction: "up" | "down" };
+}) {
+  return adminClient("/admin-api/home-sections/", {
+    method: "PATCH",
+    body: toJsonBody({ action: "move", id: opts.data.id, direction: opts.data.direction }),
+  }) as Promise<{ ok: boolean; moved: boolean }>;
+}
+
+export async function getAdminBulkOrdersClient(opts?: { data?: { status?: string } }) {
+  const params = new URLSearchParams();
+  if (opts?.data?.status) params.set("status", opts.data.status);
+  const qs = params.toString();
+  return adminClient(`/admin-api/bulk-orders/${qs ? `?${qs}` : ""}`);
+}
+
+export async function updateAdminBulkOrderClient(opts: {
+  data: { id: string; status?: string; admin_notes?: string };
+}) {
+  return adminClient("/admin-api/bulk-orders/", {
+    method: "PATCH",
+    body: toJsonBody(opts.data),
+  });
+}
+
+export async function bulkApproveBulkOrdersClient(opts?: {
+  data?: { ids?: string[]; action?: string };
+}) {
+  return adminClient("/admin-api/bulk-orders/", {
+    method: "POST",
+    body: toJsonBody(opts?.data ?? { action: "approve" }),
+  }) as Promise<{ ok: boolean; updated: number }>;
 }
 
 export async function adminListCouponsClient() {

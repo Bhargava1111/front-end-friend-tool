@@ -9,10 +9,19 @@ const PROMISES = [
 ];
 
 const LINKS = [
+  { to: "/sale", label: "Mega Sale" },
+  { to: "/festival-store", label: "Festival Store" },
+  { to: "/new-arrivals", label: "New Arrivals" },
+  { to: "/bulk-order", label: "Bulk Orders" },
+  { to: "/compare", label: "Compare" },
   { to: "/categories", label: "Categories" },
   { to: "/deals", label: "Deals" },
+  { to: "/offers", label: "Offers" },
+  { to: "/membership", label: "Membership" },
+  { to: "/gift-cards", label: "Gift Cards" },
   { to: "/coupons", label: "Coupons" },
   { to: "/brands", label: "Brands" },
+  { to: "/track-order", label: "Track Order" },
   { to: "/blogs", label: "Journal" },
   { to: "/stores", label: "Store locator" },
   { to: "/about", label: "About us" },

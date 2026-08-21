@@ -15,46 +15,68 @@ import { Route as AboutRouteImport } from './routes/about'
 import { Route as AdminRouteRouteImport } from './routes/admin/route'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as BrandsRouteImport } from './routes/brands'
+import { Route as BulkOrderRouteImport } from './routes/bulk-order'
 import { Route as CategoriesRouteImport } from './routes/categories'
+import { Route as CompareRouteImport } from './routes/compare'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as CouponsRouteImport } from './routes/coupons'
 import { Route as DealsRouteImport } from './routes/deals'
 import { Route as FaqRouteImport } from './routes/faq'
 import { Route as FeedbackRouteImport } from './routes/feedback'
+import { Route as FestivalStoreRouteImport } from './routes/festival-store'
+import { Route as GiftCardsRouteImport } from './routes/gift-cards'
 import { Route as HelpRouteImport } from './routes/help'
 import { Route as InstallIosRouteImport } from './routes/install-ios'
 import { Route as MaintenanceRouteImport } from './routes/maintenance'
+import { Route as MembershipRouteImport } from './routes/membership'
+import { Route as NewArrivalsRouteImport } from './routes/new-arrivals'
 import { Route as OffersRouteImport } from './routes/offers'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as PaymentFailureRouteImport } from './routes/payment-failure'
 import { Route as PaymentSuccessRouteImport } from './routes/payment-success'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as SaleRouteImport } from './routes/sale'
 import { Route as SearchRouteImport } from './routes/search'
 import { Route as SplashRouteImport } from './routes/splash'
 import { Route as StoresRouteImport } from './routes/stores'
 import { Route as SupportRouteImport } from './routes/support'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as TestimonialsRouteImport } from './routes/testimonials'
+import { Route as TrackOrderRouteImport } from './routes/track-order'
 import { Route as AuthenticatedAddressesRouteImport } from './routes/_authenticated/addresses'
 import { Route as AuthenticatedCartRouteImport } from './routes/_authenticated/cart'
 import { Route as AuthenticatedCheckoutRouteImport } from './routes/_authenticated/checkout'
 import { Route as AuthenticatedLanguageRouteImport } from './routes/_authenticated/language'
+import { Route as AuthenticatedMyReviewsRouteImport } from './routes/_authenticated/my-reviews'
+import { Route as AuthenticatedNotificationSettingsRouteImport } from './routes/_authenticated/notification-settings'
 import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated/notifications'
+import { Route as AuthenticatedPriceAlertsRouteImport } from './routes/_authenticated/price-alerts'
+import { Route as AuthenticatedRecentlyViewedRouteImport } from './routes/_authenticated/recently-viewed'
 import { Route as AuthenticatedReferralRouteImport } from './routes/_authenticated/referral'
+import { Route as AuthenticatedReorderRouteImport } from './routes/_authenticated/reorder'
 import { Route as AuthenticatedRewardsRouteImport } from './routes/_authenticated/rewards'
+import { Route as AuthenticatedSavedItemsRouteImport } from './routes/_authenticated/saved-items'
+import { Route as AuthenticatedSubscriptionsRouteImport } from './routes/_authenticated/subscriptions'
 import { Route as AuthenticatedVerifyAccountRouteImport } from './routes/_authenticated/verify-account'
 import { Route as AuthenticatedWalletRouteImport } from './routes/_authenticated/wallet'
 import { Route as AuthenticatedWishlistRouteImport } from './routes/_authenticated/wishlist'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
+import { Route as AdminAbandonedCartsRouteImport } from './routes/admin/abandoned-carts'
+import { Route as AdminAnalyticsRouteImport } from './routes/admin/analytics'
 import { Route as AdminAuditLogsRouteImport } from './routes/admin/audit-logs'
+import { Route as AdminBulkOrdersRouteImport } from './routes/admin/bulk-orders'
 import { Route as AdminCustomersRouteImport } from './routes/admin/customers'
+import { Route as AdminFlashSalesRouteImport } from './routes/admin/flash-sales'
+import { Route as AdminInventoryRouteImport } from './routes/admin/inventory'
+import { Route as AdminMarketingRouteImport } from './routes/admin/marketing'
 import { Route as AdminNotificationsRouteImport } from './routes/admin/notifications'
 import { Route as AdminPaymentsRouteImport } from './routes/admin/payments'
 import { Route as AdminPromotionsRouteImport } from './routes/admin/promotions'
 import { Route as AdminReportsRouteImport } from './routes/admin/reports'
 import { Route as AdminReturnsRouteImport } from './routes/admin/returns'
 import { Route as AdminReviewsRouteImport } from './routes/admin/reviews'
+import { Route as AdminSegmentsRouteImport } from './routes/admin/segments'
 import { Route as AdminSettingsRouteImport } from './routes/admin/settings'
 import { Route as AdminTicketsRouteImport } from './routes/admin/tickets'
 import { Route as BlogsIndexRouteImport } from './routes/blogs.index'
@@ -130,9 +152,19 @@ const BrandsRoute = BrandsRouteImport.update({
   path: '/brands',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BulkOrderRoute = BulkOrderRouteImport.update({
+  id: '/bulk-order',
+  path: '/bulk-order',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CategoriesRoute = CategoriesRouteImport.update({
   id: '/categories',
   path: '/categories',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CompareRoute = CompareRouteImport.update({
+  id: '/compare',
+  path: '/compare',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ContactRoute = ContactRouteImport.update({
@@ -160,6 +192,16 @@ const FeedbackRoute = FeedbackRouteImport.update({
   path: '/feedback',
   getParentRoute: () => rootRouteImport,
 } as any)
+const FestivalStoreRoute = FestivalStoreRouteImport.update({
+  id: '/festival-store',
+  path: '/festival-store',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GiftCardsRoute = GiftCardsRouteImport.update({
+  id: '/gift-cards',
+  path: '/gift-cards',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const HelpRoute = HelpRouteImport.update({
   id: '/help',
   path: '/help',
@@ -173,6 +215,16 @@ const InstallIosRoute = InstallIosRouteImport.update({
 const MaintenanceRoute = MaintenanceRouteImport.update({
   id: '/maintenance',
   path: '/maintenance',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MembershipRoute = MembershipRouteImport.update({
+  id: '/membership',
+  path: '/membership',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NewArrivalsRoute = NewArrivalsRouteImport.update({
+  id: '/new-arrivals',
+  path: '/new-arrivals',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OffersRoute = OffersRouteImport.update({
@@ -205,6 +257,11 @@ const ResetPasswordRoute = ResetPasswordRouteImport.update({
   path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SaleRoute = SaleRouteImport.update({
+  id: '/sale',
+  path: '/sale',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SearchRoute = SearchRouteImport.update({
   id: '/search',
   path: '/search',
@@ -235,6 +292,11 @@ const TestimonialsRoute = TestimonialsRouteImport.update({
   path: '/testimonials',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TrackOrderRoute = TrackOrderRouteImport.update({
+  id: '/track-order',
+  path: '/track-order',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedAddressesRoute = AuthenticatedAddressesRouteImport.update({
   id: '/addresses',
   path: '/addresses',
@@ -255,10 +317,33 @@ const AuthenticatedLanguageRoute = AuthenticatedLanguageRouteImport.update({
   path: '/language',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedMyReviewsRoute = AuthenticatedMyReviewsRouteImport.update({
+  id: '/my-reviews',
+  path: '/my-reviews',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedNotificationSettingsRoute =
+  AuthenticatedNotificationSettingsRouteImport.update({
+    id: '/notification-settings',
+    path: '/notification-settings',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedNotificationsRoute =
   AuthenticatedNotificationsRouteImport.update({
     id: '/notifications',
     path: '/notifications',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedPriceAlertsRoute =
+  AuthenticatedPriceAlertsRouteImport.update({
+    id: '/price-alerts',
+    path: '/price-alerts',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedRecentlyViewedRoute =
+  AuthenticatedRecentlyViewedRouteImport.update({
+    id: '/recently-viewed',
+    path: '/recently-viewed',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedReferralRoute = AuthenticatedReferralRouteImport.update({
@@ -266,11 +351,27 @@ const AuthenticatedReferralRoute = AuthenticatedReferralRouteImport.update({
   path: '/referral',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedReorderRoute = AuthenticatedReorderRouteImport.update({
+  id: '/reorder',
+  path: '/reorder',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedRewardsRoute = AuthenticatedRewardsRouteImport.update({
   id: '/rewards',
   path: '/rewards',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedSavedItemsRoute = AuthenticatedSavedItemsRouteImport.update({
+  id: '/saved-items',
+  path: '/saved-items',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedSubscriptionsRoute =
+  AuthenticatedSubscriptionsRouteImport.update({
+    id: '/subscriptions',
+    path: '/subscriptions',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedVerifyAccountRoute =
   AuthenticatedVerifyAccountRouteImport.update({
     id: '/verify-account',
@@ -292,14 +393,44 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AdminRouteRoute,
 } as any)
+const AdminAbandonedCartsRoute = AdminAbandonedCartsRouteImport.update({
+  id: '/abandoned-carts',
+  path: '/abandoned-carts',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminAnalyticsRoute = AdminAnalyticsRouteImport.update({
+  id: '/analytics',
+  path: '/analytics',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
 const AdminAuditLogsRoute = AdminAuditLogsRouteImport.update({
   id: '/audit-logs',
   path: '/audit-logs',
   getParentRoute: () => AdminRouteRoute,
 } as any)
+const AdminBulkOrdersRoute = AdminBulkOrdersRouteImport.update({
+  id: '/bulk-orders',
+  path: '/bulk-orders',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
 const AdminCustomersRoute = AdminCustomersRouteImport.update({
   id: '/customers',
   path: '/customers',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminFlashSalesRoute = AdminFlashSalesRouteImport.update({
+  id: '/flash-sales',
+  path: '/flash-sales',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminInventoryRoute = AdminInventoryRouteImport.update({
+  id: '/inventory',
+  path: '/inventory',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminMarketingRoute = AdminMarketingRouteImport.update({
+  id: '/marketing',
+  path: '/marketing',
   getParentRoute: () => AdminRouteRoute,
 } as any)
 const AdminNotificationsRoute = AdminNotificationsRouteImport.update({
@@ -330,6 +461,11 @@ const AdminReturnsRoute = AdminReturnsRouteImport.update({
 const AdminReviewsRoute = AdminReviewsRouteImport.update({
   id: '/reviews',
   path: '/reviews',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminSegmentsRoute = AdminSegmentsRouteImport.update({
+  id: '/segments',
+  path: '/segments',
   getParentRoute: () => AdminRouteRoute,
 } as any)
 const AdminSettingsRoute = AdminSettingsRouteImport.update({
@@ -568,45 +704,67 @@ export interface FileRoutesByFullPath {
   '/about': typeof AboutRoute
   '/auth': typeof AuthRoute
   '/brands': typeof BrandsRoute
+  '/bulk-order': typeof BulkOrderRoute
   '/categories': typeof CategoriesRoute
+  '/compare': typeof CompareRoute
   '/contact': typeof ContactRoute
   '/coupons': typeof CouponsRoute
   '/deals': typeof DealsRoute
   '/faq': typeof FaqRoute
   '/feedback': typeof FeedbackRoute
+  '/festival-store': typeof FestivalStoreRoute
+  '/gift-cards': typeof GiftCardsRoute
   '/help': typeof HelpRoute
   '/install-ios': typeof InstallIosRoute
   '/maintenance': typeof MaintenanceRoute
+  '/membership': typeof MembershipRoute
+  '/new-arrivals': typeof NewArrivalsRoute
   '/offers': typeof OffersRoute
   '/onboarding': typeof OnboardingRoute
   '/payment-failure': typeof PaymentFailureRoute
   '/payment-success': typeof PaymentSuccessRoute
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/sale': typeof SaleRoute
   '/search': typeof SearchRoute
   '/splash': typeof SplashRoute
   '/stores': typeof StoresRoute
   '/support': typeof SupportRoute
   '/terms': typeof TermsRoute
   '/testimonials': typeof TestimonialsRoute
+  '/track-order': typeof TrackOrderRoute
   '/addresses': typeof AuthenticatedAddressesRoute
   '/cart': typeof AuthenticatedCartRoute
   '/checkout': typeof AuthenticatedCheckoutRoute
   '/language': typeof AuthenticatedLanguageRoute
+  '/my-reviews': typeof AuthenticatedMyReviewsRoute
+  '/notification-settings': typeof AuthenticatedNotificationSettingsRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
+  '/price-alerts': typeof AuthenticatedPriceAlertsRoute
+  '/recently-viewed': typeof AuthenticatedRecentlyViewedRoute
   '/referral': typeof AuthenticatedReferralRoute
+  '/reorder': typeof AuthenticatedReorderRoute
   '/rewards': typeof AuthenticatedRewardsRoute
+  '/saved-items': typeof AuthenticatedSavedItemsRoute
+  '/subscriptions': typeof AuthenticatedSubscriptionsRoute
   '/verify-account': typeof AuthenticatedVerifyAccountRoute
   '/wallet': typeof AuthenticatedWalletRoute
   '/wishlist': typeof AuthenticatedWishlistRoute
+  '/admin/abandoned-carts': typeof AdminAbandonedCartsRoute
+  '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/audit-logs': typeof AdminAuditLogsRoute
+  '/admin/bulk-orders': typeof AdminBulkOrdersRoute
   '/admin/customers': typeof AdminCustomersRoute
+  '/admin/flash-sales': typeof AdminFlashSalesRoute
+  '/admin/inventory': typeof AdminInventoryRoute
+  '/admin/marketing': typeof AdminMarketingRoute
   '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/payments': typeof AdminPaymentsRoute
   '/admin/promotions': typeof AdminPromotionsRoute
   '/admin/reports': typeof AdminReportsRoute
   '/admin/returns': typeof AdminReturnsRoute
   '/admin/reviews': typeof AdminReviewsRoute
+  '/admin/segments': typeof AdminSegmentsRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/tickets': typeof AdminTicketsRoute
   '/blogs/$slug': typeof BlogsSlugRoute
@@ -659,45 +817,67 @@ export interface FileRoutesByTo {
   '/about': typeof AboutRoute
   '/auth': typeof AuthRoute
   '/brands': typeof BrandsRoute
+  '/bulk-order': typeof BulkOrderRoute
   '/categories': typeof CategoriesRoute
+  '/compare': typeof CompareRoute
   '/contact': typeof ContactRoute
   '/coupons': typeof CouponsRoute
   '/deals': typeof DealsRoute
   '/faq': typeof FaqRoute
   '/feedback': typeof FeedbackRoute
+  '/festival-store': typeof FestivalStoreRoute
+  '/gift-cards': typeof GiftCardsRoute
   '/help': typeof HelpRoute
   '/install-ios': typeof InstallIosRoute
   '/maintenance': typeof MaintenanceRoute
+  '/membership': typeof MembershipRoute
+  '/new-arrivals': typeof NewArrivalsRoute
   '/offers': typeof OffersRoute
   '/onboarding': typeof OnboardingRoute
   '/payment-failure': typeof PaymentFailureRoute
   '/payment-success': typeof PaymentSuccessRoute
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/sale': typeof SaleRoute
   '/search': typeof SearchRoute
   '/splash': typeof SplashRoute
   '/stores': typeof StoresRoute
   '/support': typeof SupportRoute
   '/terms': typeof TermsRoute
   '/testimonials': typeof TestimonialsRoute
+  '/track-order': typeof TrackOrderRoute
   '/addresses': typeof AuthenticatedAddressesRoute
   '/cart': typeof AuthenticatedCartRoute
   '/checkout': typeof AuthenticatedCheckoutRoute
   '/language': typeof AuthenticatedLanguageRoute
+  '/my-reviews': typeof AuthenticatedMyReviewsRoute
+  '/notification-settings': typeof AuthenticatedNotificationSettingsRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
+  '/price-alerts': typeof AuthenticatedPriceAlertsRoute
+  '/recently-viewed': typeof AuthenticatedRecentlyViewedRoute
   '/referral': typeof AuthenticatedReferralRoute
+  '/reorder': typeof AuthenticatedReorderRoute
   '/rewards': typeof AuthenticatedRewardsRoute
+  '/saved-items': typeof AuthenticatedSavedItemsRoute
+  '/subscriptions': typeof AuthenticatedSubscriptionsRoute
   '/verify-account': typeof AuthenticatedVerifyAccountRoute
   '/wallet': typeof AuthenticatedWalletRoute
   '/wishlist': typeof AuthenticatedWishlistRoute
+  '/admin/abandoned-carts': typeof AdminAbandonedCartsRoute
+  '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/audit-logs': typeof AdminAuditLogsRoute
+  '/admin/bulk-orders': typeof AdminBulkOrdersRoute
   '/admin/customers': typeof AdminCustomersRoute
+  '/admin/flash-sales': typeof AdminFlashSalesRoute
+  '/admin/inventory': typeof AdminInventoryRoute
+  '/admin/marketing': typeof AdminMarketingRoute
   '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/payments': typeof AdminPaymentsRoute
   '/admin/promotions': typeof AdminPromotionsRoute
   '/admin/reports': typeof AdminReportsRoute
   '/admin/returns': typeof AdminReturnsRoute
   '/admin/reviews': typeof AdminReviewsRoute
+  '/admin/segments': typeof AdminSegmentsRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/tickets': typeof AdminTicketsRoute
   '/blogs/$slug': typeof BlogsSlugRoute
@@ -753,45 +933,67 @@ export interface FileRoutesById {
   '/about': typeof AboutRoute
   '/auth': typeof AuthRoute
   '/brands': typeof BrandsRoute
+  '/bulk-order': typeof BulkOrderRoute
   '/categories': typeof CategoriesRoute
+  '/compare': typeof CompareRoute
   '/contact': typeof ContactRoute
   '/coupons': typeof CouponsRoute
   '/deals': typeof DealsRoute
   '/faq': typeof FaqRoute
   '/feedback': typeof FeedbackRoute
+  '/festival-store': typeof FestivalStoreRoute
+  '/gift-cards': typeof GiftCardsRoute
   '/help': typeof HelpRoute
   '/install-ios': typeof InstallIosRoute
   '/maintenance': typeof MaintenanceRoute
+  '/membership': typeof MembershipRoute
+  '/new-arrivals': typeof NewArrivalsRoute
   '/offers': typeof OffersRoute
   '/onboarding': typeof OnboardingRoute
   '/payment-failure': typeof PaymentFailureRoute
   '/payment-success': typeof PaymentSuccessRoute
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/sale': typeof SaleRoute
   '/search': typeof SearchRoute
   '/splash': typeof SplashRoute
   '/stores': typeof StoresRoute
   '/support': typeof SupportRoute
   '/terms': typeof TermsRoute
   '/testimonials': typeof TestimonialsRoute
+  '/track-order': typeof TrackOrderRoute
   '/_authenticated/addresses': typeof AuthenticatedAddressesRoute
   '/_authenticated/cart': typeof AuthenticatedCartRoute
   '/_authenticated/checkout': typeof AuthenticatedCheckoutRoute
   '/_authenticated/language': typeof AuthenticatedLanguageRoute
+  '/_authenticated/my-reviews': typeof AuthenticatedMyReviewsRoute
+  '/_authenticated/notification-settings': typeof AuthenticatedNotificationSettingsRoute
   '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
+  '/_authenticated/price-alerts': typeof AuthenticatedPriceAlertsRoute
+  '/_authenticated/recently-viewed': typeof AuthenticatedRecentlyViewedRoute
   '/_authenticated/referral': typeof AuthenticatedReferralRoute
+  '/_authenticated/reorder': typeof AuthenticatedReorderRoute
   '/_authenticated/rewards': typeof AuthenticatedRewardsRoute
+  '/_authenticated/saved-items': typeof AuthenticatedSavedItemsRoute
+  '/_authenticated/subscriptions': typeof AuthenticatedSubscriptionsRoute
   '/_authenticated/verify-account': typeof AuthenticatedVerifyAccountRoute
   '/_authenticated/wallet': typeof AuthenticatedWalletRoute
   '/_authenticated/wishlist': typeof AuthenticatedWishlistRoute
+  '/admin/abandoned-carts': typeof AdminAbandonedCartsRoute
+  '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/audit-logs': typeof AdminAuditLogsRoute
+  '/admin/bulk-orders': typeof AdminBulkOrdersRoute
   '/admin/customers': typeof AdminCustomersRoute
+  '/admin/flash-sales': typeof AdminFlashSalesRoute
+  '/admin/inventory': typeof AdminInventoryRoute
+  '/admin/marketing': typeof AdminMarketingRoute
   '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/payments': typeof AdminPaymentsRoute
   '/admin/promotions': typeof AdminPromotionsRoute
   '/admin/reports': typeof AdminReportsRoute
   '/admin/returns': typeof AdminReturnsRoute
   '/admin/reviews': typeof AdminReviewsRoute
+  '/admin/segments': typeof AdminSegmentsRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/tickets': typeof AdminTicketsRoute
   '/blogs/$slug': typeof BlogsSlugRoute
@@ -847,45 +1049,67 @@ export interface FileRouteTypes {
     | '/about'
     | '/auth'
     | '/brands'
+    | '/bulk-order'
     | '/categories'
+    | '/compare'
     | '/contact'
     | '/coupons'
     | '/deals'
     | '/faq'
     | '/feedback'
+    | '/festival-store'
+    | '/gift-cards'
     | '/help'
     | '/install-ios'
     | '/maintenance'
+    | '/membership'
+    | '/new-arrivals'
     | '/offers'
     | '/onboarding'
     | '/payment-failure'
     | '/payment-success'
     | '/privacy'
     | '/reset-password'
+    | '/sale'
     | '/search'
     | '/splash'
     | '/stores'
     | '/support'
     | '/terms'
     | '/testimonials'
+    | '/track-order'
     | '/addresses'
     | '/cart'
     | '/checkout'
     | '/language'
+    | '/my-reviews'
+    | '/notification-settings'
     | '/notifications'
+    | '/price-alerts'
+    | '/recently-viewed'
     | '/referral'
+    | '/reorder'
     | '/rewards'
+    | '/saved-items'
+    | '/subscriptions'
     | '/verify-account'
     | '/wallet'
     | '/wishlist'
+    | '/admin/abandoned-carts'
+    | '/admin/analytics'
     | '/admin/audit-logs'
+    | '/admin/bulk-orders'
     | '/admin/customers'
+    | '/admin/flash-sales'
+    | '/admin/inventory'
+    | '/admin/marketing'
     | '/admin/notifications'
     | '/admin/payments'
     | '/admin/promotions'
     | '/admin/reports'
     | '/admin/returns'
     | '/admin/reviews'
+    | '/admin/segments'
     | '/admin/settings'
     | '/admin/tickets'
     | '/blogs/$slug'
@@ -938,45 +1162,67 @@ export interface FileRouteTypes {
     | '/about'
     | '/auth'
     | '/brands'
+    | '/bulk-order'
     | '/categories'
+    | '/compare'
     | '/contact'
     | '/coupons'
     | '/deals'
     | '/faq'
     | '/feedback'
+    | '/festival-store'
+    | '/gift-cards'
     | '/help'
     | '/install-ios'
     | '/maintenance'
+    | '/membership'
+    | '/new-arrivals'
     | '/offers'
     | '/onboarding'
     | '/payment-failure'
     | '/payment-success'
     | '/privacy'
     | '/reset-password'
+    | '/sale'
     | '/search'
     | '/splash'
     | '/stores'
     | '/support'
     | '/terms'
     | '/testimonials'
+    | '/track-order'
     | '/addresses'
     | '/cart'
     | '/checkout'
     | '/language'
+    | '/my-reviews'
+    | '/notification-settings'
     | '/notifications'
+    | '/price-alerts'
+    | '/recently-viewed'
     | '/referral'
+    | '/reorder'
     | '/rewards'
+    | '/saved-items'
+    | '/subscriptions'
     | '/verify-account'
     | '/wallet'
     | '/wishlist'
+    | '/admin/abandoned-carts'
+    | '/admin/analytics'
     | '/admin/audit-logs'
+    | '/admin/bulk-orders'
     | '/admin/customers'
+    | '/admin/flash-sales'
+    | '/admin/inventory'
+    | '/admin/marketing'
     | '/admin/notifications'
     | '/admin/payments'
     | '/admin/promotions'
     | '/admin/reports'
     | '/admin/returns'
     | '/admin/reviews'
+    | '/admin/segments'
     | '/admin/settings'
     | '/admin/tickets'
     | '/blogs/$slug'
@@ -1031,45 +1277,67 @@ export interface FileRouteTypes {
     | '/about'
     | '/auth'
     | '/brands'
+    | '/bulk-order'
     | '/categories'
+    | '/compare'
     | '/contact'
     | '/coupons'
     | '/deals'
     | '/faq'
     | '/feedback'
+    | '/festival-store'
+    | '/gift-cards'
     | '/help'
     | '/install-ios'
     | '/maintenance'
+    | '/membership'
+    | '/new-arrivals'
     | '/offers'
     | '/onboarding'
     | '/payment-failure'
     | '/payment-success'
     | '/privacy'
     | '/reset-password'
+    | '/sale'
     | '/search'
     | '/splash'
     | '/stores'
     | '/support'
     | '/terms'
     | '/testimonials'
+    | '/track-order'
     | '/_authenticated/addresses'
     | '/_authenticated/cart'
     | '/_authenticated/checkout'
     | '/_authenticated/language'
+    | '/_authenticated/my-reviews'
+    | '/_authenticated/notification-settings'
     | '/_authenticated/notifications'
+    | '/_authenticated/price-alerts'
+    | '/_authenticated/recently-viewed'
     | '/_authenticated/referral'
+    | '/_authenticated/reorder'
     | '/_authenticated/rewards'
+    | '/_authenticated/saved-items'
+    | '/_authenticated/subscriptions'
     | '/_authenticated/verify-account'
     | '/_authenticated/wallet'
     | '/_authenticated/wishlist'
+    | '/admin/abandoned-carts'
+    | '/admin/analytics'
     | '/admin/audit-logs'
+    | '/admin/bulk-orders'
     | '/admin/customers'
+    | '/admin/flash-sales'
+    | '/admin/inventory'
+    | '/admin/marketing'
     | '/admin/notifications'
     | '/admin/payments'
     | '/admin/promotions'
     | '/admin/reports'
     | '/admin/returns'
     | '/admin/reviews'
+    | '/admin/segments'
     | '/admin/settings'
     | '/admin/tickets'
     | '/blogs/$slug'
@@ -1125,27 +1393,35 @@ export interface RootRouteChildren {
   AboutRoute: typeof AboutRoute
   AuthRoute: typeof AuthRoute
   BrandsRoute: typeof BrandsRoute
+  BulkOrderRoute: typeof BulkOrderRoute
   CategoriesRoute: typeof CategoriesRoute
+  CompareRoute: typeof CompareRoute
   ContactRoute: typeof ContactRoute
   CouponsRoute: typeof CouponsRoute
   DealsRoute: typeof DealsRoute
   FaqRoute: typeof FaqRoute
   FeedbackRoute: typeof FeedbackRoute
+  FestivalStoreRoute: typeof FestivalStoreRoute
+  GiftCardsRoute: typeof GiftCardsRoute
   HelpRoute: typeof HelpRoute
   InstallIosRoute: typeof InstallIosRoute
   MaintenanceRoute: typeof MaintenanceRoute
+  MembershipRoute: typeof MembershipRoute
+  NewArrivalsRoute: typeof NewArrivalsRoute
   OffersRoute: typeof OffersRoute
   OnboardingRoute: typeof OnboardingRoute
   PaymentFailureRoute: typeof PaymentFailureRoute
   PaymentSuccessRoute: typeof PaymentSuccessRoute
   PrivacyRoute: typeof PrivacyRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  SaleRoute: typeof SaleRoute
   SearchRoute: typeof SearchRoute
   SplashRoute: typeof SplashRoute
   StoresRoute: typeof StoresRoute
   SupportRoute: typeof SupportRoute
   TermsRoute: typeof TermsRoute
   TestimonialsRoute: typeof TestimonialsRoute
+  TrackOrderRoute: typeof TrackOrderRoute
   BlogsSlugRoute: typeof BlogsSlugRoute
   CategorySlugRoute: typeof CategorySlugRoute
   DevLoginTestRoute: typeof DevLoginTestRoute
@@ -1197,11 +1473,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BrandsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/bulk-order': {
+      id: '/bulk-order'
+      path: '/bulk-order'
+      fullPath: '/bulk-order'
+      preLoaderRoute: typeof BulkOrderRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/categories': {
       id: '/categories'
       path: '/categories'
       fullPath: '/categories'
       preLoaderRoute: typeof CategoriesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/compare': {
+      id: '/compare'
+      path: '/compare'
+      fullPath: '/compare'
+      preLoaderRoute: typeof CompareRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/contact': {
@@ -1239,6 +1529,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FeedbackRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/festival-store': {
+      id: '/festival-store'
+      path: '/festival-store'
+      fullPath: '/festival-store'
+      preLoaderRoute: typeof FestivalStoreRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/gift-cards': {
+      id: '/gift-cards'
+      path: '/gift-cards'
+      fullPath: '/gift-cards'
+      preLoaderRoute: typeof GiftCardsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/help': {
       id: '/help'
       path: '/help'
@@ -1258,6 +1562,20 @@ declare module '@tanstack/react-router' {
       path: '/maintenance'
       fullPath: '/maintenance'
       preLoaderRoute: typeof MaintenanceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/membership': {
+      id: '/membership'
+      path: '/membership'
+      fullPath: '/membership'
+      preLoaderRoute: typeof MembershipRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/new-arrivals': {
+      id: '/new-arrivals'
+      path: '/new-arrivals'
+      fullPath: '/new-arrivals'
+      preLoaderRoute: typeof NewArrivalsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/offers': {
@@ -1302,6 +1620,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/sale': {
+      id: '/sale'
+      path: '/sale'
+      fullPath: '/sale'
+      preLoaderRoute: typeof SaleRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/search': {
       id: '/search'
       path: '/search'
@@ -1344,6 +1669,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TestimonialsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/track-order': {
+      id: '/track-order'
+      path: '/track-order'
+      fullPath: '/track-order'
+      preLoaderRoute: typeof TrackOrderRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/addresses': {
       id: '/_authenticated/addresses'
       path: '/addresses'
@@ -1372,11 +1704,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedLanguageRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/my-reviews': {
+      id: '/_authenticated/my-reviews'
+      path: '/my-reviews'
+      fullPath: '/my-reviews'
+      preLoaderRoute: typeof AuthenticatedMyReviewsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/notification-settings': {
+      id: '/_authenticated/notification-settings'
+      path: '/notification-settings'
+      fullPath: '/notification-settings'
+      preLoaderRoute: typeof AuthenticatedNotificationSettingsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/notifications': {
       id: '/_authenticated/notifications'
       path: '/notifications'
       fullPath: '/notifications'
       preLoaderRoute: typeof AuthenticatedNotificationsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/price-alerts': {
+      id: '/_authenticated/price-alerts'
+      path: '/price-alerts'
+      fullPath: '/price-alerts'
+      preLoaderRoute: typeof AuthenticatedPriceAlertsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/recently-viewed': {
+      id: '/_authenticated/recently-viewed'
+      path: '/recently-viewed'
+      fullPath: '/recently-viewed'
+      preLoaderRoute: typeof AuthenticatedRecentlyViewedRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/referral': {
@@ -1386,11 +1746,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedReferralRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/reorder': {
+      id: '/_authenticated/reorder'
+      path: '/reorder'
+      fullPath: '/reorder'
+      preLoaderRoute: typeof AuthenticatedReorderRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/rewards': {
       id: '/_authenticated/rewards'
       path: '/rewards'
       fullPath: '/rewards'
       preLoaderRoute: typeof AuthenticatedRewardsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/saved-items': {
+      id: '/_authenticated/saved-items'
+      path: '/saved-items'
+      fullPath: '/saved-items'
+      preLoaderRoute: typeof AuthenticatedSavedItemsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/subscriptions': {
+      id: '/_authenticated/subscriptions'
+      path: '/subscriptions'
+      fullPath: '/subscriptions'
+      preLoaderRoute: typeof AuthenticatedSubscriptionsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/verify-account': {
@@ -1421,6 +1802,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof AdminRouteRoute
     }
+    '/admin/abandoned-carts': {
+      id: '/admin/abandoned-carts'
+      path: '/abandoned-carts'
+      fullPath: '/admin/abandoned-carts'
+      preLoaderRoute: typeof AdminAbandonedCartsRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/analytics': {
+      id: '/admin/analytics'
+      path: '/analytics'
+      fullPath: '/admin/analytics'
+      preLoaderRoute: typeof AdminAnalyticsRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
     '/admin/audit-logs': {
       id: '/admin/audit-logs'
       path: '/audit-logs'
@@ -1428,11 +1823,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAuditLogsRouteImport
       parentRoute: typeof AdminRouteRoute
     }
+    '/admin/bulk-orders': {
+      id: '/admin/bulk-orders'
+      path: '/bulk-orders'
+      fullPath: '/admin/bulk-orders'
+      preLoaderRoute: typeof AdminBulkOrdersRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
     '/admin/customers': {
       id: '/admin/customers'
       path: '/customers'
       fullPath: '/admin/customers'
       preLoaderRoute: typeof AdminCustomersRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/flash-sales': {
+      id: '/admin/flash-sales'
+      path: '/flash-sales'
+      fullPath: '/admin/flash-sales'
+      preLoaderRoute: typeof AdminFlashSalesRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/inventory': {
+      id: '/admin/inventory'
+      path: '/inventory'
+      fullPath: '/admin/inventory'
+      preLoaderRoute: typeof AdminInventoryRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/marketing': {
+      id: '/admin/marketing'
+      path: '/marketing'
+      fullPath: '/admin/marketing'
+      preLoaderRoute: typeof AdminMarketingRouteImport
       parentRoute: typeof AdminRouteRoute
     }
     '/admin/notifications': {
@@ -1475,6 +1898,13 @@ declare module '@tanstack/react-router' {
       path: '/reviews'
       fullPath: '/admin/reviews'
       preLoaderRoute: typeof AdminReviewsRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/segments': {
+      id: '/admin/segments'
+      path: '/segments'
+      fullPath: '/admin/segments'
+      preLoaderRoute: typeof AdminSegmentsRouteImport
       parentRoute: typeof AdminRouteRoute
     }
     '/admin/settings': {
@@ -1800,9 +2230,16 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedCartRoute: typeof AuthenticatedCartRoute
   AuthenticatedCheckoutRoute: typeof AuthenticatedCheckoutRoute
   AuthenticatedLanguageRoute: typeof AuthenticatedLanguageRoute
+  AuthenticatedMyReviewsRoute: typeof AuthenticatedMyReviewsRoute
+  AuthenticatedNotificationSettingsRoute: typeof AuthenticatedNotificationSettingsRoute
   AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRoute
+  AuthenticatedPriceAlertsRoute: typeof AuthenticatedPriceAlertsRoute
+  AuthenticatedRecentlyViewedRoute: typeof AuthenticatedRecentlyViewedRoute
   AuthenticatedReferralRoute: typeof AuthenticatedReferralRoute
+  AuthenticatedReorderRoute: typeof AuthenticatedReorderRoute
   AuthenticatedRewardsRoute: typeof AuthenticatedRewardsRoute
+  AuthenticatedSavedItemsRoute: typeof AuthenticatedSavedItemsRoute
+  AuthenticatedSubscriptionsRoute: typeof AuthenticatedSubscriptionsRoute
   AuthenticatedVerifyAccountRoute: typeof AuthenticatedVerifyAccountRoute
   AuthenticatedWalletRoute: typeof AuthenticatedWalletRoute
   AuthenticatedWishlistRoute: typeof AuthenticatedWishlistRoute
@@ -1818,9 +2255,17 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedCartRoute: AuthenticatedCartRoute,
   AuthenticatedCheckoutRoute: AuthenticatedCheckoutRoute,
   AuthenticatedLanguageRoute: AuthenticatedLanguageRoute,
+  AuthenticatedMyReviewsRoute: AuthenticatedMyReviewsRoute,
+  AuthenticatedNotificationSettingsRoute:
+    AuthenticatedNotificationSettingsRoute,
   AuthenticatedNotificationsRoute: AuthenticatedNotificationsRoute,
+  AuthenticatedPriceAlertsRoute: AuthenticatedPriceAlertsRoute,
+  AuthenticatedRecentlyViewedRoute: AuthenticatedRecentlyViewedRoute,
   AuthenticatedReferralRoute: AuthenticatedReferralRoute,
+  AuthenticatedReorderRoute: AuthenticatedReorderRoute,
   AuthenticatedRewardsRoute: AuthenticatedRewardsRoute,
+  AuthenticatedSavedItemsRoute: AuthenticatedSavedItemsRoute,
+  AuthenticatedSubscriptionsRoute: AuthenticatedSubscriptionsRoute,
   AuthenticatedVerifyAccountRoute: AuthenticatedVerifyAccountRoute,
   AuthenticatedWalletRoute: AuthenticatedWalletRoute,
   AuthenticatedWishlistRoute: AuthenticatedWishlistRoute,
@@ -1835,14 +2280,21 @@ const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
 interface AdminRouteRouteChildren {
+  AdminAbandonedCartsRoute: typeof AdminAbandonedCartsRoute
+  AdminAnalyticsRoute: typeof AdminAnalyticsRoute
   AdminAuditLogsRoute: typeof AdminAuditLogsRoute
+  AdminBulkOrdersRoute: typeof AdminBulkOrdersRoute
   AdminCustomersRoute: typeof AdminCustomersRoute
+  AdminFlashSalesRoute: typeof AdminFlashSalesRoute
+  AdminInventoryRoute: typeof AdminInventoryRoute
+  AdminMarketingRoute: typeof AdminMarketingRoute
   AdminNotificationsRoute: typeof AdminNotificationsRoute
   AdminPaymentsRoute: typeof AdminPaymentsRoute
   AdminPromotionsRoute: typeof AdminPromotionsRoute
   AdminReportsRoute: typeof AdminReportsRoute
   AdminReturnsRoute: typeof AdminReturnsRoute
   AdminReviewsRoute: typeof AdminReviewsRoute
+  AdminSegmentsRoute: typeof AdminSegmentsRoute
   AdminSettingsRoute: typeof AdminSettingsRoute
   AdminTicketsRoute: typeof AdminTicketsRoute
   AdminIndexRoute: typeof AdminIndexRoute
@@ -1882,14 +2334,21 @@ interface AdminRouteRouteChildren {
 }
 
 const AdminRouteRouteChildren: AdminRouteRouteChildren = {
+  AdminAbandonedCartsRoute: AdminAbandonedCartsRoute,
+  AdminAnalyticsRoute: AdminAnalyticsRoute,
   AdminAuditLogsRoute: AdminAuditLogsRoute,
+  AdminBulkOrdersRoute: AdminBulkOrdersRoute,
   AdminCustomersRoute: AdminCustomersRoute,
+  AdminFlashSalesRoute: AdminFlashSalesRoute,
+  AdminInventoryRoute: AdminInventoryRoute,
+  AdminMarketingRoute: AdminMarketingRoute,
   AdminNotificationsRoute: AdminNotificationsRoute,
   AdminPaymentsRoute: AdminPaymentsRoute,
   AdminPromotionsRoute: AdminPromotionsRoute,
   AdminReportsRoute: AdminReportsRoute,
   AdminReturnsRoute: AdminReturnsRoute,
   AdminReviewsRoute: AdminReviewsRoute,
+  AdminSegmentsRoute: AdminSegmentsRoute,
   AdminSettingsRoute: AdminSettingsRoute,
   AdminTicketsRoute: AdminTicketsRoute,
   AdminIndexRoute: AdminIndexRoute,
@@ -1939,27 +2398,35 @@ const rootRouteChildren: RootRouteChildren = {
   AboutRoute: AboutRoute,
   AuthRoute: AuthRoute,
   BrandsRoute: BrandsRoute,
+  BulkOrderRoute: BulkOrderRoute,
   CategoriesRoute: CategoriesRoute,
+  CompareRoute: CompareRoute,
   ContactRoute: ContactRoute,
   CouponsRoute: CouponsRoute,
   DealsRoute: DealsRoute,
   FaqRoute: FaqRoute,
   FeedbackRoute: FeedbackRoute,
+  FestivalStoreRoute: FestivalStoreRoute,
+  GiftCardsRoute: GiftCardsRoute,
   HelpRoute: HelpRoute,
   InstallIosRoute: InstallIosRoute,
   MaintenanceRoute: MaintenanceRoute,
+  MembershipRoute: MembershipRoute,
+  NewArrivalsRoute: NewArrivalsRoute,
   OffersRoute: OffersRoute,
   OnboardingRoute: OnboardingRoute,
   PaymentFailureRoute: PaymentFailureRoute,
   PaymentSuccessRoute: PaymentSuccessRoute,
   PrivacyRoute: PrivacyRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  SaleRoute: SaleRoute,
   SearchRoute: SearchRoute,
   SplashRoute: SplashRoute,
   StoresRoute: StoresRoute,
   SupportRoute: SupportRoute,
   TermsRoute: TermsRoute,
   TestimonialsRoute: TestimonialsRoute,
+  TrackOrderRoute: TrackOrderRoute,
   BlogsSlugRoute: BlogsSlugRoute,
   CategorySlugRoute: CategorySlugRoute,
   DevLoginTestRoute: DevLoginTestRoute,

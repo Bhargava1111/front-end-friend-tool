@@ -6,6 +6,7 @@ import { BottomNav } from "./bottom-nav";
 import { DesktopHeader } from "./desktop-header";
 import { BackToTop, StickyCartBar } from "./cart-pill";
 import { SiteFooter } from "./site-footer";
+import { CompareBar } from "./compare-bar";
 
 import { cn } from "@/lib/utils";
 import { isNativePlatform } from "@/lib/capacitor";
@@ -67,6 +68,7 @@ export function PageShell({
       {withNav && withCartBar && (
         <>
           <StickyCartBar />
+          <CompareBar />
           <BackToTop />
         </>
       )}

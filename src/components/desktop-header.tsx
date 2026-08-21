@@ -8,9 +8,16 @@ import { isNativePlatform } from "@/lib/capacitor";
 
 const navLinks = [
   { to: "/", label: "Home", exact: true },
+  { to: "/sale", label: "Sale" },
+  { to: "/festival-store", label: "Festival" },
+  { to: "/new-arrivals", label: "New" },
+  { to: "/bulk-order", label: "Bulk" },
+  { to: "/compare", label: "Compare" },
   { to: "/categories", label: "Categories" },
   { to: "/deals", label: "Deals" },
   { to: "/offers", label: "Offers" },
+  { to: "/membership", label: "Membership" },
+  { to: "/gift-cards", label: "Gift Cards" },
   { to: "/brands", label: "Brands" },
   { to: "/coupons", label: "Coupons" },
   { to: "/stores", label: "Stores" },
