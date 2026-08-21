@@ -301,17 +301,28 @@ class AdminOrderBulkView(APIView):
         order_ids = request.data.get("order_ids") or []
         action = request.data.get("action", "approve")
         delivery_date = request.data.get("delivery_date")
+        explicit_status = request.data.get("status") or (
+            action if action in dict(Order.Status.choices) else None
+        )
 
         status_map = {
             "approve": "confirmed",
             "confirm": "confirmed",
+            "confirmed": "confirmed",
             "reject": "cancelled",
             "cancel": "cancelled",
+            "cancelled": "cancelled",
             "pack": "packed",
+            "packed": "packed",
             "deliver": "delivered",
+            "delivered": "delivered",
             "out_for_delivery": "out_for_delivery",
+            "pending": "pending",
         }
-        new_status = status_map.get(action, action)
+        if explicit_status and explicit_status in dict(Order.Status.choices):
+            new_status = explicit_status
+        else:
+            new_status = status_map.get(action, action)
         if new_status not in dict(Order.Status.choices):
             return Response({"detail": f"Invalid action: {action}"}, status=400)
 
@@ -324,41 +335,57 @@ class AdminOrderBulkView(APIView):
             qs = Order.objects.filter(id__in=order_ids)
 
         updated = 0
+        changed = 0
+        results = []
         for order in qs:
             old_status = order.status
             order.status = new_status
-            if delivery_date and action in ("approve", "confirm"):
+            if delivery_date and new_status == "confirmed":
                 order.delivery_date = delivery_date
-            order.save()
+            order.save(update_fields=["status", "delivery_date", "updated_at"])
             if old_status != order.status:
                 notify_order_status(order)
+                changed += 1
             updated += 1
+            results.append({"id": str(order.id), "status": order.status})
 
         log_activity(
             request.user,
             "order.bulk_update",
             "order",
             "",
-            {"action": action, "count": updated, "order_ids": [str(i) for i in order_ids]},
+            {"action": action, "status": new_status, "count": changed, "order_ids": [str(i) for i in order_ids]},
             request,
         )
-        return Response({"ok": True, "updated": updated, "status": new_status})
+        return Response({"ok": True, "updated": updated, "changed": changed, "status": new_status, "orders": results})
 
 
 class AdminOrderDetailView(APIView):
     permission_classes = [IsAdminRole]
 
+    def post(self, request, pk):
+        return self._apply_update(request, pk)
+
     def patch(self, request, pk):
+        return self._apply_update(request, pk)
+
+    def _apply_update(self, request, pk):
         from storeops.services.audit import log_activity
         from storeops.services.notifications import notify_order_status
 
         order = Order.objects.get(id=pk)
         old_status = order.status
+        update_fields = ["updated_at"]
         if "status" in request.data:
-            order.status = request.data["status"]
+            new_status = request.data["status"]
+            if new_status not in dict(Order.Status.choices):
+                return Response({"detail": f"Invalid status: {new_status}"}, status=400)
+            order.status = new_status
+            update_fields.append("status")
         if "delivery_date" in request.data:
-            order.delivery_date = request.data["delivery_date"]
-        order.save()
+            order.delivery_date = request.data["delivery_date"] or None
+            update_fields.append("delivery_date")
+        order.save(update_fields=update_fields)
         if old_status != order.status:
             notify_order_status(order)
         log_activity(
@@ -544,18 +571,39 @@ class AdminHomeSectionView(APIView):
 
     def post(self, request):
         data = request.data
+        action = data.get("action")
+        if action in ("move", "reorder"):
+            return self._handle_section_reorder(data)
+        if action == "sync_defaults":
+            from catalog.home_sections_defaults import ensure_default_home_sections
+            from catalog.cache_utils import invalidate_catalog_cache
+
+            created = ensure_default_home_sections()
+            # Re-index sort order after sync
+            sections = list(HomeOfferSection.objects.all().order_by("sort_order", "title"))
+            for i, section in enumerate(sections):
+                section.sort_order = i + 1
+            HomeOfferSection.objects.bulk_update(sections, ["sort_order"])
+            invalidate_catalog_cache()
+            return Response({"ok": True, "created": created, "total": len(sections)})
+
         sid = data.get("id")
         key = (data.get("key") or "").strip().lower().replace(" ", "_")
-        if not key and not sid:
-            title = (data.get("title") or "").strip()
+        title = (data.get("title") or "").strip()
+        if not key and not sid and title:
             key = re.sub(r"[^a-z0-9_]+", "_", title.lower()).strip("_")[:50]
         fields = {}
         for field in (
             "key", "title", "subtitle", "layout", "fallback_rule",
             "see_all_tab", "max_price", "max_products", "sort_order", "is_active", "show_on_home",
         ):
-            if field in data:
-                fields[field] = data[field]
+            if field in data and data[field] is not None:
+                val = data[field]
+                if field in ("key", "title", "subtitle", "see_all_tab") and isinstance(val, str):
+                    val = val.strip()
+                if field == "key" and not val:
+                    continue
+                fields[field] = val
         if key:
             fields["key"] = key
         if sid:
@@ -564,10 +612,17 @@ class AdminHomeSectionView(APIView):
                 setattr(section, k, v)
             section.save()
         else:
-            if not fields.get("key") or not fields.get("title"):
-                return Response({"detail": "Title and key are required."}, status=400)
+            if not fields.get("title"):
+                return Response({"detail": "Title is required."}, status=400)
+            if not fields.get("key"):
+                fields["key"] = re.sub(r"[^a-z0-9_]+", "_", fields["title"].lower()).strip("_")[:50]
+            if not fields.get("key"):
+                return Response({"detail": "Could not generate section key from title."}, status=400)
             if HomeOfferSection.objects.filter(key=fields["key"]).exists():
                 return Response({"detail": "Section key already exists."}, status=400)
+            if "sort_order" not in fields:
+                max_sort = HomeOfferSection.objects.order_by("-sort_order").values_list("sort_order", flat=True).first()
+                fields["sort_order"] = (max_sort or 0) + 1
             section = HomeOfferSection.objects.create(**fields)
         invalidate_catalog_cache()
         return Response(HomeOfferSectionSerializer(section).data)
@@ -582,30 +637,45 @@ class AdminHomeSectionView(APIView):
         return Response(status=204)
 
     def patch(self, request):
-        action = request.data.get("action")
+        return self._handle_section_reorder(request.data)
+
+    def _handle_section_reorder(self, data):
+        action = data.get("action")
         if action == "move":
-            section_id = request.data.get("id")
-            direction = request.data.get("direction")
+            section_id = data.get("id")
+            direction = data.get("direction")
             sections = list(HomeOfferSection.objects.all().order_by("sort_order", "title"))
+            for i, section in enumerate(sections):
+                section.sort_order = i
             idx = next((i for i, s in enumerate(sections) if str(s.id) == str(section_id)), None)
             if idx is None:
                 return Response({"detail": "Section not found"}, status=404)
             if direction == "up" and idx > 0:
-                swap_idx = idx - 1
+                sections[idx], sections[idx - 1] = sections[idx - 1], sections[idx]
             elif direction == "down" and idx < len(sections) - 1:
-                swap_idx = idx + 1
+                sections[idx], sections[idx + 1] = sections[idx + 1], sections[idx]
             else:
                 return Response({"ok": True, "moved": False})
-            a, b = sections[idx], sections[swap_idx]
-            a.sort_order, b.sort_order = b.sort_order, a.sort_order
-            HomeOfferSection.objects.bulk_update([a, b], ["sort_order"])
+            for i, section in enumerate(sections):
+                section.sort_order = i
+            HomeOfferSection.objects.bulk_update(sections, ["sort_order"])
             invalidate_catalog_cache()
             return Response({"ok": True, "moved": True})
 
         if action == "reorder":
-            ordered_ids = request.data.get("ordered_ids") or []
-            for i, sid in enumerate(ordered_ids):
-                HomeOfferSection.objects.filter(id=sid).update(sort_order=i)
+            ordered_ids = [str(sid) for sid in (data.get("ordered_ids") or [])]
+            if not ordered_ids:
+                return Response({"detail": "ordered_ids required"}, status=400)
+            by_id = {str(s.id): s for s in HomeOfferSection.objects.all()}
+            ordered = [by_id[sid] for sid in ordered_ids if sid in by_id]
+            if not ordered:
+                return Response({"detail": "No matching sections"}, status=400)
+            seen = {str(s.id) for s in ordered}
+            tail = [s for s in HomeOfferSection.objects.all().order_by("sort_order", "title") if str(s.id) not in seen]
+            sections = ordered + tail
+            for i, section in enumerate(sections):
+                section.sort_order = i
+            HomeOfferSection.objects.bulk_update(sections, ["sort_order"])
             invalidate_catalog_cache()
             return Response({"ok": True, "reordered": len(ordered_ids)})
 

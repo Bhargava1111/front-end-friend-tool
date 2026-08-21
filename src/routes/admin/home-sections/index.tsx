@@ -1,3 +1,4 @@
+import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAdminFn } from "@/hooks/use-admin-fn";
@@ -5,77 +6,191 @@ import {
   adminListHomeSectionsClient,
   adminDeleteHomeSectionClient,
   adminReorderHomeSectionClient,
+  adminBulkReorderHomeSectionsClient,
+  adminSyncHomeSectionsClient,
 } from "@/lib/admin-client.functions";
-import { Pencil, Plus, Trash2, ChevronUp, ChevronDown, GripVertical } from "lucide-react";
+import { Pencil, Plus, Trash2, ChevronUp, ChevronDown, GripVertical, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import {
   adminListHomeSections,
   adminDeleteHomeSection,
   adminReorderHomeSection,
+  adminBulkReorderHomeSections,
+  adminSyncHomeSections,
 } from "@/lib/admin-extra.functions";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/skeletons";
 import { ErrorState } from "@/components/state-blocks";
 import type { HomeOfferSectionDef } from "@/lib/offer-sections";
 import { FALLBACK_RULES, SECTION_LAYOUTS } from "@/lib/offer-sections";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/admin/home-sections/")({
   component: AdminHomeSectionsPage,
 });
 
+function invalidateHomeQueries(queryClient: ReturnType<typeof useQueryClient>) {
+  queryClient.invalidateQueries({ queryKey: ["admin-home-sections"] });
+  queryClient.invalidateQueries({ queryKey: ["home"] });
+  queryClient.invalidateQueries({ queryKey: ["admin-products"] });
+}
+
+function sortSections(list: HomeOfferSectionDef[]) {
+  return [...list].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
+}
+
+function reorderIds(ids: string[], fromId: string, toId: string) {
+  const from = ids.indexOf(fromId);
+  const to = ids.indexOf(toId);
+  if (from < 0 || to < 0 || from === to) return ids;
+  const next = [...ids];
+  const [removed] = next.splice(from, 1);
+  next.splice(to, 0, removed);
+  return next;
+}
+
 function AdminHomeSectionsPage() {
   const list = useAdminFn(adminListHomeSections, adminListHomeSectionsClient);
   const remove = useAdminFn(adminDeleteHomeSection, adminDeleteHomeSectionClient);
   const reorder = useAdminFn(adminReorderHomeSection, adminReorderHomeSectionClient);
+  const bulkReorder = useAdminFn(adminBulkReorderHomeSections, adminBulkReorderHomeSectionsClient);
+  const syncDefaults = useAdminFn(adminSyncHomeSections, adminSyncHomeSectionsClient);
   const queryClient = useQueryClient();
+  const [draggingId, setDraggingId] = useState<string | null>(null);
+  const [dragOverId, setDragOverId] = useState<string | null>(null);
+  const [localIds, setLocalIds] = useState<string[] | null>(null);
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["admin-home-sections"],
     queryFn: () => list() as Promise<HomeOfferSectionDef[]>,
   });
 
-  const sections = data ?? [];
+  const serverSections = useMemo(() => sortSections(data ?? []), [data]);
+
+  useEffect(() => {
+    if (!localIds && serverSections.length) {
+      setLocalIds(serverSections.map((s) => s.id));
+    }
+  }, [serverSections, localIds]);
+
+  useEffect(() => {
+    if (localIds && serverSections.length) {
+      const serverIds = serverSections.map((s) => s.id).join(",");
+      const localSorted = localIds
+        .map((id) => serverSections.find((s) => s.id === id))
+        .filter(Boolean)
+        .map((s) => `${s!.id}:${s!.sort_order}`)
+        .join(",");
+      const serverSorted = serverSections.map((s) => `${s.id}:${s.sort_order}`).join(",");
+      if (serverSorted !== localSorted && !draggingId) {
+        setLocalIds(serverSections.map((s) => s.id));
+      }
+    }
+  }, [serverSections, localIds, draggingId]);
+
+  const sections = useMemo(() => {
+    const byId = new Map(serverSections.map((s) => [s.id, s]));
+    const order = localIds ?? serverSections.map((s) => s.id);
+    return order.map((id) => byId.get(id)).filter((s): s is HomeOfferSectionDef => Boolean(s));
+  }, [serverSections, localIds]);
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => remove({ data: { id } }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin-home-sections"] });
-      queryClient.invalidateQueries({ queryKey: ["admin-products"] });
-      queryClient.invalidateQueries({ queryKey: ["home"] });
+      setLocalIds(null);
+      invalidateHomeQueries(queryClient);
       toast.success("Section deleted");
     },
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const applyOrder = (nextIds: string[]) => {
+    setLocalIds(nextIds);
+    bulkReorderMutation.mutate(nextIds);
+  };
+
+  const bulkReorderMutation = useMutation({
+    mutationFn: (orderedIds: string[]) => bulkReorder({ data: { ordered_ids: orderedIds } }),
+    onSuccess: async () => {
+      await queryClient.refetchQueries({ queryKey: ["admin-home-sections"] });
+      invalidateHomeQueries(queryClient);
+      toast.success("Section order saved");
+    },
+    onError: (e: Error) => {
+      setLocalIds(null);
+      toast.error(e.message);
+    },
+  });
+
   const moveMutation = useMutation({
     mutationFn: (vars: { id: string; direction: "up" | "down" }) => reorder({ data: vars }),
-    onSuccess: (res) => {
+    onSuccess: async (res) => {
       if (res.moved) {
-        queryClient.invalidateQueries({ queryKey: ["admin-home-sections"] });
-        queryClient.invalidateQueries({ queryKey: ["home"] });
+        setLocalIds(null);
+        await queryClient.refetchQueries({ queryKey: ["admin-home-sections"] });
+        invalidateHomeQueries(queryClient);
         toast.success("Section moved");
+      } else {
+        toast.message("Already at the edge");
       }
     },
     onError: (e: Error) => toast.error(e.message),
   });
+
+  const syncMutation = useMutation({
+    mutationFn: () => syncDefaults(),
+    onSuccess: async (res) => {
+      setLocalIds(null);
+      await queryClient.refetchQueries({ queryKey: ["admin-home-sections"] });
+      invalidateHomeQueries(queryClient);
+      toast.success(
+        res.created > 0
+          ? `Added ${res.created} missing section${res.created !== 1 ? "s" : ""} (${res.total} total)`
+          : `All ${res.total} default sections present`,
+      );
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const handleDrop = (targetId: string, sourceId?: string) => {
+    const fromId = sourceId ?? draggingId;
+    if (!fromId || fromId === targetId) return;
+    const ids = sections.map((s) => s.id);
+    const next = reorderIds(ids, fromId, targetId);
+    applyOrder(next);
+    setDraggingId(null);
+    setDragOverId(null);
+  };
 
   const layoutLabel = (v: string) => SECTION_LAYOUTS.find((l) => l.value === v)?.label ?? v;
   const fallbackLabel = (v: string) => FALLBACK_RULES.find((r) => r.value === v)?.label ?? v;
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
           <h1 className="text-lg font-bold text-foreground">Home sections</h1>
           <p className="text-xs text-muted-foreground">
-            Drag order with ↑ ↓ — sections appear on the home page top to bottom
+            Drag the grip handle or use ↑ ↓ — order updates the live home page
           </p>
         </div>
-        <Button size="sm" className="rounded-xl" asChild>
-          <Link to="/admin/home-sections/new">
-            <Plus className="mr-1.5 h-4 w-4" /> New section
-          </Link>
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button
+            size="sm"
+            variant="secondary"
+            className="rounded-xl"
+            disabled={syncMutation.isPending}
+            onClick={() => syncMutation.mutate()}
+          >
+            <RefreshCw className={cn("mr-1.5 h-4 w-4", syncMutation.isPending && "animate-spin")} />
+            Add missing sections
+          </Button>
+          <Button size="sm" className="rounded-xl" asChild>
+            <Link to="/admin/home-sections/new">
+              <Plus className="mr-1.5 h-4 w-4" /> New section
+            </Link>
+          </Button>
+        </div>
       </div>
 
       {isError ? (
@@ -91,10 +206,38 @@ function AdminHomeSectionsPage() {
           {sections.map((s, index) => (
             <div
               key={s.id}
-              className="flex flex-wrap items-center gap-3 rounded-2xl border border-border bg-card p-4 card-elevated"
+              onDragOver={(e) => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = "move";
+                setDragOverId(s.id);
+              }}
+              onDragLeave={() => setDragOverId((id) => (id === s.id ? null : id))}
+              onDrop={(e) => {
+                e.preventDefault();
+                const sourceId = e.dataTransfer.getData("text/plain") || draggingId || "";
+                handleDrop(s.id, sourceId || undefined);
+              }}
+              className={cn(
+                "flex flex-wrap items-center gap-3 rounded-2xl border border-border bg-card p-4 card-elevated transition-shadow",
+                draggingId === s.id && "opacity-50",
+                dragOverId === s.id && "ring-2 ring-primary",
+              )}
             >
-              <div className="flex shrink-0 flex-col items-center gap-0.5">
-                <GripVertical className="h-4 w-4 text-muted-foreground" />
+              <div
+                draggable
+                onDragStart={(e) => {
+                  e.dataTransfer.setData("text/plain", s.id);
+                  e.dataTransfer.effectAllowed = "move";
+                  setDraggingId(s.id);
+                }}
+                onDragEnd={() => {
+                  setDraggingId(null);
+                  setDragOverId(null);
+                }}
+                className="flex shrink-0 cursor-grab touch-none flex-col items-center gap-0.5 active:cursor-grabbing"
+                title="Drag to reorder"
+              >
+                <GripVertical className="h-5 w-5 text-muted-foreground" />
                 <span className="text-[10px] font-bold text-muted-foreground">#{index + 1}</span>
               </div>
               <div className="flex shrink-0 flex-col gap-0.5">
@@ -102,7 +245,7 @@ function AdminHomeSectionsPage() {
                   size="icon"
                   variant="ghost"
                   className="h-7 w-7"
-                  disabled={index === 0 || moveMutation.isPending}
+                  disabled={index === 0 || moveMutation.isPending || bulkReorderMutation.isPending}
                   aria-label="Move up"
                   onClick={() => moveMutation.mutate({ id: s.id, direction: "up" })}
                 >
@@ -112,7 +255,9 @@ function AdminHomeSectionsPage() {
                   size="icon"
                   variant="ghost"
                   className="h-7 w-7"
-                  disabled={index === sections.length - 1 || moveMutation.isPending}
+                  disabled={
+                    index === sections.length - 1 || moveMutation.isPending || bulkReorderMutation.isPending
+                  }
                   aria-label="Move down"
                   onClick={() => moveMutation.mutate({ id: s.id, direction: "down" })}
                 >
@@ -128,7 +273,7 @@ function AdminHomeSectionsPage() {
                 <p className="text-xs text-muted-foreground">
                   {s.placed_count ?? 0} manually placed · {s.display_count ?? 0} shown on store
                   {" · sort "}
-                  {s.sort_order ?? index}
+                  {index + 1}
                 </p>
                 {s.subtitle ? <p className="mt-0.5 text-xs text-muted-foreground">{s.subtitle}</p> : null}
               </div>
@@ -166,7 +311,7 @@ function AdminHomeSectionsPage() {
           ))}
           {sections.length === 0 && (
             <p className="rounded-2xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
-              No sections yet. Create one to show product rails on the home page.
+              No sections yet. Click &quot;Add missing sections&quot; or create one.
             </p>
           )}
         </div>

@@ -67,7 +67,6 @@ const groups = [
     label: "Selling",
     links: [
       { to: "/admin/orders", label: "Orders", icon: ShoppingBag },
-      { to: "/admin/bulk-orders", label: "Bulk orders", icon: Package },
       { to: "/admin/returns", label: "Returns", icon: PackageX },
       { to: "/admin/coupons", label: "Coupons", icon: TicketPercent },
     ],

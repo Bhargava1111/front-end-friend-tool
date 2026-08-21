@@ -143,7 +143,7 @@ class BulkOrderView(APIView):
                     "New bulk order request",
                     f"{req.name} — {req.estimated_qty or '?'} units",
                     "system",
-                    link="/admin/bulk-orders",
+                    link="/admin/orders",
                 )
         except Exception:
             pass

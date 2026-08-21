@@ -44,16 +44,23 @@ function NewHomeSection() {
   const [form, setForm] = useState({ ...blank });
 
   const saveMutation = useMutation({
-    mutationFn: () =>
-      save({
-        data: {
-          ...form,
-          title: form.title.trim(),
-          key: form.key.trim() || undefined,
-          max_products: Number(form.max_products) || 12,
-          sort_order: Number(form.sort_order) || 0,
-        },
-      }),
+    mutationFn: () => {
+      const payload: Record<string, unknown> = {
+        title: form.title.trim(),
+        subtitle: form.subtitle.trim(),
+        layout: form.layout,
+        fallback_rule: form.fallback_rule,
+        see_all_tab: form.see_all_tab.trim(),
+        max_price: Number(form.max_price) || 99,
+        max_products: Number(form.max_products) || 12,
+        sort_order: Number(form.sort_order) || 0,
+        is_active: form.is_active,
+        show_on_home: form.show_on_home,
+      };
+      const key = form.key.trim();
+      if (key) payload.key = key;
+      return save({ data: payload });
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-home-sections"] });
       queryClient.invalidateQueries({ queryKey: ["home"] });

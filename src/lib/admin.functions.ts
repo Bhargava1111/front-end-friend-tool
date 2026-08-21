@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireAuth } from "@/integrations/django/auth-middleware";
 import { apiFetch, toJsonBody } from "@/lib/api";
 import { adminFetchServer as adminFetch, adminPanelHeadersServer as adminPanelHeaders } from "@/lib/admin-api.server";
+import type { OrderStatus } from "@/lib/types";
 
 function admin(token: string, path: string, init?: RequestInit) {
   return adminFetch(token, path, init);
@@ -113,26 +114,49 @@ export const bulkUpdateOrders = createServerFn({ method: "POST" })
   .inputValidator(
     (data: {
       order_ids?: string[];
-      action: "approve" | "reject" | "confirm" | "cancel" | "pack" | "deliver";
+      action?: string;
+      status?: OrderStatus;
       delivery_date?: string;
     }) => data,
   )
   .handler(async ({ data, context }) => {
+    const payload = { ...data };
+    if (payload.status && !payload.action) {
+      payload.action = payload.status;
+    }
     return admin(context.accessToken, "/admin-api/orders/bulk/", {
       method: "POST",
-      body: toJsonBody(data),
-    }) as Promise<{ ok: boolean; updated: number; status: string }>;
+      body: toJsonBody(payload),
+    }) as Promise<{
+      ok: boolean;
+      updated: number;
+      changed?: number;
+      status: string;
+      orders?: Array<{ id: string; status: string }>;
+    }>;
   });
 
 export const setOrderStatus = createServerFn({ method: "POST" })
   .middleware([requireAuth])
   .inputValidator((data: { id: string; status: string }) => data)
   .handler(async ({ data, context }) => {
-    await admin(context.accessToken, `/admin-api/orders/${data.id}/`, {
-      method: "PATCH",
-      body: toJsonBody({ status: data.status }),
-    });
-    return { ok: true };
+    const body = toJsonBody({ status: data.status, action: data.status });
+    const path = `/admin-api/orders/${data.id}/`;
+    try {
+      return (await admin(context.accessToken, path, { method: "POST", body })) as {
+        status?: string;
+        id?: string;
+      };
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "";
+      if (msg.includes("405") || msg.toLowerCase().includes("method")) {
+        return (await admin(context.accessToken, path, { method: "PATCH", body })) as {
+          status?: string;
+          id?: string;
+        };
+      }
+      throw err;
+    }
   });
 
 export const getAdminProducts = createServerFn({ method: "GET" })

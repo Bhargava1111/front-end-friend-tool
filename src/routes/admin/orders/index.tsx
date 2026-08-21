@@ -60,6 +60,102 @@ const STATUSES: OrderStatus[] = [
 type DayFilter = "all" | "today" | "yesterday" | "week" | "custom";
 type SortOrder = "newest" | "oldest";
 
+const QUICK_BULK_ACTIONS: { status: OrderStatus; label: string; tone?: "destructive" }[] = [
+  { status: "confirmed", label: "Approve" },
+  { status: "packed", label: "Packed" },
+  { status: "out_for_delivery", label: "Out for delivery" },
+  { status: "delivered", label: "Delivered" },
+  { status: "cancelled", label: "Cancel", tone: "destructive" },
+];
+
+function DayGroupToolbar({
+  dayKey,
+  label,
+  items,
+  selected,
+  deliveryDate,
+  onDeliveryDateChange,
+  onToggleGroup,
+  onApplyStatus,
+  busy,
+}: {
+  dayKey: string;
+  label: string;
+  items: Order[];
+  selected: Set<string>;
+  deliveryDate: string;
+  onDeliveryDateChange: (dayKey: string, value: string) => void;
+  onToggleGroup: (items: Order[]) => void;
+  onApplyStatus: (orderIds: string[], status: OrderStatus, deliveryDate?: string) => void;
+  busy: boolean;
+}) {
+  const allInGroupSelected = items.length > 0 && items.every((o) => selected.has(o.id));
+  const selectedInGroup = items.filter((o) => selected.has(o.id));
+  const targetCount = selectedInGroup.length > 0 ? selectedInGroup.length : items.length;
+  const targetIds =
+    selectedInGroup.length > 0 ? selectedInGroup.map((o) => o.id) : items.map((o) => o.id);
+
+  return (
+    <div className="sticky top-0 z-10 space-y-2 rounded-xl border border-border bg-card/95 p-3 shadow-sm backdrop-blur">
+      <div className="flex flex-wrap items-center gap-2">
+        <Checkbox
+          checked={allInGroupSelected}
+          onCheckedChange={() => onToggleGroup(items)}
+          aria-label={`Select all orders for ${label}`}
+        />
+        <h2 className="text-xs font-bold text-foreground">
+          {label}
+          <span className="ml-2 font-normal text-muted-foreground">
+            ({items.length} order{items.length !== 1 ? "s" : ""}
+            {selectedInGroup.length > 0 ? ` · ${selectedInGroup.length} selected` : ""})
+          </span>
+        </h2>
+        <Button
+          type="button"
+          size="sm"
+          variant="ghost"
+          className="ml-auto h-7 rounded-lg px-2 text-[10px]"
+          disabled={busy}
+          onClick={() => onToggleGroup(items)}
+        >
+          {allInGroupSelected ? "Deselect day" : "Select day"}
+        </Button>
+      </div>
+      <div className="flex flex-wrap items-center gap-1.5">
+        <span className="text-[10px] font-medium text-muted-foreground">Day actions ({targetCount}):</span>
+        <Input
+          type="date"
+          className="h-7 w-32 text-[10px]"
+          value={deliveryDate}
+          onChange={(e) => onDeliveryDateChange(dayKey, e.target.value)}
+          title="Delivery date for approve on this day"
+        />
+        {QUICK_BULK_ACTIONS.map((action) => (
+          <Button
+            key={action.status}
+            type="button"
+            size="sm"
+            variant={action.tone === "destructive" ? "outline" : "secondary"}
+            className={cn(
+              "h-7 rounded-lg px-2.5 text-[10px]",
+              action.tone === "destructive" && "border-destructive/40 text-destructive",
+            )}
+            disabled={busy || targetIds.length === 0}
+            onClick={() =>
+              onApplyStatus(
+                targetIds,
+                action.status,
+                action.status === "confirmed" ? deliveryDate : undefined,
+              )
+            }
+          >
+            {action.label}
+          </Button>
+        ))}
+      </div>
+    </div>
+  );
+}
 function dayLabel(iso: string) {
   const d = new Date(iso);
   const today = new Date();
@@ -111,6 +207,8 @@ function AdminOrders() {
   const [bulkDeliveryDate, setBulkDeliveryDate] = useState(() =>
     new Date(Date.now() + 86_400_000).toISOString().slice(0, 10),
   );
+  const [bulkStatus, setBulkStatus] = useState<OrderStatus>("confirmed");
+  const [groupDates, setGroupDates] = useState<Record<string, string>>({});
 
   const scheduleFn = useAdminFn(setOrderDelivery, setOrderDeliveryClient);
 
@@ -126,8 +224,30 @@ function AdminOrders() {
       fetchOrders({
         data: { customer, open, sort, day: queryDay, date: queryDate },
       }) as Promise<Order[]>,
-    staleTime: 15_000,
+    staleTime: 0,
   });
+
+  const refreshOrders = async () => {
+    await qc.refetchQueries({ queryKey: ["admin-orders"] });
+    qc.invalidateQueries({ queryKey: ["admin-dashboard"] });
+    qc.invalidateQueries({ queryKey: ["notifications"] });
+  };
+
+  const patchOrdersInCache = (
+    orderIds: string[],
+    patch: Partial<Order> & { status?: OrderStatus },
+  ) => {
+    const idSet = new Set(orderIds.map(String));
+    qc.setQueriesData<Order[]>({ queryKey: ["admin-orders"] }, (old) =>
+      old?.map((o) => (idSet.has(String(o.id)) ? { ...o, ...patch } : o)),
+    );
+  };
+
+  const patchOrdersFromResults = (results: Array<{ id: string; status: string }>) => {
+    for (const row of results) {
+      patchOrdersInCache([row.id], { status: row.status as OrderStatus });
+    }
+  };
 
   const { data: customerDetail } = useQuery({
     queryKey: ["admin-customer", customer],
@@ -138,35 +258,77 @@ function AdminOrders() {
 
   const mutation = useMutation({
     mutationFn: (vars: { id: string; status: OrderStatus }) => updateStatus({ data: vars }),
-    onSuccess: () => {
-      toast.success("Order updated");
-      qc.invalidateQueries({ queryKey: ["admin-orders"] });
-      qc.invalidateQueries({ queryKey: ["admin-dashboard"] });
-      qc.invalidateQueries({ queryKey: ["notifications"] });
+    onMutate: (vars) => {
+      patchOrdersInCache([vars.id], { status: vars.status });
     },
-    onError: (e: Error) => toast.error(e.message),
+    onSuccess: async (res, vars) => {
+      const nextStatus = (res?.status as OrderStatus | undefined) ?? vars.status;
+      patchOrdersInCache([vars.id], { status: nextStatus });
+      await refreshOrders();
+      toast.success(`Order marked ${STATUS_LABEL[nextStatus]}`);
+    },
+    onError: (e: Error, vars) => {
+      void refreshOrders();
+      toast.error(e.message || `Could not update order to ${STATUS_LABEL[vars.status]}`);
+    },
   });
 
   const bulkMutation = useMutation({
-    mutationFn: (vars: { order_ids?: string[]; action: string; delivery_date?: string }) =>
+    mutationFn: (vars: { order_ids?: string[]; action?: string; status?: OrderStatus; delivery_date?: string }) =>
       bulkUpdate({ data: vars }),
-    onSuccess: (res) => {
-      toast.success(`Updated ${res.updated} order${res.updated !== 1 ? "s" : ""}`);
-      setSelected(new Set());
-      qc.invalidateQueries({ queryKey: ["admin-orders"] });
-      qc.invalidateQueries({ queryKey: ["admin-dashboard"] });
-      qc.invalidateQueries({ queryKey: ["notifications"] });
+    onMutate: (vars) => {
+      const ids = (vars.order_ids ?? []).map(String);
+      if (ids.length && vars.status) {
+        patchOrdersInCache(ids, {
+          status: vars.status,
+          ...(vars.status === "confirmed" && vars.delivery_date
+            ? { delivery_date: vars.delivery_date }
+            : {}),
+        });
+      }
     },
-    onError: (e: Error) => toast.error(e.message),
+    onSuccess: async (res, vars) => {
+      const ids = (vars.order_ids ?? []).map(String);
+      const nextStatus = (res.status ?? vars.status) as OrderStatus | undefined;
+      if (res.orders?.length) {
+        patchOrdersFromResults(res.orders);
+      } else if (ids.length && nextStatus) {
+        patchOrdersInCache(ids, {
+          status: nextStatus,
+          ...(nextStatus === "confirmed" && vars.delivery_date
+            ? { delivery_date: vars.delivery_date }
+            : {}),
+        });
+      }
+      setSelected(new Set());
+      await refreshOrders();
+      const changed = res.changed ?? res.updated ?? 0;
+      if (changed > 0 && nextStatus) {
+        toast.success(
+          `Updated ${changed} order${changed !== 1 ? "s" : ""} → ${STATUS_LABEL[nextStatus] ?? nextStatus}`,
+        );
+      } else if ((res.updated ?? 0) === 0) {
+        toast.error("No orders matched — refresh the page and try again");
+      } else {
+        toast.message("Orders were already in that status");
+      }
+    },
+    onError: (e: Error) => {
+      void refreshOrders();
+      toast.error(e.message || "Bulk status update failed");
+    },
   });
 
   const schedule = useMutation({
     mutationFn: (vars: { id: string; delivery_date: string; status?: string }) =>
       scheduleFn({ data: vars }),
-    onSuccess: () => {
+    onSuccess: async (_res, vars) => {
+      patchOrdersInCache([vars.id], {
+        delivery_date: vars.delivery_date,
+        status: (vars.status as OrderStatus) ?? "confirmed",
+      });
+      await refreshOrders();
       toast.success("Delivery date saved");
-      qc.invalidateQueries({ queryKey: ["admin-orders"] });
-      qc.invalidateQueries({ queryKey: ["notifications"] });
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -194,17 +356,35 @@ function AdminOrders() {
   const pendingCount = pendingOrders.length;
   const allPendingSelected =
     pendingOrders.length > 0 && pendingOrders.every((o) => selected.has(o.id));
+  const allVisibleSelected = orders.length > 0 && orders.every((o) => selected.has(o.id));
+
+  function applyBulkStatus(orderIds: string[], status: OrderStatus = bulkStatus, deliveryDate?: string) {
+    if (!orderIds.length) return;
+    const date = deliveryDate ?? bulkDeliveryDate;
+    if (status === "confirmed" && !date) {
+      toast.error("Pick a delivery date for confirmed orders");
+      return;
+    }
+    if (status === "cancelled" && !confirm(`Cancel ${orderIds.length} order(s)?`)) return;
+    bulkMutation.mutate({
+      order_ids: orderIds,
+      action: status,
+      status,
+      delivery_date: status === "confirmed" ? date : undefined,
+    });
+  }
 
   const grouped = useMemo(() => {
-    if (!groupByDay) return [{ label: "", items: orders }];
+    if (!groupByDay) return [{ dayKey: "all", label: "", items: orders }];
     const map = new Map<string, Order[]>();
     for (const o of orders) {
       const key = o.created_at?.slice(0, 10) ?? "unknown";
       if (!map.has(key)) map.set(key, []);
       map.get(key)!.push(o);
     }
-    return Array.from(map.entries()).map(([key, items]) => ({
-      label: items[0]?.created_at ? dayLabel(items[0].created_at) : key,
+    return Array.from(map.entries()).map(([dayKey, items]) => ({
+      dayKey,
+      label: items[0]?.created_at ? dayLabel(items[0].created_at) : dayKey,
       items,
     }));
   }, [orders, groupByDay]);
@@ -224,6 +404,30 @@ function AdminOrders() {
     } else {
       setSelected(new Set(pendingOrders.map((o) => o.id)));
     }
+  }
+
+  function toggleSelectAllVisible() {
+    if (allVisibleSelected) {
+      setSelected(new Set());
+    } else {
+      setSelected(new Set(orders.map((o) => o.id)));
+    }
+  }
+
+  function toggleSelectGroup(groupItems: Order[]) {
+    const allSelected = groupItems.every((o) => selected.has(o.id));
+    setSelected((prev) => {
+      const next = new Set(prev);
+      for (const o of groupItems) {
+        if (allSelected) next.delete(o.id);
+        else next.add(o.id);
+      }
+      return next;
+    });
+  }
+
+  function groupDeliveryDate(dayKey: string) {
+    return groupDates[dayKey] ?? bulkDeliveryDate;
   }
 
   return (
@@ -266,6 +470,7 @@ function AdminOrders() {
                 bulkMutation.mutate({
                   action: "approve",
                   delivery_date: bulkDeliveryDate,
+                  status: "confirmed",
                 })
               }
             >
@@ -274,22 +479,46 @@ function AdminOrders() {
             </Button>
           )}
           {selected.size > 0 && (
-            <Button
-              size="sm"
-              variant="secondary"
-              className="gap-1.5 rounded-xl text-xs"
-              disabled={bulkMutation.isPending}
-              onClick={() =>
-                bulkMutation.mutate({
-                  order_ids: Array.from(selected),
-                  action: "approve",
-                  delivery_date: bulkDeliveryDate,
-                })
-              }
-            >
-              <Check className="h-3.5 w-3.5" />
-              Approve selected ({selected.size})
-            </Button>
+            <>
+              <Select value={bulkStatus} onValueChange={(v) => setBulkStatus(v as OrderStatus)}>
+                <SelectTrigger className="h-8 w-40 text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {STATUSES.map((s) => (
+                    <SelectItem key={s} value={s}>
+                      {STATUS_LABEL[s]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {bulkStatus === "confirmed" && (
+                <Input
+                  type="date"
+                  className="h-8 w-36 text-xs"
+                  value={bulkDeliveryDate}
+                  onChange={(e) => setBulkDeliveryDate(e.target.value)}
+                  title="Delivery date for bulk confirm"
+                />
+              )}
+              <Button
+                size="sm"
+                className="gap-1.5 rounded-xl text-xs"
+                disabled={bulkMutation.isPending}
+                onClick={() => applyBulkStatus(Array.from(selected), bulkStatus)}
+              >
+                <Check className="h-3.5 w-3.5" />
+                Apply to {selected.size} selected
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="rounded-xl text-xs"
+                onClick={() => setSelected(new Set())}
+              >
+                Clear
+              </Button>
+            </>
           )}
           <Button className="gap-2 rounded-xl" size="sm" asChild>
             <Link to="/admin/orders/new">
@@ -336,17 +565,23 @@ function AdminOrders() {
             className="h-8 w-36 text-xs"
             value={bulkDeliveryDate}
             onChange={(e) => setBulkDeliveryDate(e.target.value)}
-            title="Delivery date for bulk approve"
+            title="Delivery date for bulk confirm"
           />
         )}
         <label className="ml-auto flex cursor-pointer items-center gap-1.5 text-xs text-muted-foreground">
           <Checkbox checked={groupByDay} onCheckedChange={(v) => setGroupByDay(Boolean(v))} />
           Group by day
         </label>
-        {pendingCount > 0 && (
+        {orders.length > 0 && (
           <label className="flex cursor-pointer items-center gap-1.5 text-xs font-medium text-primary">
+            <Checkbox checked={allVisibleSelected} onCheckedChange={toggleSelectAllVisible} />
+            Select all shown ({orders.length})
+          </label>
+        )}
+        {pendingCount > 0 && (
+          <label className="flex cursor-pointer items-center gap-1.5 text-xs text-muted-foreground">
             <Checkbox checked={allPendingSelected} onCheckedChange={toggleSelectAllPending} />
-            Select all pending
+            Pending only ({pendingCount})
           </label>
         )}
       </div>
@@ -390,26 +625,34 @@ function AdminOrders() {
       )}
 
       {grouped.map((group) => (
-        <div key={group.label || "all"} className="space-y-3">
-          {groupByDay && group.label && (
-            <h2 className="sticky top-0 z-10 rounded-xl bg-secondary/60 px-3 py-2 text-xs font-bold text-foreground backdrop-blur">
-              {group.label}
-              <span className="ml-2 font-normal text-muted-foreground">
-                ({group.items.length} order{group.items.length !== 1 ? "s" : ""})
-              </span>
-            </h2>
-          )}
+        <div key={group.dayKey || group.label || "all"} className="space-y-3">
+          {groupByDay && group.label ? (
+            <DayGroupToolbar
+              dayKey={group.dayKey}
+              label={group.label}
+              items={group.items}
+              selected={selected}
+              deliveryDate={groupDeliveryDate(group.dayKey)}
+              onDeliveryDateChange={(dayKey, value) =>
+                setGroupDates((prev) => ({ ...prev, [dayKey]: value }))
+              }
+              onToggleGroup={toggleSelectGroup}
+              onApplyStatus={(orderIds, status, deliveryDate) =>
+                applyBulkStatus(orderIds, status, deliveryDate)
+              }
+              busy={bulkMutation.isPending}
+            />
+          ) : null}
           {group.items.map((o) => (
             <div key={o.id} className="rounded-2xl border border-border bg-card p-4">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="flex min-w-0 items-start gap-3">
-                  {o.status === "pending" && (
-                    <Checkbox
-                      className="mt-1"
-                      checked={selected.has(o.id)}
-                      onCheckedChange={() => toggleSelect(o.id)}
-                    />
-                  )}
+                  <Checkbox
+                    className="mt-1"
+                    checked={selected.has(o.id)}
+                    onCheckedChange={() => toggleSelect(o.id)}
+                    aria-label={`Select order ${o.order_number}`}
+                  />
                   <div className="min-w-0">
                     <p className="text-sm font-semibold text-foreground">{o.order_number}</p>
                     <p className="text-xs text-muted-foreground">
@@ -464,7 +707,13 @@ function AdminOrders() {
                       variant="outline"
                       className="h-9 gap-1.5 border-destructive/40 text-xs text-destructive"
                       disabled={mutation.isPending || bulkMutation.isPending}
-                      onClick={() => bulkMutation.mutate({ order_ids: [o.id], action: "reject" })}
+                      onClick={() =>
+                        bulkMutation.mutate({
+                          order_ids: [o.id],
+                          action: "cancelled",
+                          status: "cancelled",
+                        })
+                      }
                     >
                       <X className="h-3.5 w-3.5" /> Reject
                     </Button>

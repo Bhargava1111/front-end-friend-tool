@@ -17,6 +17,7 @@ import { formatINR } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { Banner, Product } from "@/lib/types";
 import type { HomeSectionBlock } from "@/lib/offer-sections";
+import { homeSectionDisplaySize } from "@/lib/offer-sections";
 import { ProductRail } from "./product-rail";
 
 function useCountdown(target: number) {
@@ -97,7 +98,7 @@ export function FlashSaleRail({
   if (deals.length === 0) return null;
 
   return (
-    <Reveal className="mt-7">
+    <Reveal className="mt-8">
       <div className="mx-4 overflow-hidden rounded-3xl bg-gradient-to-br from-primary via-primary to-primary/80 pb-4 pt-4 card-elevated">
         <div className="flex items-center justify-between px-4">
           <h2 className="flex items-center gap-2 text-base font-bold text-primary-foreground">
@@ -142,35 +143,35 @@ export function CouponStrip() {
     : COUPONS.map((c) => ({ ...c, banner: null as string | null }));
 
   return (
-    <Reveal className="mt-7">
+    <Reveal className="mt-4">
       <div className="flex items-center justify-between px-4">
-        <h2 className="flex items-center gap-2 text-base font-bold text-foreground">
-          <Ticket className="h-4.5 w-4.5 text-accent" /> Coupons for you
+        <h2 className="flex items-center gap-1.5 text-sm font-bold text-foreground">
+          <Ticket className="h-3.5 w-3.5 text-accent" /> Coupons for you
         </h2>
         <SeeAll to="/coupons" />
       </div>
-      <div className="no-scrollbar mt-3 flex gap-3 overflow-x-auto px-4 pb-1">
+      <div className="no-scrollbar mt-2 flex gap-2 overflow-x-auto px-4 pb-1">
         {list.map((c) => (
           <div
             key={c.code}
-            className="w-[230px] shrink-0 overflow-hidden rounded-2xl border border-dashed border-accent/60 bg-accent-soft/70 sm:w-[268px]"
+            className="w-[188px] shrink-0 overflow-hidden rounded-xl border border-dashed border-accent/50 bg-accent-soft/60 sm:w-[210px]"
           >
             {c.banner && (
               <img
                 src={c.banner}
                 alt={c.title}
                 loading="lazy"
-                className="h-[86px] w-full object-cover"
+                className="h-[52px] w-full object-cover"
               />
             )}
-            <div className="p-4">
-            <p className="text-[11px] font-bold uppercase tracking-wide text-accent-foreground">
+            <div className="p-2.5">
+            <p className="text-[10px] font-bold uppercase tracking-wide text-accent-foreground">
               {c.discount}
             </p>
-            <p className="mt-1 text-sm font-semibold text-foreground">{c.title}</p>
-            <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">{c.description}</p>
-            <div className="mt-3 flex items-center justify-between">
-              <span className="text-[11px] text-muted-foreground">Min {formatINR(c.minOrder)}</span>
+            <p className="mt-0.5 line-clamp-1 text-xs font-semibold text-foreground">{c.title}</p>
+            <p className="mt-0.5 line-clamp-1 text-[10px] text-muted-foreground">{c.description}</p>
+            <div className="mt-2 flex items-center justify-between gap-1">
+              <span className="text-[10px] text-muted-foreground">Min {formatINR(c.minOrder)}</span>
               <button
                 type="button"
                 onClick={() => {
@@ -179,9 +180,9 @@ export function CouponStrip() {
                   toast.success(`Coupon ${c.code} copied`);
                   setTimeout(() => setCopied(null), 1600);
                 }}
-                className="flex items-center gap-1 rounded-full bg-card px-3 py-1.5 text-[11px] font-bold text-primary"
+                className="flex items-center gap-1 rounded-full bg-card px-2 py-1 text-[10px] font-bold text-primary"
               >
-                {copied === c.code ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+                {copied === c.code ? <Check className="h-2.5 w-2.5" /> : <Copy className="h-2.5 w-2.5" />}
                 {c.code}
               </button>
             </div>
@@ -193,7 +194,7 @@ export function CouponStrip() {
   );
 }
 
-export function OfferCards() {
+export function OfferCards({ embedded = false }: { embedded?: boolean }) {
   const { data: combos = [], isLoading } = useQuery({
     queryKey: ["combo-packs"],
     queryFn: () => getCombos(),
@@ -207,27 +208,21 @@ export function OfferCards() {
 
   if (isLoading) {
     return (
-      <Reveal className="mt-7 grid grid-cols-2 gap-3 px-4 lg:grid-cols-4 lg:gap-4">
-        {[0, 1, 2, 3].map((i) => (
-          <div key={i} className="h-40 animate-pulse rounded-3xl bg-secondary" />
+      <div className={cn("no-scrollbar flex gap-2 overflow-x-auto", embedded ? "mt-2" : "px-4")}>
+        {[0, 1, 2].map((i) => (
+          <div key={i} className="h-[72px] w-[148px] shrink-0 animate-pulse rounded-xl bg-secondary" />
         ))}
-      </Reveal>
+      </div>
     );
   }
 
   if (combos.length > 0) {
     return (
-      <Reveal className="mt-7">
-        <div className="flex items-center justify-between px-4">
-          <h2 className="text-base font-bold text-foreground">Combo packs</h2>
-          <SeeAll to="/deals" search={{ tab: "combo" }} />
-        </div>
-        <div className="no-scrollbar mt-3 flex gap-3 overflow-x-auto px-4 pb-1">
-          {combos.map((product) => (
-            <ProductCard key={product.id} product={product} className="w-[168px] shrink-0" />
-          ))}
-        </div>
-      </Reveal>
+      <div className={cn("no-scrollbar mt-2 flex gap-2 overflow-x-auto pb-0.5", !embedded && "px-4")}>
+        {combos.map((product) => (
+          <ProductCard key={product.id} product={product} className="w-[132px] shrink-0" />
+        ))}
+      </div>
     );
   }
 
@@ -256,7 +251,7 @@ export function OfferCards() {
   const list = bannerCombos.length ? bannerCombos : fallback;
 
   return (
-    <Reveal className="mt-7 grid grid-cols-2 gap-3 px-4 lg:grid-cols-4 lg:gap-4">
+    <div className={cn("no-scrollbar mt-2 flex gap-2 overflow-x-auto pb-0.5", !embedded && "px-4")}>
       {list.map((o) => {
         const price = o.product ? Number(o.product.price) : null;
         const mrp = o.product?.mrp ? Number(o.product.mrp) : null;
@@ -273,36 +268,23 @@ export function OfferCards() {
                   loading="lazy"
                   className="absolute inset-0 h-full w-full object-cover"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/35 to-black/10" />
+                <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/45 to-black/15" />
               </>
             )}
-            <div className="relative">
+            <div className="relative min-w-0">
               {discount > 0 && (
-                <span className="mb-1 inline-flex rounded-full bg-accent px-2 py-0.5 text-[10px] font-bold text-accent-foreground">
+                <span className="mb-0.5 inline-flex rounded-full bg-accent px-1.5 py-px text-[9px] font-bold text-accent-foreground">
                   {discount}% OFF
                 </span>
               )}
-              <p className="text-sm font-bold leading-tight">{o.title}</p>
-              {o.subtitle && <p className="mt-1 text-[11px] opacity-80">{o.subtitle}</p>}
-              {price !== null && (
-                <p className="mt-2 text-sm font-bold">
-                  {formatINR(price)}
-                  {mrp && mrp > price && (
-                    <span className="ml-1 text-[11px] font-normal line-through opacity-70">
-                      {formatINR(mrp)}
-                    </span>
-                  )}
-                </p>
-              )}
+              <p className="line-clamp-1 text-[11px] font-bold leading-tight">{o.title}</p>
+              {o.subtitle && <p className="mt-0.5 line-clamp-1 text-[9px] opacity-80">{o.subtitle}</p>}
             </div>
-            <span className="relative mt-3 flex items-center gap-0.5 text-[11px] font-semibold">
-              {o.cta} <ChevronRight className="h-3.5 w-3.5" />
-            </span>
           </>
         );
 
         const className = cn(
-          "relative flex min-h-[148px] flex-col justify-between overflow-hidden rounded-3xl p-4 transition-transform active:scale-[0.98]",
+          "relative flex h-[72px] w-[148px] shrink-0 flex-col justify-end overflow-hidden rounded-xl p-2.5 transition-transform active:scale-[0.98] sm:w-[156px]",
           o.image
             ? "text-white"
             : o.tone === "accent"
@@ -330,7 +312,7 @@ export function OfferCards() {
           </Link>
         );
       })}
-    </Reveal>
+    </div>
   );
 }
 
@@ -355,19 +337,19 @@ export function BrandRail() {
       }));
 
   return (
-    <Reveal className="mt-7">
+    <Reveal className="mt-5">
       <div className="flex items-center justify-between px-4">
-        <h2 className="text-base font-bold text-foreground sm:text-lg">Featured brands</h2>
+        <h2 className="text-sm font-bold text-foreground sm:text-base">Featured brands</h2>
         <SeeAll to="/brands" />
       </div>
-      <div className="no-scrollbar mt-3 flex gap-3 overflow-x-auto px-4 pb-1 sm:gap-4">
+      <div className="no-scrollbar mt-2 flex gap-2 overflow-x-auto px-4 pb-1 sm:gap-3">
         {list.map((b) => (
           <Link
             key={b.key}
             to="/brands"
-            className="relative flex w-[164px] shrink-0 flex-col overflow-hidden rounded-2xl border border-border bg-card text-center card-elevated transition-transform active:scale-[0.97] sm:w-[200px]"
+            className="relative flex w-[120px] shrink-0 flex-col overflow-hidden rounded-xl border border-border bg-card text-center card-elevated transition-transform active:scale-[0.97] sm:w-[140px]"
           >
-            <span className="relative block h-[86px] w-full bg-secondary sm:h-[104px]">
+            <span className="relative block h-[58px] w-full bg-secondary sm:h-[68px]">
               {b.banner ? (
                 <img
                   src={b.banner}
@@ -380,21 +362,21 @@ export function BrandRail() {
               )}
               <span className="absolute inset-0 bg-gradient-to-t from-foreground/70 to-transparent" />
             </span>
-            <span className="-mt-6 flex flex-col items-center gap-1.5 px-3 pb-3">
+            <span className="-mt-5 flex flex-col items-center gap-1 px-2 pb-2">
               {b.logo ? (
                 <img
                   src={b.logo}
                   alt={b.name}
                   loading="lazy"
-                  className="h-11 w-11 rounded-full border-2 border-card object-cover"
+                  className="h-9 w-9 rounded-full border-2 border-card object-cover"
                 />
               ) : (
-                <span className="grid h-11 w-11 place-items-center rounded-full border-2 border-card bg-primary-soft text-sm font-bold text-primary">
+                <span className="grid h-9 w-9 place-items-center rounded-full border-2 border-card bg-primary-soft text-xs font-bold text-primary">
                   {b.initials}
                 </span>
               )}
-              <span className="line-clamp-1 text-xs font-semibold text-foreground">{b.name}</span>
-              <span className="line-clamp-1 text-[10px] text-muted-foreground">{b.tagline}</span>
+              <span className="line-clamp-1 text-[10px] font-semibold text-foreground">{b.name}</span>
+              <span className="line-clamp-1 text-[9px] text-muted-foreground">{b.tagline}</span>
             </span>
           </Link>
         ))}
@@ -409,7 +391,7 @@ export function RecentlyViewedRail() {
   const recentScrollRef = useAutoScroll<HTMLDivElement>(items.length > 3);
   if (!hydrated || items.length === 0) return null;
   return (
-    <Reveal className="mt-7">
+    <Reveal className="mt-8">
       <div className="flex items-center justify-between px-4">
         <h2 className="text-base font-bold text-foreground">Recently viewed</h2>
         <SeeAll to="/search" />
@@ -469,11 +451,16 @@ function BannerSlide({
       <div className={cn("relative shrink-0 overflow-hidden card-elevated", className)}>
         {imageBlock}
         <div className={cn("absolute inset-0", overlayClass)} />
-        <div className="absolute inset-y-0 left-0 flex w-[72%] flex-col justify-end p-4">
+        <div className={cn("absolute inset-y-0 left-0 flex flex-col justify-end", layout === "card" ? "" : "w-[78%] p-2.5")}>
           {badge}
-          <p className="text-sm font-bold leading-tight text-white drop-shadow-sm">{banner.title}</p>
-          {banner.subtitle && (
-            <p className="mt-1 line-clamp-2 text-[11px] text-white/85">{banner.subtitle}</p>
+          <p className={cn("font-bold leading-tight text-white drop-shadow-sm", layout === "card" ? "" : "line-clamp-1 text-[11px]")}>
+            {banner.title}
+          </p>
+          {banner.subtitle && layout !== "card" && (
+            <p className="mt-0.5 line-clamp-1 text-[9px] text-white/85">{banner.subtitle}</p>
+          )}
+          {banner.subtitle && layout === "card" && (
+            <p className="mt-0.5 line-clamp-2 text-[11px] text-muted-foreground">{banner.subtitle}</p>
           )}
         </div>
       </div>
@@ -488,40 +475,52 @@ function BannerSlide({
   return <div className="shrink-0">{body}</div>;
 }
 
-/** Deal / discount banners only — not mixed with festive creatives. */
+/** Deal / discount banners only — compact strip, not mixed with festive creatives. */
 export function OfferBannerCarousel({ banners }: { banners: Banner[] }) {
   const ref = useAutoScroll<HTMLDivElement>(banners.length > 1);
   if (banners.length === 0) return null;
   return (
-    <Reveal className="mt-7">
-      <div className="px-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="grid h-8 w-8 place-items-center rounded-xl bg-primary text-primary-foreground">
-              <Percent className="h-4 w-4" />
+    <div ref={ref} className="no-scrollbar flex gap-2 overflow-x-auto pb-0.5">
+      {banners.map((b) => (
+        <BannerSlide
+          key={b.id}
+          banner={b}
+          className="h-[68px] w-[min(58vw,200px)] rounded-xl ring-1 ring-primary/15 sm:w-[188px]"
+          overlayClass="bg-gradient-to-r from-primary/88 via-primary/50 to-transparent"
+          badge={
+            <span className="mb-0.5 w-fit rounded-full bg-accent px-1.5 py-px text-[8px] font-bold uppercase tracking-wide text-accent-foreground">
+              Offer
             </span>
-            <div>
-              <h2 className="text-base font-bold text-foreground">Today's offers</h2>
-              <p className="text-[11px] text-muted-foreground">Deals, combos and savings</p>
+          }
+        />
+      ))}
+    </div>
+  );
+}
+
+/** Tiny grouped block: today's offers + combo chips. */
+export function HomeOffersStrip({ banners }: { banners: Banner[] }) {
+  return (
+    <Reveal className="mt-4 px-4">
+      <div className="rounded-2xl border border-border/70 bg-card/60 px-3 py-2.5 shadow-sm">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex min-w-0 items-center gap-1.5">
+            <span className="grid h-6 w-6 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary">
+              <Percent className="h-3 w-3" />
+            </span>
+            <div className="min-w-0">
+              <h2 className="text-xs font-bold text-foreground">Today&apos;s offers</h2>
+              <p className="truncate text-[10px] text-muted-foreground">Deals &amp; combos</p>
             </div>
           </div>
           <SeeAll to="/offers" />
         </div>
-      </div>
-      <div ref={ref} className="no-scrollbar mt-3 flex gap-3 overflow-x-auto px-4 pb-1">
-        {banners.map((b) => (
-          <BannerSlide
-            key={b.id}
-            banner={b}
-            className="h-[132px] w-[270px] rounded-2xl ring-1 ring-primary/20"
-            overlayClass="bg-gradient-to-r from-primary/90 via-primary/55 to-transparent"
-            badge={
-              <span className="mb-1.5 w-fit rounded-full bg-accent px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-accent-foreground">
-                Offer
-              </span>
-            }
-          />
-        ))}
+        {banners.length > 0 && (
+          <div className="mt-2">
+            <OfferBannerCarousel banners={banners} />
+          </div>
+        )}
+        <OfferCards embedded />
       </div>
     </Reveal>
   );
@@ -532,7 +531,7 @@ export function FestivalBannerCarousel({ banners }: { banners: Banner[] }) {
   const ref = useAutoScroll<HTMLDivElement>(banners.length > 1);
   if (banners.length === 0) return null;
   return (
-    <Reveal className="mt-7">
+    <Reveal className="mt-8">
       <div className="mx-4 overflow-hidden rounded-3xl bg-gradient-to-br from-amber-950 via-amber-900 to-orange-800 px-4 pb-4 pt-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 text-amber-50">
@@ -650,7 +649,7 @@ export function FestivalPicks({
   if (tabs.length === 0 && list.length === 0) return null;
 
   return (
-    <Reveal className="mt-7">
+    <Reveal className="mt-8">
       <div className="flex items-center justify-between px-4">
         <h2 className="text-base font-bold text-foreground">{title}</h2>
         {curated?.length ? (
@@ -715,7 +714,7 @@ export function BudgetRail({
   const ref = useAutoScroll<HTMLDivElement>(items.length > 3);
   if (items.length === 0) return null;
   return (
-    <Reveal className="mt-7">
+    <Reveal className="mt-8">
       <div className="mx-4 rounded-3xl bg-gradient-to-br from-accent-soft to-accent-soft/40 p-4">
         <div className="flex items-center justify-between">
           <h2 className="text-base font-bold text-accent-foreground">
@@ -736,30 +735,39 @@ export function BudgetRail({
   );
 }
 
-/** Shop-by-need tiles that deep-link into categories. */
+/** Shop-by-need tiles — bento mix of one hero tile + smaller tiles. */
 export function ShopByNeed({ categories }: { categories: Array<{ id: string; name: string; slug: string; image_url: string | null }> }) {
   const tiles = categories.slice(0, 6);
   if (tiles.length === 0) return null;
   return (
-    <Reveal className="mt-7">
+    <Reveal className="mt-8">
       <div className="flex items-center justify-between px-4">
-        <h2 className="text-base font-bold text-foreground">Shop by need</h2>
+        <h2 className="text-lg font-bold text-foreground">Shop by need</h2>
         <SeeAll to="/categories" />
       </div>
-      <div className="mt-3 grid grid-cols-3 gap-3 px-4 sm:grid-cols-4 lg:grid-cols-6">
-        {tiles.map((c) => (
+      <div className="mt-3 grid auto-rows-[88px] grid-cols-4 gap-2 px-4 sm:auto-rows-[96px] sm:gap-3">
+        {tiles.map((c, i) => (
           <Link
             key={c.id}
             to="/category/$slug"
             params={{ slug: c.slug }}
-            className="overflow-hidden rounded-2xl border border-border bg-card transition-transform active:scale-[0.97]"
+            className={cn(
+              "group relative overflow-hidden rounded-2xl border border-border bg-card transition-transform active:scale-[0.97]",
+              i === 0 ? "col-span-2 row-span-2" : "col-span-1",
+            )}
           >
-            <div className="aspect-[4/3] w-full bg-secondary">
+            <div className="absolute inset-0 bg-secondary">
               {c.image_url && (
-                <img src={c.image_url} alt="" loading="lazy" className="h-full w-full object-cover" />
+                <img src={c.image_url} alt="" loading="lazy" className="h-full w-full object-cover transition-transform group-hover:scale-105" />
               )}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/20 to-transparent" />
             </div>
-            <p className="line-clamp-2 px-2 py-2 text-[11px] font-semibold leading-tight text-foreground">
+            <p
+              className={cn(
+                "absolute bottom-0 left-0 right-0 font-semibold leading-tight text-white drop-shadow",
+                i === 0 ? "p-3 text-sm" : "p-2 text-[10px]",
+              )}
+            >
               {c.name}
             </p>
           </Link>
@@ -778,16 +786,18 @@ export function ServicePromises() {
     { icon: Leaf, label: "Farm fresh" },
   ];
   return (
-    <Reveal className="mt-7 grid grid-cols-4 gap-2 px-4 sm:grid-cols-6 lg:grid-cols-8">
-      {items.map((i) => (
-        <div
-          key={i.label}
-          className="flex flex-col items-center gap-1.5 rounded-2xl border border-border bg-card px-1 py-3 text-center"
-        >
-          <i.icon className="h-4.5 w-4.5 text-primary" />
-          <span className="text-[10px] font-semibold leading-tight text-muted-foreground">{i.label}</span>
-        </div>
-      ))}
+    <Reveal className="mt-4 px-4">
+      <div className="no-scrollbar flex gap-2 overflow-x-auto rounded-2xl border border-border/60 bg-card/40 p-2">
+        {items.map((i) => (
+          <div
+            key={i.label}
+            className="flex min-w-[88px] shrink-0 flex-col items-center gap-1 rounded-xl bg-card px-2 py-2 text-center"
+          >
+            <i.icon className="h-3.5 w-3.5 text-primary" />
+            <span className="text-[9px] font-semibold leading-tight text-muted-foreground">{i.label}</span>
+          </div>
+        ))}
+      </div>
     </Reveal>
   );
 }
@@ -839,7 +849,14 @@ function HomeDynamicSection({
           />
         );
       }
-      return <ProductRail title={section.title} products={products} href={href} />;
+      return (
+        <ProductRail
+          title={section.title}
+          products={products}
+          href={href}
+          size={homeSectionDisplaySize(section)}
+        />
+      );
   }
 }
 
@@ -853,10 +870,11 @@ export function HomeDynamicSections({
   allProducts: Product[];
   categories: Array<{ id: string; name: string; slug: string }>;
 }) {
-  if (!sections.length) return null;
+  const sorted = [...sections].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
+  if (!sorted.length) return null;
   return (
     <>
-      {sections.map((section) => (
+      {sorted.map((section) => (
         <Reveal key={section.id}>
           <HomeDynamicSection section={section} allProducts={allProducts} categories={categories} />
         </Reveal>

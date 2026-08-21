@@ -3,9 +3,14 @@ import type { Product } from "@/lib/types";
 export const DEFAULT_OFFER_SECTIONS = [
   { key: "flash_sale", label: "Flash sale" },
   { key: "todays_deals", label: "Today's deals" },
+  { key: "deal_of_the_day", label: "Deal of the day" },
   { key: "under_99", label: "Under ₹99" },
   { key: "festive_picks", label: "Festive picks" },
   { key: "combo_packs", label: "Combo packs" },
+  { key: "trending", label: "Trending now" },
+  { key: "best_sellers", label: "Best sellers" },
+  { key: "recommended", label: "Recommended" },
+  { key: "newest", label: "Newly added" },
   { key: "custom_offers", label: "Custom offers" },
 ] as const;
 
@@ -34,6 +39,45 @@ export type HomeSectionBlock = HomeOfferSectionDef & {
 };
 
 export type OfferSectionsMap = Partial<Record<string, Product[]>>;
+
+/** Build ordered home sections from API payload (supports older cached responses). */
+export function resolveHomeSections(data: {
+  home_sections?: HomeSectionBlock[];
+  section_meta?: HomeOfferSectionDef[];
+  sections?: OfferSectionsMap;
+  all?: Product[];
+}): HomeSectionBlock[] {
+  if (data.home_sections?.length) {
+    return [...data.home_sections].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
+  }
+  const meta = data.section_meta ?? [];
+  if (!meta.length) return [];
+  const byId = new Map((data.all ?? []).map((p) => [p.id, p]));
+  return meta
+    .filter((s) => s.is_active !== false && s.show_on_home !== false)
+    .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
+    .map((s) => {
+      const fromIds = (s.resolved_product_ids ?? [])
+        .map((id) => byId.get(id))
+        .filter((p): p is Product => Boolean(p));
+      const fromMap = data.sections?.[s.key] ?? [];
+      return {
+        ...s,
+        products: fromIds.length > 0 ? fromIds : fromMap,
+      };
+    });
+}
+
+export function homeSectionDisplaySize(
+  section: Pick<HomeOfferSectionDef, "key" | "layout">,
+): "compact" | "default" | "featured" {
+  if (section.layout === "countdown_rail" || section.layout === "budget_rail") return "featured";
+  if (section.layout === "deal_card") return "default";
+  if (section.key === "todays_deals" || section.key === "combo_packs" || section.key === "custom_offers") {
+    return "compact";
+  }
+  return "default";
+}
 
 export function offerSectionLabel(key: string, sections?: Array<{ key: string; title?: string; label?: string }>) {
   const fromApi = sections?.find((s) => s.key === key);

@@ -55,9 +55,28 @@ export const adminReorderHomeSection = createServerFn({ method: "POST" })
   .inputValidator((data: { id: string; direction: "up" | "down" }) => data)
   .handler(async ({ data, context }) => {
     return admin(context.accessToken, "/admin-api/home-sections/", {
-      method: "PATCH",
+      method: "POST",
       body: toJsonBody({ action: "move", id: data.id, direction: data.direction }),
     }) as Promise<{ ok: boolean; moved: boolean }>;
+  });
+
+export const adminBulkReorderHomeSections = createServerFn({ method: "POST" })
+  .middleware([requireAuth])
+  .inputValidator((data: { ordered_ids: string[] }) => data)
+  .handler(async ({ data, context }) => {
+    return admin(context.accessToken, "/admin-api/home-sections/", {
+      method: "POST",
+      body: toJsonBody({ action: "reorder", ordered_ids: data.ordered_ids }),
+    }) as Promise<{ ok: boolean; reordered: number }>;
+  });
+
+export const adminSyncHomeSections = createServerFn({ method: "POST" })
+  .middleware([requireAuth])
+  .handler(async ({ context }) => {
+    return admin(context.accessToken, "/admin-api/home-sections/", {
+      method: "POST",
+      body: toJsonBody({ action: "sync_defaults" }),
+    }) as Promise<{ ok: boolean; created: number; total: number }>;
   });
 
 export const adminListCoupons = createServerFn({ method: "GET" })

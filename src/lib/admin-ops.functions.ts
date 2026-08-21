@@ -61,9 +61,11 @@ export const setOrderDelivery = createServerFn({ method: "POST" })
   .middleware([requireAuth])
   .inputValidator((data: { id: string; delivery_date: string; status?: string }) => data)
   .handler(async ({ data, context }) => {
+    const payload: Record<string, string> = { delivery_date: data.delivery_date };
+    if (data.status) payload.status = data.status;
     await admin(context.accessToken, `/admin-api/orders/${data.id}/`, {
-      method: "PATCH",
-      body: toJsonBody({ delivery_date: data.delivery_date, status: data.status ?? "confirmed" }),
+      method: "POST",
+      body: toJsonBody(payload),
     });
     return { ok: true };
   });

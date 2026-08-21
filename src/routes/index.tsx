@@ -4,6 +4,7 @@ import { Search, MapPin, Sparkles } from "lucide-react";
 import { getHomeData } from "@/lib/catalog.functions";
 import { splitHomeBanners } from "@/lib/home-banners";
 import type { OfferSectionsMap, HomeSectionBlock } from "@/lib/offer-sections";
+import { resolveHomeSections } from "@/lib/offer-sections";
 import { PageShell } from "@/components/page-shell";
 import { BannerSlider } from "@/components/banner-slider";
 import { ProductRail } from "@/components/product-rail";
@@ -21,8 +22,7 @@ import {
   FestivalBannerCarousel,
   FestivalPicks,
   FlashSaleRail,
-  OfferBannerCarousel,
-  OfferCards,
+  HomeOffersStrip,
   RecentlyViewedRail,
   HomeDynamicSections,
   ServicePromises,
@@ -35,6 +35,7 @@ import { LiveActivityTicker } from "@/components/live-activity-ticker";
 const homeQuery = queryOptions({
   queryKey: ["home"],
   queryFn: () => getHomeData(),
+  staleTime: 30_000,
 });
 
 export const Route = createFileRoute("/")({
@@ -99,8 +100,16 @@ function Home() {
   const topCategories = data.categories.filter((c) => !c.parent_id);
   const categoryScrollRef = useAutoScroll<HTMLDivElement>(topCategories.length > 3);
   const sections = (data as { sections?: OfferSectionsMap }).sections ?? {};
-  const homeSections = (data as { home_sections?: HomeSectionBlock[] }).home_sections ?? [];
+  const homeSections = resolveHomeSections(
+    data as {
+      home_sections?: HomeSectionBlock[];
+      section_meta?: HomeSectionBlock[];
+      sections?: OfferSectionsMap;
+      all?: typeof allProducts;
+    },
+  );
   const useDynamicSections = homeSections.length > 0;
+  const dynamicKeys = new Set(homeSections.map((s) => s.key));
   const { heroBanners, offerBanners, festiveBanners } = splitHomeBanners(data);
 
 
@@ -224,36 +233,62 @@ function Home() {
         </>
       )}
 
-      <OfferBannerCarousel banners={offerBanners} />
-      <OfferCards />
+      <HomeOffersStrip banners={offerBanners} />
 
       <CouponStrip />
 
       <FestivalBannerCarousel banners={festiveBanners} />
 
-      <Reveal>
-        <ProductRail title="Trending now" products={trending} href={{ to: "/deals", search: { tab: "trending" } }} />
-      </Reveal>
+      {!dynamicKeys.has("trending") && (
+        <Reveal>
+          <ProductRail
+            size="featured"
+            title="Trending now"
+            products={trending}
+            href={{ to: "/deals", search: { tab: "trending" } }}
+          />
+        </Reveal>
+      )}
 
-      <Reveal>
-        <ProductRail title="Best sellers" products={data.bestSelling} href={{ to: "/deals", search: { tab: "best_sellers" } }} />
-      </Reveal>
+      {!dynamicKeys.has("best_sellers") && (
+        <Reveal>
+          <ProductRail
+            title="Best sellers"
+            products={data.bestSelling}
+            href={{ to: "/deals", search: { tab: "best_sellers" } }}
+          />
+        </Reveal>
+      )}
 
       <ShopByNeed categories={topCategories} />
 
       <RecentlyViewedRail />
 
-      <Reveal>
-        <ProductRail title="Recommended for you" products={data.recommended} href={{ to: "/deals", search: { tab: "recommended" } }} />
-      </Reveal>
+      {!dynamicKeys.has("recommended") && (
+        <Reveal>
+          <ProductRail
+            size="compact"
+            title="Recommended for you"
+            products={data.recommended}
+            href={{ to: "/deals", search: { tab: "recommended" } }}
+          />
+        </Reveal>
+      )}
 
       <BrandRail />
 
       <ServicePromises />
 
-      <Reveal>
-        <ProductRail title="Newly added" products={data.newest} href={{ to: "/deals", search: { tab: "newest" } }} />
-      </Reveal>
+      {!dynamicKeys.has("newest") && (
+        <Reveal>
+          <ProductRail
+            size="compact"
+            title="Newly added"
+            products={data.newest}
+            href={{ to: "/deals", search: { tab: "newest" } }}
+          />
+        </Reveal>
+      )}
 
 
       <Reveal className="mt-8 px-4 lg:px-0">

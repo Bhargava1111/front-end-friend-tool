@@ -99,22 +99,40 @@ export async function getAdminOrdersClient(opts?: {
 export async function bulkUpdateOrdersClient(opts: {
   data: {
     order_ids?: string[];
-    action: string;
+    action?: string;
+    status?: string;
     delivery_date?: string;
   };
 }) {
+  const payload = { ...opts.data };
+  // Backends that only read `action` (not `status`) must get the target status as action too.
+  if (payload.status && !payload.action) {
+    payload.action = payload.status;
+  }
   return adminClient("/admin-api/orders/bulk/", {
     method: "POST",
-    body: toJsonBody(opts.data),
-  }) as Promise<{ ok: boolean; updated: number; status: string }>;
+    body: toJsonBody(payload),
+  }) as Promise<{
+    ok: boolean;
+    updated: number;
+    changed?: number;
+    status: string;
+    orders?: Array<{ id: string; status: string }>;
+  }>;
 }
 
 export async function setOrderStatusClient(opts: { data: { id: string; status: string } }) {
-  await adminClient(`/admin-api/orders/${opts.data.id}/`, {
-    method: "PATCH",
-    body: toJsonBody({ status: opts.data.status }),
-  });
-  return { ok: true };
+  const body = toJsonBody({ status: opts.data.status, action: opts.data.status });
+  const path = `/admin-api/orders/${opts.data.id}/`;
+  try {
+    return (await adminClient(path, { method: "POST", body })) as { status?: string; id?: string };
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : "";
+    if (msg.includes("405") || msg.toLowerCase().includes("method")) {
+      return (await adminClient(path, { method: "PATCH", body })) as { status?: string; id?: string };
+    }
+    throw err;
+  }
 }
 
 export async function getAdminProductsClient() {
@@ -259,9 +277,23 @@ export async function adminReorderHomeSectionClient(opts: {
   data: { id: string; direction: "up" | "down" };
 }) {
   return adminClient("/admin-api/home-sections/", {
-    method: "PATCH",
+    method: "POST",
     body: toJsonBody({ action: "move", id: opts.data.id, direction: opts.data.direction }),
   }) as Promise<{ ok: boolean; moved: boolean }>;
+}
+
+export async function adminBulkReorderHomeSectionsClient(opts: { data: { ordered_ids: string[] } }) {
+  return adminClient("/admin-api/home-sections/", {
+    method: "POST",
+    body: toJsonBody({ action: "reorder", ordered_ids: opts.data.ordered_ids }),
+  }) as Promise<{ ok: boolean; reordered: number }>;
+}
+
+export async function adminSyncHomeSectionsClient() {
+  return adminClient("/admin-api/home-sections/", {
+    method: "POST",
+    body: toJsonBody({ action: "sync_defaults" }),
+  }) as Promise<{ ok: boolean; created: number; total: number }>;
 }
 
 export async function getAdminBulkOrdersClient(opts?: { data?: { status?: string } }) {
@@ -479,14 +511,12 @@ export async function deleteAdminUserClient(opts: { data: { id?: string; userId?
 export async function setOrderDeliveryClient(opts: {
   data: { id: string; delivery_date: string; status?: string };
 }) {
-  await adminClient(`/admin-api/orders/${opts.data.id}/`, {
-    method: "PATCH",
-    body: toJsonBody({
-      delivery_date: opts.data.delivery_date,
-      status: opts.data.status ?? "confirmed",
-    }),
+  const payload: Record<string, string> = { delivery_date: opts.data.delivery_date };
+  if (opts.data.status) payload.status = opts.data.status;
+  return adminClient(`/admin-api/orders/${opts.data.id}/`, {
+    method: "POST",
+    body: toJsonBody(payload),
   });
-  return { ok: true };
 }
 
 export async function getAdminBlogPostsClient() {
