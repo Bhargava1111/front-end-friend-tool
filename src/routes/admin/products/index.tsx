@@ -68,8 +68,22 @@ function AdminProducts() {
   });
 
   const offerSections = sectionRows.length
-    ? sectionRows.filter((s) => s.is_active).map((s) => ({ key: s.key, label: s.title }))
-    : [...DEFAULT_OFFER_SECTIONS];
+    ? sectionRows.filter((s) => s.is_active).map((s) => ({
+        key: s.key,
+        label: s.title,
+        placedCount: s.placed_count ?? 0,
+        displayCount: s.display_count ?? 0,
+        resolvedIds: new Set(s.resolved_product_ids ?? []),
+        fallbackRule: s.fallback_rule,
+      }))
+    : DEFAULT_OFFER_SECTIONS.map((s) => ({
+        key: s.key,
+        label: s.label,
+        placedCount: 0,
+        displayCount: 0,
+        resolvedIds: new Set<string>(),
+        fallbackRule: "manual",
+      }));
 
   const [targetSection, setTargetSection] = useState(offerSections[0]?.key ?? "flash_sale");
   const [sectionFilter, setSectionFilter] = useState<string>("all");
@@ -82,6 +96,7 @@ function AdminProducts() {
 
   const invalidate = () => {
     qc.invalidateQueries({ queryKey: ["admin-products"] });
+    qc.invalidateQueries({ queryKey: ["admin-home-sections"] });
     qc.invalidateQueries({ queryKey: ["home"] });
   };
 
@@ -121,17 +136,19 @@ function AdminProducts() {
 
   const allProducts = (data?.products ?? []) as ProductRow[];
   const sectionCounts = Object.fromEntries(
-    offerSections.map((s) => [
-      s.key,
-      allProducts.filter((p) => (p.offer_sections ?? []).includes(s.key)).length,
-    ]),
+    offerSections.map((s) => [s.key, s.displayCount || s.placedCount]),
   ) as Record<string, number>;
+
+  const sectionResolvedIds = Object.fromEntries(
+    offerSections.map((s) => [s.key, s.resolvedIds]),
+  ) as Record<string, Set<string>>;
 
   const products = allProducts.filter((p) => {
     const matchesSearch = p.name.toLowerCase().includes(search.toLowerCase());
-    const matchesSection =
-      sectionFilter === "all" || (p.offer_sections ?? []).includes(sectionFilter);
-    return matchesSearch && matchesSection;
+    if (sectionFilter === "all") return matchesSearch;
+    const inPlaced = (p.offer_sections ?? []).includes(sectionFilter);
+    const inResolved = sectionResolvedIds[sectionFilter]?.has(p.id) ?? false;
+    return matchesSearch && (inPlaced || inResolved);
   });
   const categories = data?.categories ?? [];
   const categoryName = (id?: string | null) =>
@@ -201,7 +218,9 @@ function AdminProducts() {
 
       {sectionFilter !== "all" && (
         <p className="rounded-xl border border-border bg-secondary/40 px-3 py-2 text-xs text-muted-foreground">
-          Products listed here appear in the <strong className="text-foreground">{offerSectionLabel(sectionFilter, sectionRows)}</strong> block on the home page. Use the tag buttons to add or remove individual products.
+          Showing products in <strong className="text-foreground">{offerSectionLabel(sectionFilter, sectionRows)}</strong>.
+          Tags show manual assignments; auto-filled products (from fallback rules) appear here too.
+          Use the tag buttons to add or remove manual placements.
         </p>
       )}
 
@@ -305,6 +324,10 @@ function AdminProducts() {
                 const sections = p.offer_sections ?? [];
                 const inActiveSection =
                   sectionFilter !== "all" && sections.includes(sectionFilter);
+                const autoFilled =
+                  sectionFilter !== "all" &&
+                  !inActiveSection &&
+                  (sectionResolvedIds[sectionFilter]?.has(p.id) ?? false);
                 return (
                   <tr key={p.id} className={selected.has(p.id) ? "bg-primary-soft/30" : undefined}>
                     <td className="px-4 py-3">
@@ -372,10 +395,15 @@ function AdminProducts() {
                               key={s}
                               className="rounded-full bg-accent-soft px-2 py-0.5 text-[10px] font-semibold text-accent-foreground"
                             >
-                              {offerSectionLabel(s)}
+                              {offerSectionLabel(s, sectionRows)}
                             </span>
                           ))}
                         </div>
+                      )}
+                      {autoFilled && (
+                        <span className="mt-1 inline-block rounded-full bg-secondary px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
+                          Auto-filled on store
+                        </span>
                       )}
                     </td>
                     <td className="px-4 py-3">

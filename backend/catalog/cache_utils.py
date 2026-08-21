@@ -1,6 +1,6 @@
 from django.core.cache import cache
 
-HOME_CACHE_KEY = "catalog:home:v1"
+HOME_CACHE_KEY = "catalog:home:v2"
 HOME_CACHE_TTL = 60
 DEALS_CACHE_PREFIX = "catalog:deals:"
 DEALS_CACHE_TTL = 45

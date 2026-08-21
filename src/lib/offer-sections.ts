@@ -19,10 +19,14 @@ export type HomeOfferSectionDef = {
   layout: "rail" | "countdown_rail" | "budget_rail" | "deal_card";
   fallback_rule: string;
   see_all_tab?: string;
+  max_price?: number;
   max_products: number;
   sort_order: number;
   is_active: boolean;
   show_on_home: boolean;
+  placed_count?: number;
+  display_count?: number;
+  resolved_product_ids?: string[];
 };
 
 export type HomeSectionBlock = HomeOfferSectionDef & {

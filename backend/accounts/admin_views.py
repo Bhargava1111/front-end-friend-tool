@@ -465,8 +465,12 @@ class AdminHomeSectionView(APIView):
     permission_classes = [IsAdminRole]
 
     def get(self, request):
+        from catalog.placements import all_section_products
+        sections_map = all_section_products(limit=40)
         qs = HomeOfferSection.objects.all().order_by("sort_order", "title")
-        return Response(HomeOfferSectionSerializer(qs, many=True).data)
+        return Response(
+            HomeOfferSectionSerializer(qs, many=True, context={"sections_map": sections_map}).data
+        )
 
     def post(self, request):
         data = request.data
@@ -478,7 +482,7 @@ class AdminHomeSectionView(APIView):
         fields = {}
         for field in (
             "key", "title", "subtitle", "layout", "fallback_rule",
-            "see_all_tab", "max_products", "sort_order", "is_active", "show_on_home",
+            "see_all_tab", "max_price", "max_products", "sort_order", "is_active", "show_on_home",
         ):
             if field in data:
                 fields[field] = data[field]

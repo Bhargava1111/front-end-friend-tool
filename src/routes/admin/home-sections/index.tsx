@@ -77,6 +77,10 @@ function AdminHomeSectionsPage() {
                 <p className="text-sm font-semibold text-foreground">{s.title}</p>
                 <p className="text-xs text-muted-foreground">
                   {layoutLabel(s.layout)} · {fallbackLabel(s.fallback_rule)} · key: {s.key}
+                  {s.max_price ? ` · max ₹${s.max_price}` : ""}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {s.placed_count ?? 0} manually placed · {s.display_count ?? 0} shown on store
                 </p>
                 {s.subtitle ? <p className="mt-0.5 text-xs text-muted-foreground">{s.subtitle}</p> : null}
               </div>

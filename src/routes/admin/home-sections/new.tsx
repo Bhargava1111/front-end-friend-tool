@@ -30,6 +30,7 @@ const blank = {
   layout: "rail",
   fallback_rule: "manual",
   see_all_tab: "",
+  max_price: 99,
   max_products: 12,
   sort_order: 0,
   is_active: true,
@@ -131,6 +132,15 @@ function NewHomeSection() {
               value={form.see_all_tab}
               onChange={(e) => setForm((f) => ({ ...f, see_all_tab: e.target.value }))}
               placeholder="flash, today, budget…"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Max price (₹)</Label>
+            <Input
+              type="number"
+              min={1}
+              value={form.max_price}
+              onChange={(e) => setForm((f) => ({ ...f, max_price: Number(e.target.value) }))}
             />
           </div>
           <div className="space-y-1.5">

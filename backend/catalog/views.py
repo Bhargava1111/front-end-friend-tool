@@ -11,6 +11,7 @@ from catalog.placements import (
     all_section_products,
     fallback_products,
     home_sections_payload,
+    section_meta_list,
     section_products,
 )
 from catalog.serializers import (
@@ -56,6 +57,7 @@ class HomeView(APIView):
             "all": all_products,
             "sections": sections,
             "home_sections": home_sections_payload(sections, all_products),
+            "section_meta": section_meta_list(sections, all_products),
         }
         cache.set(HOME_CACHE_KEY, payload, HOME_CACHE_TTL)
         return Response(payload)
@@ -63,8 +65,15 @@ class HomeView(APIView):
 
 class HomeSectionListView(APIView):
     def get(self, request):
-        qs = HomeOfferSection.objects.filter(is_active=True, show_on_home=True).order_by("sort_order")
-        return Response(HomeOfferSectionSerializer(qs, many=True).data)
+        sections_map = all_section_products(limit=40)
+        qs = HomeOfferSection.objects.filter(is_active=True).order_by("sort_order")
+        return Response(
+            HomeOfferSectionSerializer(
+                qs,
+                many=True,
+                context={"sections_map": sections_map},
+            ).data
+        )
 
 
 class CategoryListView(APIView):
@@ -171,10 +180,17 @@ class DealsView(APIView):
         }
         if tab in section_map:
             section_key = section_map[tab]
-            products = section_products(section_key, limit=40)
-            if not products:
-                rule = HomeOfferSection.objects.filter(key=section_key).values_list("fallback_rule", flat=True).first()
-                products = fallback_products(rule or "discounted", limit=40)
+            section_def = HomeOfferSection.objects.filter(key=section_key).first()
+            max_price = section_def.max_price if section_def else (99 if tab == "budget" else None)
+            products = section_products(section_key, limit=40, max_price=max_price if tab == "budget" else None)
+            if not products and section_def:
+                products = fallback_products(
+                    section_def.fallback_rule,
+                    limit=40,
+                    max_price=max_price if tab == "budget" or section_def.fallback_rule == "under_99" else None,
+                )
+            elif not products:
+                products = fallback_products("discounted", limit=40, max_price=max_price if tab == "budget" else None)
             if products:
                 payload = {
                     "results": products,

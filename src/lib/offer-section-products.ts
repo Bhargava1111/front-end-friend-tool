@@ -1,4 +1,4 @@
-import type { OfferSectionKey, OfferSectionsMap } from "@/lib/offer-sections";
+import type { OfferSectionKey, OfferSectionsMap, HomeOfferSectionDef } from "@/lib/offer-sections";
 import type { Product } from "@/lib/types";
 
 export type DealsTab =
@@ -60,22 +60,31 @@ function discountedProducts(home: HomeCatalogData, limit = 40): Product[] {
 export function resolveSectionProducts(
   section: OfferSectionKey,
   home: HomeCatalogData,
-  opts?: { categoryId?: string; limit?: number },
+  opts?: { categoryId?: string; limit?: number; maxPrice?: number },
 ): Product[] {
   const limit = opts?.limit ?? 40;
   const sections = home.sections ?? {};
   const curated = sections[section];
-  if (curated?.length) return curated.slice(0, limit);
+  const maxPrice = opts?.maxPrice;
+
+  const withinPrice = (items: Product[]) =>
+    maxPrice != null ? items.filter((p) => Number(p.price) <= maxPrice) : items;
+
+  if (curated?.length) return withinPrice(curated).slice(0, limit);
 
   const pool = allProducts(home);
 
   switch (section) {
     case "flash_sale":
-      return discountedProducts(home, limit);
+      return withinPrice(discountedProducts(home, limit));
     case "todays_deals":
-      return (home.featured?.length ? home.featured : pool.filter((p) => p.is_featured)).slice(0, limit);
-    case "under_99":
-      return pool.filter((p) => Number(p.price) <= 99).slice(0, limit);
+      return withinPrice(
+        (home.featured?.length ? home.featured : pool.filter((p) => p.is_featured)).slice(0, limit),
+      );
+    case "under_99": {
+      const ceiling = maxPrice ?? 99;
+      return pool.filter((p) => Number(p.price) <= ceiling).slice(0, limit);
+    }
     case "festive_picks":
       if (opts?.categoryId) {
         return pool.filter((p) => p.category_id === opts.categoryId).slice(0, limit);
@@ -84,18 +93,33 @@ export function resolveSectionProducts(
     case "combo_packs":
       return pool.filter((p) => p.is_combo).slice(0, limit);
     case "custom_offers":
-      return discountedProducts(home, limit);
+      return withinPrice(discountedProducts(home, limit));
     default:
       return pool.slice(0, limit);
   }
 }
 
+function sectionMetaForTab(tab: DealsTab, sectionMeta?: HomeOfferSectionDef[]) {
+  if (!sectionMeta?.length) return undefined;
+  return sectionMeta.find((s) => s.see_all_tab === tab || s.key === DEALS_TAB_TO_SECTION[tab]);
+}
+
 /** Resolve products for a /deals tab — same rules as home rails. */
-export function resolveDealsTabProducts(tab: DealsTab, home: HomeCatalogData): Product[] {
+export function resolveDealsTabProducts(
+  tab: DealsTab,
+  home: HomeCatalogData,
+  sectionMeta?: HomeOfferSectionDef[],
+): Product[] {
   if (tab === "all") return discountedProducts(home, 40);
 
+  const meta = sectionMetaForTab(tab, sectionMeta);
   const section = DEALS_TAB_TO_SECTION[tab];
-  if (section) return resolveSectionProducts(section, home);
+  if (section) {
+    return resolveSectionProducts(section, home, {
+      limit: 40,
+      maxPrice: meta?.max_price,
+    });
+  }
 
   switch (tab) {
     case "best_sellers":
@@ -119,7 +143,10 @@ export function resolveDealsTabProducts(tab: DealsTab, home: HomeCatalogData): P
   }
 }
 
-export function dealsTabLabel(tab: DealsTab): string {
+export function dealsTabLabel(tab: DealsTab, sectionMeta?: HomeOfferSectionDef[]): string {
+  const fromMeta = sectionMetaForTab(tab, sectionMeta);
+  if (fromMeta?.title) return fromMeta.title;
+
   const labels: Record<DealsTab, string> = {
     all: "All deals",
     flash: "Flash sale",

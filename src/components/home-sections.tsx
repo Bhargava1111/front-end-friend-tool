@@ -73,9 +73,13 @@ function CountdownPill() {
 export function FlashSaleRail({
   products,
   curated,
+  title = "Flash Sale",
+  subtitle = "Ends at midnight — grab them before they're gone",
 }: {
   products: Product[];
   curated?: Product[];
+  title?: string;
+  subtitle?: string;
 }) {
   const deals =
     curated && curated.length > 0
@@ -100,7 +104,7 @@ export function FlashSaleRail({
             <span className="grid h-7 w-7 place-items-center rounded-full bg-accent text-accent-foreground">
               <Zap className="h-4 w-4" />
             </span>
-            Flash Sale
+            {title}
           </h2>
           <div className="flex items-center gap-2">
             <CountdownPill />
@@ -108,7 +112,7 @@ export function FlashSaleRail({
           </div>
         </div>
         <p className="mt-1 px-4 text-xs text-primary-foreground/70">
-          Ends at midnight — grab them before they're gone
+          {subtitle}
         </p>
         <div
           ref={dealsScrollRef}
@@ -695,14 +699,18 @@ export function BudgetRail({
   products,
   curated,
   ceiling = 99,
+  title,
+  subtitle,
 }: {
   products: Product[];
   curated?: Product[];
   ceiling?: number;
+  title?: string;
+  subtitle?: string;
 }) {
   const items =
     curated && curated.length > 0
-      ? curated.slice(0, 12)
+      ? curated.filter((p) => Number(p.price) <= ceiling).slice(0, 12)
       : products.filter((p) => Number(p.price) <= ceiling).slice(0, 12);
   const ref = useAutoScroll<HTMLDivElement>(items.length > 3);
   if (items.length === 0) return null;
@@ -710,10 +718,14 @@ export function BudgetRail({
     <Reveal className="mt-7">
       <div className="mx-4 rounded-3xl bg-gradient-to-br from-accent-soft to-accent-soft/40 p-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-base font-bold text-accent-foreground">Under {formatINR(ceiling)} store</h2>
+          <h2 className="text-base font-bold text-accent-foreground">
+            {title ?? `Under ${formatINR(ceiling)} store`}
+          </h2>
           <SeeAll to="/deals" search={{ tab: "budget" }} />
         </div>
-        <p className="mt-0.5 text-xs text-accent-foreground/75">Small basket, big savings</p>
+        <p className="mt-0.5 text-xs text-accent-foreground/75">
+          {subtitle ?? "Small basket, big savings"}
+        </p>
         <div ref={ref} className="no-scrollbar mt-3 flex gap-3 overflow-x-auto pb-1">
           {items.map((p) => (
             <ProductCard key={p.id} product={p} className="w-[142px] shrink-0" />
@@ -796,9 +808,24 @@ function HomeDynamicSection({
 
   switch (section.layout) {
     case "countdown_rail":
-      return <FlashSaleRail products={allProducts} curated={products} />;
+      return (
+        <FlashSaleRail
+          products={allProducts}
+          curated={products}
+          title={section.title}
+          subtitle={section.subtitle}
+        />
+      );
     case "budget_rail":
-      return <BudgetRail products={allProducts} curated={products} />;
+      return (
+        <BudgetRail
+          products={allProducts}
+          curated={products}
+          ceiling={section.max_price ?? 99}
+          title={section.title}
+          subtitle={section.subtitle}
+        />
+      );
     case "deal_card":
       return <DealOfTheDay products={allProducts} curated={products} />;
     default:

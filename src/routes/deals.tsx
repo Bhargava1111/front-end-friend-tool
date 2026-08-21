@@ -8,6 +8,7 @@ import {
   resolveDealsTabProducts,
   type DealsTab,
 } from "@/lib/offer-section-products";
+import type { HomeOfferSectionDef } from "@/lib/offer-sections";
 import { PageShell, TopBar, EmptyState } from "@/components/page-shell";
 import { ProductCard } from "@/components/product-card";
 import { GridSkeleton } from "@/components/skeletons";
@@ -17,18 +18,6 @@ import { cn } from "@/lib/utils";
 import type { Product } from "@/lib/types";
 
 const dealsQuery = queryOptions({ queryKey: ["home"], queryFn: () => getHomeData() });
-
-const tabQuery = (tab: DealsTab) =>
-  queryOptions({
-    queryKey: ["deals", tab],
-    queryFn: () =>
-      getDeals({
-        data: {
-          tab: tab === "all" ? undefined : tab,
-          max_price: tab === "budget" ? 99 : undefined,
-        },
-      }),
-  });
 
 const TAB_KEYS = [
   "all",
@@ -93,12 +82,29 @@ function DealsPage() {
   const { data } = useSuspenseQuery(dealsQuery);
   const { tab } = Route.useSearch();
   const navigate = Route.useNavigate();
+
+  const sectionMeta = (data as { section_meta?: HomeOfferSectionDef[] }).section_meta ?? [];
+  const budgetSection = sectionMeta.find((s) => s.see_all_tab === "budget" || s.key === "under_99");
+  const budgetMaxPrice = budgetSection?.max_price ?? 99;
+
+  const tabQuery = (activeTab: DealsTab) =>
+    queryOptions({
+      queryKey: ["deals", activeTab, budgetMaxPrice],
+      queryFn: () =>
+        getDeals({
+          data: {
+            tab: activeTab === "all" ? undefined : activeTab,
+            max_price: activeTab === "budget" ? budgetMaxPrice : undefined,
+          },
+        }),
+    });
+
   const { data: tabData, isFetching } = useQuery({
     ...tabQuery(tab),
     enabled: tab !== "all",
   });
 
-  const clientFallback = resolveDealsTabProducts(tab, data);
+  const clientFallback = resolveDealsTabProducts(tab, data, sectionMeta);
   const apiResults = (tabData as { results?: Product[] } | undefined)?.results;
   const list = apiResults?.length ? apiResults : clientFallback;
 
@@ -115,7 +121,7 @@ function DealsPage() {
   return (
     <PageShell>
       <TopBar
-        title={tab === "all" ? "Deals & offers" : dealsTabLabel(tab)}
+        title={tab === "all" ? "Deals & offers" : dealsTabLabel(tab, sectionMeta)}
         subtitle="Flash sale, daily deals & savings"
         backTo="/"
       />
@@ -150,7 +156,7 @@ function DealsPage() {
                 : "border-border bg-card text-foreground",
             )}
           >
-            {dealsTabLabel(key)}
+            {dealsTabLabel(key, sectionMeta)}
           </button>
         ))}
       </div>
@@ -161,7 +167,7 @@ function DealsPage() {
         </span>
         {tab === "all" && (
           <span className="flex items-center gap-1">
-            <IndianRupee className="h-3.5 w-3.5" /> {all.filter((p) => Number(p.price) <= 99).length} under ₹99
+            <IndianRupee className="h-3.5 w-3.5" /> {all.filter((p) => Number(p.price) <= budgetMaxPrice).length} under {formatINR(budgetMaxPrice)}
           </span>
         )}
         {isFetching && <span>Updating…</span>}

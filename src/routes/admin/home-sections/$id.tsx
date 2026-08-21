@@ -133,6 +133,15 @@ function EditHomeSection() {
             />
           </div>
           <div className="space-y-1.5">
+            <Label>Max price (₹)</Label>
+            <Input
+              type="number"
+              min={1}
+              value={form.max_price ?? 99}
+              onChange={(e) => setForm((f) => ({ ...f!, max_price: Number(e.target.value) }))}
+            />
+          </div>
+          <div className="space-y-1.5">
             <Label>Max products</Label>
             <Input
               type="number"

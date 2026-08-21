@@ -99,12 +99,30 @@ class CategorySerializer(serializers.ModelSerializer):
 
 
 class HomeOfferSectionSerializer(serializers.ModelSerializer):
+    placed_count = serializers.SerializerMethodField()
+    display_count = serializers.SerializerMethodField()
+    resolved_product_ids = serializers.SerializerMethodField()
+
     class Meta:
         model = HomeOfferSection
         fields = (
             "id", "key", "title", "subtitle", "layout", "fallback_rule",
-            "see_all_tab", "max_products", "sort_order", "is_active", "show_on_home",
+            "see_all_tab", "max_price", "max_products", "sort_order", "is_active", "show_on_home",
+            "placed_count", "display_count", "resolved_product_ids",
         )
+
+    def get_placed_count(self, obj):
+        from catalog.models import ProductOfferPlacement
+        return ProductOfferPlacement.objects.filter(section=obj.key).count()
+
+    def get_display_count(self, obj):
+        return len(self.get_resolved_product_ids(obj))
+
+    def get_resolved_product_ids(self, obj):
+        from catalog.placements import resolve_section_product_ids
+        ctx = self.context.get("sections_map")
+        all_serialized = self.context.get("all_serialized") or []
+        return resolve_section_product_ids(obj, ctx, all_serialized)
 
 
 class BannerSerializer(serializers.ModelSerializer):
