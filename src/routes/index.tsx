@@ -3,7 +3,7 @@ import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { Search, MapPin, Sparkles } from "lucide-react";
 import { getHomeData } from "@/lib/catalog.functions";
 import { splitHomeBanners } from "@/lib/home-banners";
-import type { OfferSectionsMap } from "@/lib/offer-sections";
+import type { OfferSectionsMap, HomeSectionBlock } from "@/lib/offer-sections";
 import { PageShell } from "@/components/page-shell";
 import { BannerSlider } from "@/components/banner-slider";
 import { ProductRail } from "@/components/product-rail";
@@ -24,6 +24,7 @@ import {
   OfferBannerCarousel,
   OfferCards,
   RecentlyViewedRail,
+  HomeDynamicSections,
   ServicePromises,
   ShopByNeed,
 } from "@/components/home-sections";
@@ -96,6 +97,8 @@ function Home() {
   const topCategories = data.categories.filter((c) => !c.parent_id);
   const categoryScrollRef = useAutoScroll<HTMLDivElement>(topCategories.length > 3);
   const sections = (data as { sections?: OfferSectionsMap }).sections ?? {};
+  const homeSections = (data as { home_sections?: HomeSectionBlock[] }).home_sections ?? [];
+  const useDynamicSections = homeSections.length > 0;
   const { heroBanners, offerBanners, festiveBanners } = splitHomeBanners(data);
 
 
@@ -184,35 +187,43 @@ function Home() {
         </div>
       </Reveal>
 
-      <FlashSaleRail products={allProducts} curated={sections.flash_sale} />
+      {useDynamicSections ? (
+        <HomeDynamicSections
+          sections={homeSections}
+          allProducts={allProducts}
+          categories={topCategories}
+        />
+      ) : (
+        <>
+          <FlashSaleRail products={allProducts} curated={sections.flash_sale} />
+          <DealOfTheDay products={allProducts} curated={sections.todays_deals} />
+          <Reveal>
+            <ProductRail
+              title="Today's deals"
+              products={sections.todays_deals?.length ? sections.todays_deals : data.featured}
+              href={{ to: "/deals", search: { tab: "today" } }}
+            />
+          </Reveal>
+          <FestivalPicks
+            categories={topCategories}
+            products={allProducts}
+            curated={sections.festive_picks}
+            title="Pooja & festive store"
+          />
+          <BudgetRail products={allProducts} curated={sections.under_99} />
+        </>
+      )}
+
       <OfferBannerCarousel banners={offerBanners} />
       <OfferCards />
-
-      <DealOfTheDay products={allProducts} curated={sections.todays_deals} />
-
-      <Reveal>
-        <ProductRail
-          title="Today's deals"
-          products={sections.todays_deals?.length ? sections.todays_deals : data.featured}
-          href={{ to: "/deals", search: { tab: "today" } }}
-        />
-      </Reveal>
 
       <CouponStrip />
 
       <FestivalBannerCarousel banners={festiveBanners} />
-      <FestivalPicks
-        categories={topCategories}
-        products={allProducts}
-        curated={sections.festive_picks}
-        title="Pooja & festive store"
-      />
 
       <Reveal>
         <ProductRail title="Trending now" products={trending} href={{ to: "/deals", search: { tab: "trending" } }} />
       </Reveal>
-
-      <BudgetRail products={allProducts} curated={sections.under_99} />
 
       <Reveal>
         <ProductRail title="Best sellers" products={data.bestSelling} href={{ to: "/deals", search: { tab: "best_sellers" } }} />

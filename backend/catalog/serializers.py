@@ -2,7 +2,7 @@ from decimal import Decimal
 
 from rest_framework import serializers
 
-from catalog.models import Banner, Brand, Category, Product, ProductImage, ProductVariant, Review
+from catalog.models import Banner, Brand, Category, HomeOfferSection, Product, ProductImage, ProductVariant, Review
 from orders.models import CartItem, Coupon, Order, OrderItem, OrderReturn, WishlistItem
 
 
@@ -96,6 +96,15 @@ class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
         fields = ("id", "name", "slug", "description", "image_url", "sort_order", "is_active", "parent_id")
+
+
+class HomeOfferSectionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = HomeOfferSection
+        fields = (
+            "id", "key", "title", "subtitle", "layout", "fallback_rule",
+            "see_all_tab", "max_products", "sort_order", "is_active", "show_on_home",
+        )
 
 
 class BannerSerializer(serializers.ModelSerializer):

@@ -126,17 +126,9 @@ class Review(models.Model):
 
 
 class ProductOfferPlacement(models.Model):
-    class Section(models.TextChoices):
-        FLASH_SALE = "flash_sale", "Flash Sale"
-        TODAYS_DEALS = "todays_deals", "Today's Deals"
-        UNDER_99 = "under_99", "Under ₹99"
-        FESTIVE_PICKS = "festive_picks", "Festive Picks"
-        COMBO_PACKS = "combo_packs", "Combo Packs"
-        CUSTOM_OFFERS = "custom_offers", "Custom Offers"
-
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="offer_placements")
-    section = models.CharField(max_length=30, choices=Section.choices)
+    section = models.CharField(max_length=50, db_index=True)
     sort_order = models.IntegerField(default=0)
     offer_label = models.CharField(max_length=80, blank=True, default="")
     created_at = models.DateTimeField(auto_now_add=True)
@@ -144,3 +136,41 @@ class ProductOfferPlacement(models.Model):
     class Meta:
         unique_together = [("product", "section")]
         ordering = ["sort_order", "-created_at"]
+
+
+class HomeOfferSection(models.Model):
+    class Layout(models.TextChoices):
+        RAIL = "rail", "Product rail"
+        COUNTDOWN_RAIL = "countdown_rail", "Flash sale (countdown)"
+        BUDGET_RAIL = "budget_rail", "Budget store rail"
+        DEAL_CARD = "deal_card", "Deal of the day card"
+
+    class FallbackRule(models.TextChoices):
+        MANUAL = "manual", "Manual products only"
+        DISCOUNTED = "discounted", "Top discounted"
+        FEATURED = "featured", "Featured products"
+        UNDER_99 = "under_99", "Under ₹99"
+        BEST_SELLER = "best_seller", "Best sellers"
+        NEWEST = "newest", "Newly added"
+        RECOMMENDED = "recommended", "Recommended"
+        COMBO = "combo", "Combo packs"
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    key = models.SlugField(max_length=50, unique=True)
+    title = models.CharField(max_length=120)
+    subtitle = models.CharField(max_length=255, blank=True, default="")
+    layout = models.CharField(max_length=30, choices=Layout.choices, default=Layout.RAIL)
+    fallback_rule = models.CharField(max_length=30, choices=FallbackRule.choices, default=FallbackRule.MANUAL)
+    see_all_tab = models.CharField(max_length=30, blank=True, default="")
+    max_products = models.PositiveSmallIntegerField(default=12)
+    sort_order = models.IntegerField(default=0)
+    is_active = models.BooleanField(default=True)
+    show_on_home = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["sort_order", "title"]
+
+    def __str__(self):
+        return self.title

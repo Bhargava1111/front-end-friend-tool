@@ -27,6 +27,29 @@ export const adminDeleteBrand = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+export const adminListHomeSections = createServerFn({ method: "GET" })
+  .middleware([requireAuth])
+  .handler(async ({ context }) => admin(context.accessToken, "/admin-api/home-sections/"));
+
+export const adminSaveHomeSection = createServerFn({ method: "POST" })
+  .middleware([requireAuth])
+  .inputValidator((data: Record<string, unknown>) => data)
+  .handler(async ({ data, context }) => {
+    const res = await admin(context.accessToken, "/admin-api/home-sections/", {
+      method: "POST",
+      body: toJsonBody(data),
+    });
+    return res;
+  });
+
+export const adminDeleteHomeSection = createServerFn({ method: "POST" })
+  .middleware([requireAuth])
+  .inputValidator((data: { id: string }) => data)
+  .handler(async ({ data, context }) => {
+    await admin(context.accessToken, "/admin-api/home-sections/", { method: "DELETE", body: toJsonBody(data) });
+    return { ok: true };
+  });
+
 export const adminListCoupons = createServerFn({ method: "GET" })
   .middleware([requireAuth])
   .handler(async ({ context }) => admin(context.accessToken, "/admin-api/coupons/"));

@@ -196,6 +196,28 @@ DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "care@srimahalakshmistores.
 REDIS_URL = os.getenv("REDIS_URL", "redis://127.0.0.1:6379/0").strip()
 CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL", REDIS_URL).strip()
 CELERY_RESULT_BACKEND = os.getenv("CELERY_RESULT_BACKEND", REDIS_URL).strip()
+
+# Cache (Redis db 1 when available — Celery uses db 0 by default)
+_cache_redis = os.getenv("CACHE_REDIS_URL", "").strip()
+if not _cache_redis and REDIS_URL:
+    _cache_redis = REDIS_URL.replace("/0", "/1") if REDIS_URL.endswith("/0") else f"{REDIS_URL}/1"
+if _cache_redis:
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.redis.RedisCache",
+            "LOCATION": _cache_redis,
+            "KEY_PREFIX": "mnx",
+            "TIMEOUT": 60,
+        }
+    }
+else:
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+            "LOCATION": "mnx-local",
+            "TIMEOUT": 60,
+        }
+    }
 CELERY_TASK_ALWAYS_EAGER = os.getenv(
     "CELERY_TASK_ALWAYS_EAGER",
     "True" if DEBUG else "False",

@@ -71,6 +71,7 @@ const groups = [
       { to: "/admin/categories", label: "Categories", icon: LayoutGrid },
       { to: "/admin/brands", label: "Brands", icon: Tag },
       { to: "/admin/banners", label: "Banners", icon: Images },
+      { to: "/admin/home-sections", label: "Home sections", icon: LayoutGrid },
       { to: "/admin/reviews", label: "Reviews", icon: Star },
     ],
   },

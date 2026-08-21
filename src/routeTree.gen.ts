@@ -85,6 +85,9 @@ import { Route as AdminCouponsNewRouteImport } from './routes/admin/coupons/new'
 import { Route as AdminCustomerIdRouteImport } from './routes/admin/customer.$id'
 import { Route as AdminDeliveryIndexRouteImport } from './routes/admin/delivery/index'
 import { Route as AdminDeliveryNewRouteImport } from './routes/admin/delivery/new'
+import { Route as AdminHomeSectionsIndexRouteImport } from './routes/admin/home-sections/index'
+import { Route as AdminHomeSectionsIdRouteImport } from './routes/admin/home-sections/$id'
+import { Route as AdminHomeSectionsNewRouteImport } from './routes/admin/home-sections/new'
 import { Route as AdminOrdersIndexRouteImport } from './routes/admin/orders/index'
 import { Route as AdminOrdersIdRouteImport } from './routes/admin/orders/$id'
 import { Route as AdminOrdersNewRouteImport } from './routes/admin/orders/new'
@@ -483,6 +486,21 @@ const AdminDeliveryNewRoute = AdminDeliveryNewRouteImport.update({
   path: '/delivery/new',
   getParentRoute: () => AdminRouteRoute,
 } as any)
+const AdminHomeSectionsIndexRoute = AdminHomeSectionsIndexRouteImport.update({
+  id: '/home-sections/',
+  path: '/home-sections/',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminHomeSectionsIdRoute = AdminHomeSectionsIdRouteImport.update({
+  id: '/home-sections/$id',
+  path: '/home-sections/$id',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminHomeSectionsNewRoute = AdminHomeSectionsNewRouteImport.update({
+  id: '/home-sections/new',
+  path: '/home-sections/new',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
 const AdminOrdersIndexRoute = AdminOrdersIndexRouteImport.update({
   id: '/orders/',
   path: '/orders/',
@@ -612,6 +630,8 @@ export interface FileRoutesByFullPath {
   '/admin/coupons/new': typeof AdminCouponsNewRoute
   '/admin/customer/$id': typeof AdminCustomerIdRoute
   '/admin/delivery/new': typeof AdminDeliveryNewRoute
+  '/admin/home-sections/$id': typeof AdminHomeSectionsIdRoute
+  '/admin/home-sections/new': typeof AdminHomeSectionsNewRoute
   '/admin/orders/$id': typeof AdminOrdersIdRoute
   '/admin/orders/new': typeof AdminOrdersNewRoute
   '/admin/products/$id': typeof AdminProductsIdRoute
@@ -628,6 +648,7 @@ export interface FileRoutesByFullPath {
   '/admin/categories/': typeof AdminCategoriesIndexRoute
   '/admin/coupons/': typeof AdminCouponsIndexRoute
   '/admin/delivery/': typeof AdminDeliveryIndexRoute
+  '/admin/home-sections/': typeof AdminHomeSectionsIndexRoute
   '/admin/orders/': typeof AdminOrdersIndexRoute
   '/admin/products/': typeof AdminProductsIndexRoute
   '/admin/stores/': typeof AdminStoresIndexRoute
@@ -700,6 +721,8 @@ export interface FileRoutesByTo {
   '/admin/coupons/new': typeof AdminCouponsNewRoute
   '/admin/customer/$id': typeof AdminCustomerIdRoute
   '/admin/delivery/new': typeof AdminDeliveryNewRoute
+  '/admin/home-sections/$id': typeof AdminHomeSectionsIdRoute
+  '/admin/home-sections/new': typeof AdminHomeSectionsNewRoute
   '/admin/orders/$id': typeof AdminOrdersIdRoute
   '/admin/orders/new': typeof AdminOrdersNewRoute
   '/admin/products/$id': typeof AdminProductsIdRoute
@@ -716,6 +739,7 @@ export interface FileRoutesByTo {
   '/admin/categories': typeof AdminCategoriesIndexRoute
   '/admin/coupons': typeof AdminCouponsIndexRoute
   '/admin/delivery': typeof AdminDeliveryIndexRoute
+  '/admin/home-sections': typeof AdminHomeSectionsIndexRoute
   '/admin/orders': typeof AdminOrdersIndexRoute
   '/admin/products': typeof AdminProductsIndexRoute
   '/admin/stores': typeof AdminStoresIndexRoute
@@ -791,6 +815,8 @@ export interface FileRoutesById {
   '/admin/coupons/new': typeof AdminCouponsNewRoute
   '/admin/customer/$id': typeof AdminCustomerIdRoute
   '/admin/delivery/new': typeof AdminDeliveryNewRoute
+  '/admin/home-sections/$id': typeof AdminHomeSectionsIdRoute
+  '/admin/home-sections/new': typeof AdminHomeSectionsNewRoute
   '/admin/orders/$id': typeof AdminOrdersIdRoute
   '/admin/orders/new': typeof AdminOrdersNewRoute
   '/admin/products/$id': typeof AdminProductsIdRoute
@@ -807,6 +833,7 @@ export interface FileRoutesById {
   '/admin/categories/': typeof AdminCategoriesIndexRoute
   '/admin/coupons/': typeof AdminCouponsIndexRoute
   '/admin/delivery/': typeof AdminDeliveryIndexRoute
+  '/admin/home-sections/': typeof AdminHomeSectionsIndexRoute
   '/admin/orders/': typeof AdminOrdersIndexRoute
   '/admin/products/': typeof AdminProductsIndexRoute
   '/admin/stores/': typeof AdminStoresIndexRoute
@@ -882,6 +909,8 @@ export interface FileRouteTypes {
     | '/admin/coupons/new'
     | '/admin/customer/$id'
     | '/admin/delivery/new'
+    | '/admin/home-sections/$id'
+    | '/admin/home-sections/new'
     | '/admin/orders/$id'
     | '/admin/orders/new'
     | '/admin/products/$id'
@@ -898,6 +927,7 @@ export interface FileRouteTypes {
     | '/admin/categories/'
     | '/admin/coupons/'
     | '/admin/delivery/'
+    | '/admin/home-sections/'
     | '/admin/orders/'
     | '/admin/products/'
     | '/admin/stores/'
@@ -970,6 +1000,8 @@ export interface FileRouteTypes {
     | '/admin/coupons/new'
     | '/admin/customer/$id'
     | '/admin/delivery/new'
+    | '/admin/home-sections/$id'
+    | '/admin/home-sections/new'
     | '/admin/orders/$id'
     | '/admin/orders/new'
     | '/admin/products/$id'
@@ -986,6 +1018,7 @@ export interface FileRouteTypes {
     | '/admin/categories'
     | '/admin/coupons'
     | '/admin/delivery'
+    | '/admin/home-sections'
     | '/admin/orders'
     | '/admin/products'
     | '/admin/stores'
@@ -1060,6 +1093,8 @@ export interface FileRouteTypes {
     | '/admin/coupons/new'
     | '/admin/customer/$id'
     | '/admin/delivery/new'
+    | '/admin/home-sections/$id'
+    | '/admin/home-sections/new'
     | '/admin/orders/$id'
     | '/admin/orders/new'
     | '/admin/products/$id'
@@ -1076,6 +1111,7 @@ export interface FileRouteTypes {
     | '/admin/categories/'
     | '/admin/coupons/'
     | '/admin/delivery/'
+    | '/admin/home-sections/'
     | '/admin/orders/'
     | '/admin/products/'
     | '/admin/stores/'
@@ -1651,6 +1687,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminDeliveryNewRouteImport
       parentRoute: typeof AdminRouteRoute
     }
+    '/admin/home-sections/': {
+      id: '/admin/home-sections/'
+      path: '/home-sections'
+      fullPath: '/admin/home-sections/'
+      preLoaderRoute: typeof AdminHomeSectionsIndexRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/home-sections/$id': {
+      id: '/admin/home-sections/$id'
+      path: '/home-sections/$id'
+      fullPath: '/admin/home-sections/$id'
+      preLoaderRoute: typeof AdminHomeSectionsIdRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/home-sections/new': {
+      id: '/admin/home-sections/new'
+      path: '/home-sections/new'
+      fullPath: '/admin/home-sections/new'
+      preLoaderRoute: typeof AdminHomeSectionsNewRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
     '/admin/orders/': {
       id: '/admin/orders/'
       path: '/orders'
@@ -1801,6 +1858,8 @@ interface AdminRouteRouteChildren {
   AdminCouponsNewRoute: typeof AdminCouponsNewRoute
   AdminCustomerIdRoute: typeof AdminCustomerIdRoute
   AdminDeliveryNewRoute: typeof AdminDeliveryNewRoute
+  AdminHomeSectionsIdRoute: typeof AdminHomeSectionsIdRoute
+  AdminHomeSectionsNewRoute: typeof AdminHomeSectionsNewRoute
   AdminOrdersIdRoute: typeof AdminOrdersIdRoute
   AdminOrdersNewRoute: typeof AdminOrdersNewRoute
   AdminProductsIdRoute: typeof AdminProductsIdRoute
@@ -1815,6 +1874,7 @@ interface AdminRouteRouteChildren {
   AdminCategoriesIndexRoute: typeof AdminCategoriesIndexRoute
   AdminCouponsIndexRoute: typeof AdminCouponsIndexRoute
   AdminDeliveryIndexRoute: typeof AdminDeliveryIndexRoute
+  AdminHomeSectionsIndexRoute: typeof AdminHomeSectionsIndexRoute
   AdminOrdersIndexRoute: typeof AdminOrdersIndexRoute
   AdminProductsIndexRoute: typeof AdminProductsIndexRoute
   AdminStoresIndexRoute: typeof AdminStoresIndexRoute
@@ -1845,6 +1905,8 @@ const AdminRouteRouteChildren: AdminRouteRouteChildren = {
   AdminCouponsNewRoute: AdminCouponsNewRoute,
   AdminCustomerIdRoute: AdminCustomerIdRoute,
   AdminDeliveryNewRoute: AdminDeliveryNewRoute,
+  AdminHomeSectionsIdRoute: AdminHomeSectionsIdRoute,
+  AdminHomeSectionsNewRoute: AdminHomeSectionsNewRoute,
   AdminOrdersIdRoute: AdminOrdersIdRoute,
   AdminOrdersNewRoute: AdminOrdersNewRoute,
   AdminProductsIdRoute: AdminProductsIdRoute,
@@ -1859,6 +1921,7 @@ const AdminRouteRouteChildren: AdminRouteRouteChildren = {
   AdminCategoriesIndexRoute: AdminCategoriesIndexRoute,
   AdminCouponsIndexRoute: AdminCouponsIndexRoute,
   AdminDeliveryIndexRoute: AdminDeliveryIndexRoute,
+  AdminHomeSectionsIndexRoute: AdminHomeSectionsIndexRoute,
   AdminOrdersIndexRoute: AdminOrdersIndexRoute,
   AdminProductsIndexRoute: AdminProductsIndexRoute,
   AdminStoresIndexRoute: AdminStoresIndexRoute,

@@ -17,7 +17,8 @@ from accounts.models import AppSetting, Profile, User
 from accounts.permissions import IsAdminRole
 from accounts.serializers import ProfileSerializer, UserSerializer
 from blog.models import BlogPost
-from catalog.models import Banner, Brand, Category, Product, ProductImage, ProductOfferPlacement, ProductVariant, Review
+from catalog.models import Banner, Brand, Category, HomeOfferSection, Product, ProductImage, ProductOfferPlacement, ProductVariant, Review
+from catalog.cache_utils import invalidate_catalog_cache
 from catalog.placements import product_section_slugs
 from catalog.pricing import normalize_price_tiers
 from catalog.serializers import (
@@ -25,6 +26,7 @@ from catalog.serializers import (
     BrandSerializer,
     CategorySerializer,
     CouponSerializer,
+    HomeOfferSectionSerializer,
     OrderSerializer,
     ProductSerializer,
     ReviewSerializer,
@@ -431,7 +433,7 @@ class AdminProductPlacementView(APIView):
         section = request.data.get("section")
         action = request.data.get("action", "add")
 
-        valid_sections = {key for key, _ in ProductOfferPlacement.Section.choices}
+        valid_sections = set(HomeOfferSection.objects.filter(is_active=True).values_list("key", flat=True))
         if section not in valid_sections:
             return Response({"detail": "Invalid offer section."}, status=400)
         if not product_ids:
@@ -443,6 +445,7 @@ class AdminProductPlacementView(APIView):
                 product_id__in=products.values_list("id", flat=True),
                 section=section,
             ).delete()[0]
+            invalidate_catalog_cache()
             return Response({"ok": True, "removed": removed})
 
         created = 0
@@ -454,7 +457,55 @@ class AdminProductPlacementView(APIView):
             )
             if was_created:
                 created += 1
+        invalidate_catalog_cache()
         return Response({"ok": True, "added": created, "section": section})
+
+
+class AdminHomeSectionView(APIView):
+    permission_classes = [IsAdminRole]
+
+    def get(self, request):
+        qs = HomeOfferSection.objects.all().order_by("sort_order", "title")
+        return Response(HomeOfferSectionSerializer(qs, many=True).data)
+
+    def post(self, request):
+        data = request.data
+        sid = data.get("id")
+        key = (data.get("key") or "").strip().lower().replace(" ", "_")
+        if not key and not sid:
+            title = (data.get("title") or "").strip()
+            key = re.sub(r"[^a-z0-9_]+", "_", title.lower()).strip("_")[:50]
+        fields = {}
+        for field in (
+            "key", "title", "subtitle", "layout", "fallback_rule",
+            "see_all_tab", "max_products", "sort_order", "is_active", "show_on_home",
+        ):
+            if field in data:
+                fields[field] = data[field]
+        if key:
+            fields["key"] = key
+        if sid:
+            section = get_object_or_404(HomeOfferSection, id=sid)
+            for k, v in fields.items():
+                setattr(section, k, v)
+            section.save()
+        else:
+            if not fields.get("key") or not fields.get("title"):
+                return Response({"detail": "Title and key are required."}, status=400)
+            if HomeOfferSection.objects.filter(key=fields["key"]).exists():
+                return Response({"detail": "Section key already exists."}, status=400)
+            section = HomeOfferSection.objects.create(**fields)
+        invalidate_catalog_cache()
+        return Response(HomeOfferSectionSerializer(section).data)
+
+    def delete(self, request):
+        sid = request.data.get("id")
+        section = get_object_or_404(HomeOfferSection, id=sid)
+        key = section.key
+        section.delete()
+        ProductOfferPlacement.objects.filter(section=key).delete()
+        invalidate_catalog_cache()
+        return Response(status=204)
 
 
 class AdminCategoryView(APIView):

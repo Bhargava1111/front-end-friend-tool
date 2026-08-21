@@ -1,15 +1,24 @@
+from django.core.cache import cache
 from django.db.models import Q
 from django.utils import timezone
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from catalog.models import Banner, Brand, Category, Product, Review
-from catalog.placements import all_section_products, section_products
+from catalog.cache_utils import DEALS_CACHE_PREFIX, DEALS_CACHE_TTL, HOME_CACHE_KEY, HOME_CACHE_TTL
+from catalog.models import Banner, Brand, Category, HomeOfferSection, Product, Review
+from catalog.placements import (
+    active_section_keys,
+    all_section_products,
+    fallback_products,
+    home_sections_payload,
+    section_products,
+)
 from catalog.serializers import (
     BannerSerializer,
     BrandSerializer,
     CategorySerializer,
     CouponSerializer,
+    HomeOfferSectionSerializer,
     ProductSerializer,
     ReviewSerializer,
 )
@@ -22,6 +31,10 @@ def active_products():
 
 class HomeView(APIView):
     def get(self, request):
+        cached = cache.get(HOME_CACHE_KEY)
+        if cached is not None:
+            return Response(cached)
+
         banners = Banner.objects.filter(is_active=True, placement="home").order_by("sort_order")
         offer_banners = Banner.objects.filter(is_active=True, placement="offers").order_by("sort_order")
         festive_banners = Banner.objects.filter(is_active=True, placement="festive").order_by("sort_order")
@@ -29,20 +42,29 @@ class HomeView(APIView):
         products = active_products().order_by("-created_at")
         all_products = ProductSerializer(products[:40], many=True).data
         sections = all_section_products(limit=20)
-        return Response({
+        payload = {
             "banners": BannerSerializer(banners, many=True).data,
             "offer_banners": BannerSerializer(offer_banners, many=True).data,
             "festive_banners": BannerSerializer(festive_banners, many=True).data,
             "categories": CategorySerializer(categories, many=True).data,
-            "featured": sections["todays_deals"] or [p for p in all_products if p.get("is_featured")][:10],
+            "featured": sections.get("todays_deals") or [p for p in all_products if p.get("is_featured")][:10],
             "best_sellers": [p for p in all_products if p.get("is_best_seller")][:10],
             "recommended": [p for p in all_products if p.get("is_recommended")][:10],
             "bestSelling": [p for p in all_products if p.get("is_best_seller")][:10],
             "newest": all_products[:10],
-            "budget": sections["under_99"] or [p for p in all_products if p.get("price", 0) <= 99][:12],
+            "budget": sections.get("under_99") or [p for p in all_products if p.get("price", 0) <= 99][:12],
             "all": all_products,
             "sections": sections,
-        })
+            "home_sections": home_sections_payload(sections, all_products),
+        }
+        cache.set(HOME_CACHE_KEY, payload, HOME_CACHE_TTL)
+        return Response(payload)
+
+
+class HomeSectionListView(APIView):
+    def get(self, request):
+        qs = HomeOfferSection.objects.filter(is_active=True, show_on_home=True).order_by("sort_order")
+        return Response(HomeOfferSectionSerializer(qs, many=True).data)
 
 
 class CategoryListView(APIView):
@@ -134,6 +156,10 @@ class DealsView(APIView):
     def get(self, request):
         tab = request.query_params.get("tab", "all")
         max_price = request.query_params.get("max_price")
+        cache_key = f"{DEALS_CACHE_PREFIX}{tab}:{max_price or ''}"
+        cached = cache.get(cache_key)
+        if cached is not None:
+            return Response(cached)
 
         section_map = {
             "flash": "flash_sale",
@@ -144,26 +170,38 @@ class DealsView(APIView):
             "custom": "custom_offers",
         }
         if tab in section_map:
-            products = section_products(section_map[tab], limit=40)
+            section_key = section_map[tab]
+            products = section_products(section_key, limit=40)
             if not products:
-                products = self._section_fallback(tab, max_price)
+                rule = HomeOfferSection.objects.filter(key=section_key).values_list("fallback_rule", flat=True).first()
+                products = fallback_products(rule or "discounted", limit=40)
             if products:
-                return Response({
+                payload = {
                     "results": products,
                     "counts": {
                         "discounted": len(products),
                         "budget": len([p for p in products if p.get("price", 0) <= 99]),
                     },
                     "deal_of_the_day": products[0] if products else None,
-                })
+                }
+                cache.set(cache_key, payload, DEALS_CACHE_TTL)
+                return Response(payload)
 
         if tab in ("best_sellers", "trending", "recommended", "newest"):
-            products = self._catalog_tab_fallback(tab)
-            return Response({
+            rule = {
+                "best_sellers": "best_seller",
+                "trending": "best_seller",
+                "recommended": "recommended",
+                "newest": "newest",
+            }[tab]
+            products = fallback_products(rule, limit=40)
+            payload = {
                 "results": products,
                 "counts": {"discounted": len(products), "budget": len([p for p in products if p.get("price", 0) <= 99])},
                 "deal_of_the_day": products[0] if products else None,
-            })
+            }
+            cache.set(cache_key, payload, DEALS_CACHE_TTL)
+            return Response(payload)
 
         qs = active_products().filter(mrp__isnull=False).exclude(mrp=0)
         results = []
@@ -176,11 +214,13 @@ class DealsView(APIView):
         results.sort(key=lambda x: x[0], reverse=True)
         products = ProductSerializer([p for _, p in results], many=True).data
         deal_of_day = products[0] if products else None
-        return Response({
+        payload = {
             "results": products,
             "counts": {"discounted": len(products), "budget": len([p for p in products if p.get("price", 0) <= 99])},
             "deal_of_the_day": deal_of_day,
-        })
+        }
+        cache.set(cache_key, payload, DEALS_CACHE_TTL)
+        return Response(payload)
 
     def _section_fallback(self, tab, max_price):
         qs = active_products()

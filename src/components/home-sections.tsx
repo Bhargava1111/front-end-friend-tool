@@ -16,6 +16,8 @@ import { couponLabel } from "@/lib/commerce";
 import { formatINR } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { Banner, Product } from "@/lib/types";
+import type { HomeSectionBlock } from "@/lib/offer-sections";
+import { ProductRail } from "./product-rail";
 
 function useCountdown(target: number) {
   const [left, setLeft] = useState(0);
@@ -775,5 +777,63 @@ export function ServicePromises() {
         </div>
       ))}
     </Reveal>
+  );
+}
+
+function HomeDynamicSection({
+  section,
+  allProducts,
+  categories,
+}: {
+  section: HomeSectionBlock;
+  allProducts: Product[];
+  categories: Array<{ id: string; name: string; slug: string }>;
+}) {
+  const products = section.products ?? [];
+  const href = section.see_all_tab
+    ? { to: "/deals" as const, search: { tab: section.see_all_tab } }
+    : undefined;
+
+  switch (section.layout) {
+    case "countdown_rail":
+      return <FlashSaleRail products={allProducts} curated={products} />;
+    case "budget_rail":
+      return <BudgetRail products={allProducts} curated={products} />;
+    case "deal_card":
+      return <DealOfTheDay products={allProducts} curated={products} />;
+    default:
+      if (section.key === "festive_picks") {
+        return (
+          <FestivalPicks
+            categories={categories}
+            products={allProducts}
+            curated={products}
+            title={section.title}
+          />
+        );
+      }
+      return <ProductRail title={section.title} products={products} href={href} />;
+  }
+}
+
+/** Renders admin-configured home offer sections in sort order. */
+export function HomeDynamicSections({
+  sections,
+  allProducts,
+  categories,
+}: {
+  sections: HomeSectionBlock[];
+  allProducts: Product[];
+  categories: Array<{ id: string; name: string; slug: string }>;
+}) {
+  if (!sections.length) return null;
+  return (
+    <>
+      {sections.map((section) => (
+        <Reveal key={section.id}>
+          <HomeDynamicSection section={section} allProducts={allProducts} categories={categories} />
+        </Reveal>
+      ))}
+    </>
   );
 }

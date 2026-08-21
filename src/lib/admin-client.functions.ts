@@ -220,6 +220,19 @@ export async function adminDeleteBrandClient(opts: { data: { id: string } }) {
   return { ok: true };
 }
 
+export async function adminListHomeSectionsClient() {
+  return adminClient("/admin-api/home-sections/");
+}
+
+export async function adminSaveHomeSectionClient(opts: { data: Record<string, unknown> }) {
+  return adminClient("/admin-api/home-sections/", { method: "POST", body: toJsonBody(opts.data) });
+}
+
+export async function adminDeleteHomeSectionClient(opts: { data: { id: string } }) {
+  await adminClient("/admin-api/home-sections/", { method: "DELETE", body: toJsonBody(opts.data) });
+  return { ok: true };
+}
+
 export async function adminListCouponsClient() {
   return adminClient("/admin-api/coupons/");
 }

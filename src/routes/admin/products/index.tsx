@@ -7,7 +7,9 @@ import { getAdminProductsClient, deleteAdminProductClient, setProductPlacementsC
 import { Plus, Pencil, Trash2, Tag, TagIcon } from "lucide-react";
 import { toast } from "sonner";
 import { getAdminProducts, deleteAdminProduct, setProductPlacements } from "@/lib/admin.functions";
-import { OFFER_SECTIONS, offerSectionLabel } from "@/lib/offer-sections";
+import { adminListHomeSections } from "@/lib/admin-extra.functions";
+import { adminListHomeSectionsClient } from "@/lib/admin-client.functions";
+import { DEFAULT_OFFER_SECTIONS, offerSectionLabel, type HomeOfferSectionDef } from "@/lib/offer-sections";
 import { formatINR } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -52,12 +54,24 @@ type ProductRow = {
 function AdminProducts() {
   const qc = useQueryClient();
   const fetchProducts = useAdminFn(getAdminProducts, getAdminProductsClient);
+  const fetchSections = useAdminFn(adminListHomeSections, adminListHomeSectionsClient);
   const remove = useAdminFn(deleteAdminProduct, deleteAdminProductClient);
   const setPlacements = useAdminFn(setProductPlacements, setProductPlacementsClient);
 
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [targetSection, setTargetSection] = useState(OFFER_SECTIONS[0].key);
+
+  const { data: sectionRows = [] } = useQuery({
+    queryKey: ["admin-home-sections"],
+    queryFn: () => fetchSections() as Promise<HomeOfferSectionDef[]>,
+    staleTime: 120_000,
+  });
+
+  const offerSections = sectionRows.length
+    ? sectionRows.filter((s) => s.is_active).map((s) => ({ key: s.key, label: s.title }))
+    : [...DEFAULT_OFFER_SECTIONS];
+
+  const [targetSection, setTargetSection] = useState(offerSections[0]?.key ?? "flash_sale");
   const [sectionFilter, setSectionFilter] = useState<string>("all");
 
   const { data, isLoading } = useQuery({
@@ -96,8 +110,8 @@ function AdminProducts() {
           : res.removed ?? vars.productIds.length;
       toast.success(
         vars.action === "add"
-          ? `Added ${count} product(s) to ${offerSectionLabel(vars.section)}`
-          : `Removed ${count} product(s) from ${offerSectionLabel(vars.section)}`,
+          ? `Added ${count} product(s) to ${offerSectionLabel(vars.section, sectionRows)}`
+          : `Removed ${count} product(s) from ${offerSectionLabel(vars.section, sectionRows)}`,
       );
       if (vars.productIds.length > 1) setSelected(new Set());
       invalidate();
@@ -107,7 +121,7 @@ function AdminProducts() {
 
   const allProducts = (data?.products ?? []) as ProductRow[];
   const sectionCounts = Object.fromEntries(
-    OFFER_SECTIONS.map((s) => [
+    offerSections.map((s) => [
       s.key,
       allProducts.filter((p) => (p.offer_sections ?? []).includes(s.key)).length,
     ]),
@@ -140,11 +154,16 @@ function AdminProducts() {
             Manage catalogue and assign products to home-page offer sections
           </p>
         </div>
-        <Button asChild className="gap-2">
-          <Link to="/admin/products/new">
-            <Plus className="h-4 w-4" /> New product
-          </Link>
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" asChild className="gap-2">
+            <Link to="/admin/home-sections">Home sections</Link>
+          </Button>
+          <Button asChild className="gap-2">
+            <Link to="/admin/products/new">
+              <Plus className="h-4 w-4" /> New product
+            </Link>
+          </Button>
+        </div>
       </div>
 
       <div className="no-scrollbar flex gap-2 overflow-x-auto">
@@ -160,7 +179,7 @@ function AdminProducts() {
         >
           All ({allProducts.length})
         </button>
-        {OFFER_SECTIONS.map((s) => (
+        {offerSections.map((s) => (
           <button
             key={s.key}
             type="button"
@@ -182,7 +201,7 @@ function AdminProducts() {
 
       {sectionFilter !== "all" && (
         <p className="rounded-xl border border-border bg-secondary/40 px-3 py-2 text-xs text-muted-foreground">
-          Products listed here appear in the <strong className="text-foreground">{offerSectionLabel(sectionFilter)}</strong> block on the home page. Use the tag buttons to add or remove individual products.
+          Products listed here appear in the <strong className="text-foreground">{offerSectionLabel(sectionFilter, sectionRows)}</strong> block on the home page. Use the tag buttons to add or remove individual products.
         </p>
       )}
 
@@ -203,7 +222,7 @@ function AdminProducts() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {OFFER_SECTIONS.map((s) => (
+              {offerSections.map((s) => (
                 <SelectItem key={s.key} value={s.key}>
                   {s.label}
                 </SelectItem>
@@ -250,7 +269,7 @@ function AdminProducts() {
         <p className="rounded-2xl border border-dashed border-border p-10 text-center text-sm text-muted-foreground">
           {sectionFilter === "all"
             ? "No products match your search."
-            : `No products in ${offerSectionLabel(sectionFilter)} yet. Select products and add them to this section.`}
+            : `No products in ${offerSectionLabel(sectionFilter, sectionRows)} yet. Select products and add them to this section.`}
         </p>
       )}
 
