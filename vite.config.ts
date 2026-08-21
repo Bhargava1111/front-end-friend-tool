@@ -6,9 +6,16 @@
 // You can pass additional config via defineConfig({ vite: { ... }, etc... }) if needed.
 import basicSsl from "@vitejs/plugin-basic-ssl";
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
+import { loadEnv } from "vite";
 
-const mobileHttps = process.env.MOBILE_HTTPS === "1";
-const apiProxyTarget = process.env.VITE_API_PROXY_TARGET || "http://127.0.0.1:8000";
+// Vite does not put .env* into process.env for config evaluation — load them explicitly.
+const mode = process.env.NODE_ENV === "production" ? "production" : "development";
+const fileEnv = loadEnv(mode, process.cwd(), "");
+const mobileHttps = process.env.MOBILE_HTTPS === "1" || fileEnv.MOBILE_HTTPS === "1";
+const apiProxyTarget =
+  process.env.VITE_API_PROXY_TARGET ||
+  fileEnv.VITE_API_PROXY_TARGET ||
+  "http://127.0.0.1:8000";
 
 export default defineConfig({
   tanstackStart: {

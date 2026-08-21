@@ -1,0 +1,1 @@
+var e=`mnx_offline_`;function t(t,n){if(!(typeof window>`u`))try{localStorage.setItem(`${e}${t}`,JSON.stringify({savedAt:Date.now(),data:n}))}catch{}}function n(t){if(typeof window>`u`)return null;try{let n=localStorage.getItem(`${e}${t}`);return n?JSON.parse(n)?.data??null:null}catch{return null}}export{t as n,n as t};

@@ -3,6 +3,9 @@ import fs from "node:fs";
 import path from "node:path";
 
 const basePlugins: CapacitorConfig["plugins"] = {
+  CapacitorHttp: {
+    enabled: true,
+  },
   SplashScreen: {
     launchShowDuration: 1800,
     launchAutoHide: true,
@@ -23,19 +26,24 @@ const basePlugins: CapacitorConfig["plugins"] = {
   },
 };
 
-/** Prefer LAN URL from mobile-config — never defaults to Lovable. */
-function readMobileServerUrl(): string | null {
+/** Prefer mobile config — bundled mode uses local www/ (no Lovable). */
+function readMobileConfig(): { serverUrl?: string; bundled?: boolean } {
   try {
     const configPath = path.join(process.cwd(), "mobile", "capacitor.server.json");
-    if (!fs.existsSync(configPath)) return null;
-    const data = JSON.parse(fs.readFileSync(configPath, "utf8")) as { serverUrl?: string };
-    return data.serverUrl?.trim() || null;
+    if (!fs.existsSync(configPath)) return {};
+    return JSON.parse(fs.readFileSync(configPath, "utf8")) as {
+      serverUrl?: string;
+      bundled?: boolean;
+    };
   } catch {
-    return null;
+    return {};
   }
 }
 
-const serverUrl = readMobileServerUrl() || process.env.CAPACITOR_SERVER_URL?.trim() || null;
+const mobileConfig = readMobileConfig();
+const bundled = mobileConfig.bundled === true;
+const serverUrl =
+  (!bundled && (mobileConfig.serverUrl?.trim() || process.env.CAPACITOR_SERVER_URL?.trim())) || null;
 
 function buildConfig(): CapacitorConfig {
   if (!serverUrl) {
@@ -43,7 +51,14 @@ function buildConfig(): CapacitorConfig {
       appId: "in.srimahalakshmistores.app",
       appName: "Sri Mahalakshmi Stores",
       webDir: "mobile/www",
-      android: { backgroundColor: "#2d5a45" },
+      android: {
+        backgroundColor: "#2d5a45",
+        allowMixedContent: true,
+      },
+      server: {
+        androidScheme: "http",
+        cleartext: true,
+      },
       ios: {
         backgroundColor: "#2d5a45",
         contentInset: "automatic",

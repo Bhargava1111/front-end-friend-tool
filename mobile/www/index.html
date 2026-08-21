@@ -2,84 +2,22 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no"
-    />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
     <title>Sri Mahalakshmi Stores</title>
-    <style>
-      * {
-        box-sizing: border-box;
-      }
-      html,
-      body {
-        margin: 0;
-        min-height: 100%;
-        font-family:
-          "Poppins",
-          system-ui,
-          -apple-system,
-          sans-serif;
-        background: #2d5a45;
-        color: #f8f6f0;
-      }
-      .wrap {
-        display: grid;
-        min-height: 100dvh;
-        place-items: center;
-        padding:
-          env(safe-area-inset-top)
-          env(safe-area-inset-right)
-          env(safe-area-inset-bottom)
-          env(safe-area-inset-left);
-      }
-      .card {
-        text-align: center;
-      }
-      .logo {
-        display: grid;
-        place-items: center;
-        width: 5rem;
-        height: 5rem;
-        margin: 0 auto;
-        border-radius: 1.5rem;
-        background: rgba(255, 255, 255, 0.12);
-        font-size: 1.75rem;
-        font-weight: 700;
-      }
-      h1 {
-        margin: 1rem 0 0.25rem;
-        font-size: 1.35rem;
-      }
-      p {
-        margin: 0;
-        opacity: 0.78;
-        font-size: 0.9rem;
-      }
-      .spinner {
-        width: 1.75rem;
-        height: 1.75rem;
-        margin: 1.5rem auto 0;
-        border: 3px solid rgba(255, 255, 255, 0.25);
-        border-top-color: #fff;
-        border-radius: 50%;
-        animation: spin 0.8s linear infinite;
-      }
-      @keyframes spin {
-        to {
-          transform: rotate(360deg);
-        }
-      }
-    </style>
+    <style>html,body,#root{margin:0;min-height:100%;background:#2d5a45}</style>
+    <link rel="stylesheet" href="./assets/styles-CXCyiIYW.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" />
   </head>
   <body>
-    <div class="wrap">
-      <div class="card">
-        <div class="logo">SM</div>
-        <h1>Sri Mahalakshmi Stores</h1>
-        <p>Groceries &amp; Pooja Essentials</p>
-        <div class="spinner" aria-hidden="true"></div>
-      </div>
-    </div>
+    <div id="root"></div>
+    <script>
+      try {
+        var apiUrl = "http://200.234.39.88/api/v1";
+        if (apiUrl) localStorage.setItem("mnxstore_native_api_url", apiUrl);
+      } catch (e) {}
+    </script>
+    <script type="module" src="./assets/index-BVcLI4w6.js"></script>
   </body>
 </html>

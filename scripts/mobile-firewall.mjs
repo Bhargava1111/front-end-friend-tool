@@ -32,6 +32,8 @@ for (const { name, port } of rules) {
       "action=allow",
       "protocol=TCP",
       `localport=${port}`,
+      "profile=any",
+      "enable=yes",
     ],
     { encoding: "utf8", shell: true },
   );

@@ -1,0 +1,1 @@
+import{t as e}from"./jsx-runtime-DiK4U9sA.js";var t=e(),n=()=>(0,t.jsx)(`div`,{className:`p-8 text-center text-sm`,children:`No categories found.`});export{n as notFoundComponent};

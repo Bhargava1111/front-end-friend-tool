@@ -1,0 +1,1 @@
+import{t as e}from"./jsx-runtime-DiK4U9sA.js";import{t}from"./newspaper-uPHK8nK6.js";import{b as n,x as r,y as i}from"./index-BVcLI4w6.js";var a=e(),o=({error:e})=>(0,a.jsxs)(n,{children:[(0,a.jsx)(r,{title:`Journal`,backTo:`/blogs`}),(0,a.jsx)(i,{icon:(0,a.jsx)(t,{className:`h-8 w-8`}),title:`Couldn't load this article`,description:e.message})]});export{o as errorComponent};

@@ -1,0 +1,1 @@
+function e(e){return e?/^p\d{10}@phone\.mnxstore\.in$/i.test(e.trim()):!1}function t(t){return!t||e(t)?``:t}export{t};

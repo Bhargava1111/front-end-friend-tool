@@ -55,15 +55,19 @@ const serverUrl = `${scheme}://${ip}:${webPort}`;
 // Relative path — Vite proxies /api/v1 → Django in dev.
 // Absolute LAN URL — phone calls Django directly (works without Vite proxy).
 const clientApiUrl = `/api/v1`;
-const directApiUrl = `http://${ip}:${apiPort}/api/v1`;
+const publicApi = (process.env.MOBILE_PUBLIC_API_URL || process.env.VITE_PUBLIC_API_URL || "").trim().replace(/\/$/, "");
+const directApiUrl = publicApi || `http://${ip}:${apiPort}/api/v1`;
 const serverApiUrl = `http://127.0.0.1:${apiPort}/api/v1`;
 
 const mobileDir = path.join(root, "mobile");
 fs.mkdirSync(mobileDir, { recursive: true });
 
+const bundled = process.env.MOBILE_BUNDLED === "1" || process.argv.includes("--bundled");
+
 const serverConfig = {
-  mode: "local",
-  serverUrl,
+  mode: bundled ? "local-bundled" : "local",
+  bundled,
+  serverUrl: bundled ? "" : serverUrl,
   apiUrl: directApiUrl,
   clientApiUrl,
   serverApiUrl,
@@ -81,7 +85,7 @@ const envLines = [
   `API_URL=${serverApiUrl}`,
   `VITE_API_PROXY_TARGET=http://127.0.0.1:${apiPort}`,
   `VITE_APP_URL=${serverUrl}`,
-  `CAPACITOR_SERVER_URL=${serverUrl}`,
+  bundled ? `# CAPACITOR_SERVER_URL not set — UI bundled in APK` : `CAPACITOR_SERVER_URL=${serverUrl}`,
   ``,
 ];
 fs.writeFileSync(path.join(root, ".env.mobile.local"), envLines.join("\n"));
@@ -98,8 +102,10 @@ if (fs.existsSync(backendEnvPath)) {
   corsOrigins.add(serverUrl);
   corsOrigins.add(`http://${ip}:8080`);
   corsOrigins.add(`https://${ip}:8080`);
-  corsOrigins.add("http://localhost:5173");
-  corsOrigins.add("http://127.0.0.1:5173");
+  corsOrigins.add("https://localhost");
+  corsOrigins.add("http://localhost");
+  corsOrigins.add("capacitor://localhost");
+  corsOrigins.add("ionic://localhost");
 
   const hosts = new Set(
     (backendEnv.match(/^ALLOWED_HOSTS=(.*)$/m)?.[1] ?? "localhost,127.0.0.1")
