@@ -209,13 +209,13 @@ function Home() {
       />
 
       <Reveal>
-        <ProductRail title="Trending now" products={trending} href={{ to: "/deals", search: { tab: "flash" } }} />
+        <ProductRail title="Trending now" products={trending} href={{ to: "/deals", search: { tab: "trending" } }} />
       </Reveal>
 
       <BudgetRail products={allProducts} curated={sections.under_99} />
 
       <Reveal>
-        <ProductRail title="Best sellers" products={data.bestSelling} href={{ to: "/search" }} />
+        <ProductRail title="Best sellers" products={data.bestSelling} href={{ to: "/deals", search: { tab: "best_sellers" } }} />
       </Reveal>
 
       <ShopByNeed categories={topCategories} />
@@ -223,7 +223,7 @@ function Home() {
       <RecentlyViewedRail />
 
       <Reveal>
-        <ProductRail title="Recommended for you" products={data.recommended} href={{ to: "/search" }} />
+        <ProductRail title="Recommended for you" products={data.recommended} href={{ to: "/deals", search: { tab: "recommended" } }} />
       </Reveal>
 
       <BrandRail />
@@ -231,7 +231,7 @@ function Home() {
       <ServicePromises />
 
       <Reveal>
-        <ProductRail title="Newly added" products={data.newest} href={{ to: "/search" }} />
+        <ProductRail title="Newly added" products={data.newest} href={{ to: "/deals", search: { tab: "newest" } }} />
       </Reveal>
 
 

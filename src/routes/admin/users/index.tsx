@@ -91,7 +91,7 @@ function AdminUsers() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (userId: string) => remove({ data: { userId } }),
+    mutationFn: (userId: string) => remove({ data: { id: userId } }),
     onSuccess: () => {
       toast.success("User removed");
       invalidate();

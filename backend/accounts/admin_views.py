@@ -780,7 +780,9 @@ class AdminUserVerificationView(APIView):
 
     def get(self, request):
         status_filter = request.query_params.get("status")
-        qs = Profile.objects.select_related("user").filter(user__role="customer")
+        qs = Profile.objects.select_related("user").filter(user__role="customer").exclude(
+            user__full_name="Deleted User"
+        )
         if status_filter:
             qs = qs.filter(verification_status=status_filter)
         return Response([{

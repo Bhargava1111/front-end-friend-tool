@@ -400,8 +400,10 @@ export async function createAdminUserClient(opts: { data: Record<string, unknown
   return { ok: true };
 }
 
-export async function deleteAdminUserClient(opts: { data: { id: string } }) {
-  void opts;
+export async function deleteAdminUserClient(opts: { data: { id?: string; userId?: string } }) {
+  const id = opts.data.id ?? opts.data.userId;
+  if (!id) throw new Error("User id is required");
+  await adminClient(`/admin-api/users/${id}/manage/`, { method: "DELETE" });
   return { ok: true };
 }
 

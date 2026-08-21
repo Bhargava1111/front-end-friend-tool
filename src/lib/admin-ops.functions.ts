@@ -49,10 +49,11 @@ export const createAdminUser = createServerFn({ method: "POST" })
 
 export const deleteAdminUser = createServerFn({ method: "POST" })
   .middleware([requireAuth])
-  .inputValidator((data: { id: string }) => data)
+  .inputValidator((data: { id?: string; userId?: string }) => data)
   .handler(async ({ data, context }) => {
-    void data;
-    void context;
+    const id = data.id ?? data.userId;
+    if (!id) throw new Error("User id is required");
+    await admin(context.accessToken, `/admin-api/users/${id}/manage/`, { method: "DELETE" });
     return { ok: true };
   });
 

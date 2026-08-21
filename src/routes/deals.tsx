@@ -3,7 +3,11 @@ import { z } from "zod";
 import { queryOptions, useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { Zap, Percent, IndianRupee } from "lucide-react";
 import { getDeals, getHomeData } from "@/lib/catalog.functions";
-import type { OfferSectionsMap } from "@/lib/offer-sections";
+import {
+  dealsTabLabel,
+  resolveDealsTabProducts,
+  type DealsTab,
+} from "@/lib/offer-section-products";
 import { PageShell, TopBar, EmptyState } from "@/components/page-shell";
 import { ProductCard } from "@/components/product-card";
 import { GridSkeleton } from "@/components/skeletons";
@@ -14,23 +18,33 @@ import type { Product } from "@/lib/types";
 
 const dealsQuery = queryOptions({ queryKey: ["home"], queryFn: () => getHomeData() });
 
-const tabQuery = (tab: string) =>
+const tabQuery = (tab: DealsTab) =>
   queryOptions({
     queryKey: ["deals", tab],
-    queryFn: () => getDeals({ data: { tab: tab === "all" ? undefined : tab, max_price: tab === "budget" ? 99 : undefined } }),
+    queryFn: () =>
+      getDeals({
+        data: {
+          tab: tab === "all" ? undefined : tab,
+          max_price: tab === "budget" ? 99 : undefined,
+        },
+      }),
   });
 
-const TABS = [
-  { key: "all", label: "All deals" },
-  { key: "flash", label: "Flash sale" },
-  { key: "today", label: "Today's deals" },
-  { key: "budget", label: "Under ₹99" },
-  { key: "festive", label: "Festive picks" },
-  { key: "combo", label: "Combo packs" },
-] as const;
+const TAB_KEYS = [
+  "all",
+  "flash",
+  "today",
+  "budget",
+  "festive",
+  "combo",
+  "best_sellers",
+  "trending",
+  "recommended",
+  "newest",
+] as const satisfies readonly DealsTab[];
 
 const searchSchema = z.object({
-  tab: z.enum(["all", "flash", "today", "budget", "festive", "combo"]).catch("all").default("all"),
+  tab: z.enum(TAB_KEYS).catch("all").default("all"),
 });
 
 export const Route = createFileRoute("/deals")({
@@ -77,62 +91,36 @@ function discount(p: Product) {
 
 function DealsPage() {
   const { data } = useSuspenseQuery(dealsQuery);
-  const { tab: initialTab } = Route.useSearch();
+  const { tab } = Route.useSearch();
   const navigate = Route.useNavigate();
-  const tab = initialTab;
-  const { data: tabData } = useQuery({
+  const { data: tabData, isFetching } = useQuery({
     ...tabQuery(tab),
     enabled: tab !== "all",
   });
+
+  const clientFallback = resolveDealsTabProducts(tab, data);
+  const apiResults = (tabData as { results?: Product[] } | undefined)?.results;
+  const list = apiResults?.length ? apiResults : clientFallback;
 
   const all = Array.from(
     new Map(
       [...(data.all ?? []), ...data.newest, ...data.featured, ...data.bestSelling].map((p) => [p.id, p]),
     ).values(),
   );
-  const sections = (data as { sections?: OfferSectionsMap }).sections ?? {};
-  const discounted = all.filter((p) => discount(p) > 0).sort((a, b) => discount(b) - discount(a));
-
-  const fallback =
-    tab === "flash"
-      ? discounted.slice(0, 20)
-      : tab === "today"
-        ? data.featured
-        : tab === "budget"
-          ? all.filter((p) => Number(p.price) <= 99)
-          : tab === "festive"
-            ? sections.festive_picks ?? []
-            : tab === "combo"
-              ? sections.combo_packs ?? []
-              : discounted;
-
-  const sectionFallback =
-    tab === "flash"
-      ? sections.flash_sale
-      : tab === "today"
-        ? sections.todays_deals
-        : tab === "budget"
-          ? sections.under_99
-          : tab === "festive"
-            ? sections.festive_picks
-            : tab === "combo"
-              ? sections.combo_packs
-              : undefined;
-
-  const list =
-    (tabData as { results?: Product[] })?.results?.length
-      ? (tabData as { results: Product[] }).results
-      : sectionFallback?.length
-        ? sectionFallback
-        : fallback;
-
-  const best = (sections.flash_sale?.[0] ?? sections.todays_deals?.[0] ?? discounted[0]) as Product | undefined;
+  const discounted = all.filter((p) => discount(p) > 0);
+  const best = (data.sections?.flash_sale?.[0] ?? data.sections?.todays_deals?.[0] ?? discounted[0]) as
+    | Product
+    | undefined;
 
   return (
     <PageShell>
-      <TopBar title="Deals & offers" subtitle="Flash sale, daily deals & savings" backTo="/" />
+      <TopBar
+        title={tab === "all" ? "Deals & offers" : dealsTabLabel(tab)}
+        subtitle="Flash sale, daily deals & savings"
+        backTo="/"
+      />
 
-      {best && (
+      {best && tab === "all" && (
         <Reveal className="px-4 pt-4">
           <div className="flex items-center gap-3 rounded-3xl bg-gradient-to-br from-primary to-primary/80 p-4 text-primary-foreground">
             <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-accent text-accent-foreground">
@@ -149,31 +137,34 @@ function DealsPage() {
       )}
 
       <div className="no-scrollbar mt-4 flex gap-2 overflow-x-auto px-4">
-        {TABS.map((t) => (
+        {TAB_KEYS.map((key) => (
           <button
-            key={t.key}
+            key={key}
             type="button"
-            onClick={() => navigate({ search: { tab: t.key }, replace: true })}
-            aria-pressed={tab === t.key}
+            onClick={() => navigate({ search: { tab: key }, replace: true })}
+            aria-pressed={tab === key}
             className={cn(
               "h-9 shrink-0 rounded-full border px-4 text-xs font-semibold transition-colors",
-              tab === t.key
+              tab === key
                 ? "border-primary bg-primary text-primary-foreground"
                 : "border-border bg-card text-foreground",
             )}
           >
-            {t.label}
+            {dealsTabLabel(key)}
           </button>
         ))}
       </div>
 
       <div className="mt-3 flex items-center gap-3 px-4 text-[11px] text-muted-foreground">
         <span className="flex items-center gap-1">
-          <Percent className="h-3.5 w-3.5" /> {discounted.length} discounted items
+          <Percent className="h-3.5 w-3.5" /> {list.length} products
         </span>
-        <span className="flex items-center gap-1">
-          <IndianRupee className="h-3.5 w-3.5" /> {all.filter((p) => Number(p.price) <= 99).length} under ₹99
-        </span>
+        {tab === "all" && (
+          <span className="flex items-center gap-1">
+            <IndianRupee className="h-3.5 w-3.5" /> {all.filter((p) => Number(p.price) <= 99).length} under ₹99
+          </span>
+        )}
+        {isFetching && <span>Updating…</span>}
       </div>
 
       {list.length === 0 ? (

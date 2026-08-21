@@ -150,6 +150,31 @@ class AdminUserManageView(APIView):
         log_activity(request.user, "user.update", "user", user.id, request.data, request)
         return Response({"ok": True})
 
+    def delete(self, request, pk):
+        if str(request.user.id) == str(pk):
+            return Response({"detail": "You cannot remove your own account."}, status=400)
+        try:
+            user = User.objects.get(id=pk)
+        except User.DoesNotExist:
+            return Response({"detail": "User not found."}, status=404)
+        if user.role == User.Role.ADMIN or user.is_staff:
+            return Response({"detail": "Admin accounts cannot be removed from here."}, status=400)
+        active_statuses = ["pending", "confirmed", "packed", "out_for_delivery"]
+        if Order.objects.filter(user=user, status__in=active_statuses).exists():
+            return Response(
+                {"detail": "This user has active orders. Cancel or complete them first."},
+                status=400,
+            )
+        log_activity(request.user, "user.delete", "user", user.id, request=request)
+        user.is_active = False
+        user.email = f"deleted_{user.id}@deleted.local"
+        user.phone = None
+        user.full_name = "Deleted User"
+        user.first_name = ""
+        user.last_name = ""
+        user.save()
+        return Response(status=204)
+
 
 class AdminPincodeView(APIView):
     permission_classes = [AdminModulePermission]

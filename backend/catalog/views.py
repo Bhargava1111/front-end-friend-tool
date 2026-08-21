@@ -145,6 +145,8 @@ class DealsView(APIView):
         }
         if tab in section_map:
             products = section_products(section_map[tab], limit=40)
+            if not products:
+                products = self._section_fallback(tab, max_price)
             if products:
                 return Response({
                     "results": products,
@@ -154,6 +156,14 @@ class DealsView(APIView):
                     },
                     "deal_of_the_day": products[0] if products else None,
                 })
+
+        if tab in ("best_sellers", "trending", "recommended", "newest"):
+            products = self._catalog_tab_fallback(tab)
+            return Response({
+                "results": products,
+                "counts": {"discounted": len(products), "budget": len([p for p in products if p.get("price", 0) <= 99])},
+                "deal_of_the_day": products[0] if products else None,
+            })
 
         qs = active_products().filter(mrp__isnull=False).exclude(mrp=0)
         results = []
@@ -171,6 +181,50 @@ class DealsView(APIView):
             "counts": {"discounted": len(products), "budget": len([p for p in products if p.get("price", 0) <= 99])},
             "deal_of_the_day": deal_of_day,
         })
+
+    def _section_fallback(self, tab, max_price):
+        qs = active_products()
+        if tab == "budget":
+            if max_price:
+                qs = qs.filter(price__lte=float(max_price))
+            else:
+                qs = qs.filter(price__lte=99)
+            return ProductSerializer(qs.order_by("price")[:40], many=True).data
+        if tab == "today":
+            return ProductSerializer(qs.filter(is_featured=True).order_by("-created_at")[:40], many=True).data
+        if tab == "festive":
+            return ProductSerializer(qs.order_by("-created_at")[:40], many=True).data
+        if tab == "combo":
+            return ProductSerializer(qs.filter(is_combo=True).order_by("-created_at")[:40], many=True).data
+        # flash / custom — top discounted
+        discounted = []
+        for p in qs.filter(mrp__isnull=False).exclude(mrp=0):
+            if p.mrp and p.mrp > p.price:
+                pct = float((p.mrp - p.price) / p.mrp * 100)
+                discounted.append((pct, p))
+        discounted.sort(key=lambda x: x[0], reverse=True)
+        return ProductSerializer([p for _, p in discounted[:40]], many=True).data
+
+    def _catalog_tab_fallback(self, tab):
+        qs = active_products()
+        if tab == "best_sellers":
+            items = qs.filter(is_best_seller=True).order_by("-created_at")[:40]
+            if not items.exists():
+                items = qs.order_by("-created_at")[:40]
+            return ProductSerializer(items, many=True).data
+        if tab == "trending":
+            items = qs.filter(is_best_seller=True).order_by("-created_at")[:40]
+            if not items.exists():
+                items = qs.order_by("-created_at")[:40]
+            return ProductSerializer(items, many=True).data
+        if tab == "recommended":
+            items = qs.filter(is_recommended=True).order_by("-created_at")[:40]
+            if not items.exists():
+                items = qs.order_by("-created_at")[:40]
+            return ProductSerializer(items, many=True).data
+        if tab == "newest":
+            return ProductSerializer(qs.order_by("-created_at")[:40], many=True).data
+        return []
 
 
 class OffersView(APIView):
