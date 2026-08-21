@@ -52,13 +52,22 @@ systemctl restart mnxstore-api.service
 systemctl restart mnxstore-celery.service || true
 
 cp "${BACKEND_DIR}/deploy/vps/deploy.sh" "${APP_DIR}/deploy.sh" 2>/dev/null || true
-chmod +x "${APP_DIR}/deploy.sh" 2>/dev/null || true
+cp "${BACKEND_DIR}/deploy/vps/status.sh" "${APP_DIR}/status.sh" 2>/dev/null || true
+chmod +x "${APP_DIR}/deploy.sh" "${APP_DIR}/status.sh" 2>/dev/null || true
 
-if ! command -v node >/dev/null 2>&1 || [[ "$(node -v | cut -d. -f1 | tr -d v)" -lt 20 ]]; then
-  echo "=== Installing Node.js 20 ==="
-  curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
-  apt-get install -y -qq nodejs
-fi
+ensure_node_22() {
+  local major
+  major="$(node -v 2>/dev/null | cut -d. -f1 | tr -d v || echo 0)"
+  if [[ "${major}" -lt 22 ]]; then
+    echo "=== Installing Node.js 22 (TanStack Start requires >=22) ==="
+    curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
+    apt-get install -y -qq nodejs
+  fi
+  echo "Node: $(node -v)"
+}
+
+ensure_node_22
+chown -R "${APP_USER}:${APP_USER}" "${APP_DIR}"
 
 if [[ -f "${APP_DIR}/package.json" ]] && command -v node >/dev/null 2>&1; then
   echo "=== Building web frontend ==="
@@ -69,6 +78,7 @@ if [[ -f "${APP_DIR}/package.json" ]] && command -v node >/dev/null 2>&1; then
     source ${ENV_FILE}
     set +a
     cd ${APP_DIR}
+    rm -rf node_modules/.cache 2>/dev/null || true
     npm ci
     NITRO_PRESET=node-server \
       VITE_API_URL=http://127.0.0.1/api/v1 \

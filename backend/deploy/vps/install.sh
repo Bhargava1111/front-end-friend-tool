@@ -199,10 +199,12 @@ systemctl restart mnxstore-celery.service
 
 # ── 13. Web frontend (Node/Nitro) ────────────────────────────────────
 echo "[13/16] Web frontend..."
-if ! command -v node &>/dev/null || [[ "$(node -v | cut -d. -f1 | tr -d v)" -lt 20 ]]; then
-  curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+if ! command -v node &>/dev/null || [[ "$(node -v | cut -d. -f1 | tr -d v)" -lt 22 ]]; then
+  echo "  Installing Node.js 22..."
+  curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
   apt-get install -y -qq nodejs
 fi
+echo "  Node: $(node -v)"
 
 WEB_OUT="${APP_DIR}/web-output"
 if [[ -f "${APP_DIR}/package.json" ]]; then

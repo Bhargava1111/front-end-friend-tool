@@ -13,7 +13,7 @@ Environment=PORT=3000
 Environment=HOST=127.0.0.1
 Environment=NITRO_PORT=3000
 ExecStart=/usr/bin/node server/index.mjs
-Restart=on-failure
+Restart=always
 RestartSec=5
 
 [Install]
