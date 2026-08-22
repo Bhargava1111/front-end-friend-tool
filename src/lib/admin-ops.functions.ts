@@ -23,7 +23,14 @@ export const getAdminSalesReport = createServerFn({ method: "POST" })
 
 export const getAdminUsers = createServerFn({ method: "GET" })
   .middleware([requireAuth])
-  .handler(async ({ context }) => admin(context.accessToken, "/admin-api/users/"));
+  .inputValidator((data?: { q?: string; status?: string }) => data ?? {})
+  .handler(async ({ data, context }) => {
+    const params = new URLSearchParams();
+    if (data?.q?.trim()) params.set("q", data.q.trim());
+    if (data?.status?.trim()) params.set("status", data.status.trim());
+    const qs = params.toString();
+    return admin(context.accessToken, `/admin-api/users/${qs ? `?${qs}` : ""}`);
+  });
 
 export const setUserVerification = createServerFn({ method: "POST" })
   .middleware([requireAuth])
@@ -42,9 +49,10 @@ export const createAdminUser = createServerFn({ method: "POST" })
   .middleware([requireAuth])
   .inputValidator((data: Record<string, unknown>) => data)
   .handler(async ({ data, context }) => {
-    void data;
-    void context;
-    return { ok: true };
+    return admin(context.accessToken, "/admin-api/users/", {
+      method: "POST",
+      body: toJsonBody(data),
+    });
   });
 
 export const deleteAdminUser = createServerFn({ method: "POST" })

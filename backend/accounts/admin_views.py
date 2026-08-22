@@ -1001,34 +1001,105 @@ class AdminCustomerDetailView(APIView):
 class AdminUserVerificationView(APIView):
     permission_classes = [IsAdminRole]
 
+    def _serialize_profile(self, profile, stats=None):
+        stats = stats or {}
+        return {
+            "id": str(profile.user_id),
+            "full_name": profile.user.full_name,
+            "phone": profile.user.phone,
+            "email": profile.user.email,
+            "is_active": profile.user.is_active,
+            "avatar_url": profile.avatar_url or "",
+            "gst_number": profile.gst_number or "",
+            "alt_phone": profile.alt_phone or "",
+            "dob": profile.dob.isoformat() if profile.dob else None,
+            "verification_status": profile.verification_status,
+            "address_text": profile.address_text,
+            "pincode": profile.pincode,
+            "latitude": profile.latitude,
+            "longitude": profile.longitude,
+            "location_accuracy_m": profile.location_accuracy_m,
+            "rejection_reason": profile.rejection_reason,
+            "submitted_at": profile.submitted_at.isoformat() if profile.submitted_at else None,
+            "verified_at": profile.verified_at.isoformat() if profile.verified_at else None,
+            "created_at": profile.user.date_joined.isoformat(),
+            "order_count": int(stats.get("order_count") or 0),
+            "total_spend": float(stats.get("total_spend") or 0),
+        }
+
     def get(self, request):
-        status_filter = request.query_params.get("status")
-        qs = Profile.objects.select_related("user").filter(user__role="customer").exclude(
-            user__full_name="Deleted User"
+        status_filter = (request.query_params.get("status") or "").strip().lower()
+        q = (request.query_params.get("q") or "").strip()
+        qs = (
+            Profile.objects.select_related("user")
+            .filter(user__role="customer")
+            .exclude(user__full_name="Deleted User")
+            .annotate(
+                order_count=Count("user__orders", distinct=True),
+                total_spend=Sum("user__orders__total", filter=~Q(user__orders__status="cancelled")),
+            )
+            .order_by("-user__date_joined")
         )
-        if status_filter:
-            qs = qs.filter(verification_status=status_filter)
-        return Response([{
-            "id": str(p.user_id),
-            "full_name": p.user.full_name,
-            "phone": p.user.phone,
-            "email": p.user.email,
-            "is_active": p.user.is_active,
-            "avatar_url": p.avatar_url or "",
-            "gst_number": p.gst_number or "",
-            "alt_phone": p.alt_phone or "",
-            "dob": p.dob.isoformat() if p.dob else None,
-            "verification_status": p.verification_status,
-            "address_text": p.address_text,
-            "pincode": p.pincode,
-            "latitude": p.latitude,
-            "longitude": p.longitude,
-            "location_accuracy_m": p.location_accuracy_m,
-            "rejection_reason": p.rejection_reason,
-            "submitted_at": p.submitted_at.isoformat() if p.submitted_at else None,
-            "verified_at": p.verified_at.isoformat() if p.verified_at else None,
-            "created_at": p.user.date_joined.isoformat(),
-        } for p in qs])
+        if status_filter and status_filter != "all":
+            if status_filter == "blocked":
+                qs = qs.filter(user__is_active=False)
+            else:
+                qs = qs.filter(verification_status=status_filter)
+        if q:
+            qs = qs.filter(
+                Q(user__full_name__icontains=q)
+                | Q(user__phone__icontains=q)
+                | Q(user__email__icontains=q)
+                | Q(gst_number__icontains=q)
+                | Q(pincode__icontains=q)
+                | Q(address_text__icontains=q)
+                | Q(alt_phone__icontains=q)
+            )
+        return Response([
+            self._serialize_profile(
+                p,
+                {"order_count": p.order_count, "total_spend": p.total_spend},
+            )
+            for p in qs
+        ])
+
+    def post(self, request):
+        data = request.data
+        email = (data.get("email") or "").strip()
+        phone = (data.get("phone") or "").strip()
+        password = data.get("password") or ""
+        full_name = (data.get("full_name") or "").strip()
+        role = (data.get("role") or User.Role.CUSTOMER).strip().lower()
+        address_text = (data.get("address_text") or "").strip()
+        verified = bool(data.get("verified", True))
+
+        if not email or not password or not full_name:
+            return Response({"detail": "Email, password and full name are required."}, status=400)
+        if not phone:
+            return Response({"detail": "Phone is required."}, status=400)
+        if User.objects.filter(email__iexact=email).exists():
+            return Response({"detail": "Email already in use."}, status=400)
+        if User.objects.filter(phone=phone).exists():
+            return Response({"detail": "Phone already in use."}, status=400)
+
+        is_admin = role == User.Role.ADMIN
+        user = User.objects.create_user(
+            email=email,
+            phone=phone,
+            password=password,
+            full_name=full_name,
+            role=User.Role.ADMIN if is_admin else User.Role.CUSTOMER,
+            is_staff=is_admin,
+            is_email_verified=True,
+            is_phone_verified=True,
+        )
+        profile = Profile.objects.get(user=user)
+        profile.address_text = address_text
+        if verified and not is_admin:
+            profile.verification_status = Profile.VerificationStatus.VERIFIED
+            profile.verified_at = timezone.now()
+        profile.save()
+        return Response({"ok": True, "id": str(user.id)}, status=201)
 
     def patch(self, request, pk):
         profile = Profile.objects.get(user_id=pk)

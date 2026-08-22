@@ -480,8 +480,12 @@ export async function getAdminSalesReportClient(opts: {
   return adminClient(`/admin-api/reports/sales/?${params}`);
 }
 
-export async function getAdminUsersClient() {
-  return adminClient("/admin-api/users/");
+export async function getAdminUsersClient(opts?: { data?: { q?: string; status?: string } }) {
+  const params = new URLSearchParams();
+  if (opts?.data?.q?.trim()) params.set("q", opts.data.q.trim());
+  if (opts?.data?.status?.trim()) params.set("status", opts.data.status.trim());
+  const qs = params.toString();
+  return adminClient(`/admin-api/users/${qs ? `?${qs}` : ""}`);
 }
 
 export async function setUserVerificationClient(opts: {
@@ -497,8 +501,7 @@ export async function setUserVerificationClient(opts: {
 }
 
 export async function createAdminUserClient(opts: { data: Record<string, unknown> }) {
-  void opts;
-  return { ok: true };
+  return adminClient("/admin-api/users/", { method: "POST", body: toJsonBody(opts.data) });
 }
 
 export async function deleteAdminUserClient(opts: { data: { id?: string; userId?: string } }) {
