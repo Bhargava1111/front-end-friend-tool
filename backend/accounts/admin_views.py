@@ -575,12 +575,13 @@ class AdminHomeSectionView(APIView):
         if action in ("move", "reorder"):
             return self._handle_section_reorder(data)
         if action == "sync_defaults":
-            from catalog.home_sections_defaults import ensure_default_home_sections, apply_canonical_sort_order
+            from catalog.home_sections_defaults import ensure_default_home_sections, apply_canonical_sort_order, normalize_section_max_prices
             from catalog.cache_utils import invalidate_catalog_cache
 
             created = ensure_default_home_sections()
             if created == 0:
                 apply_canonical_sort_order()
+                normalize_section_max_prices()
             total = HomeOfferSection.objects.count()
             invalidate_catalog_cache()
             return Response({"ok": True, "created": created, "total": total})

@@ -1,7 +1,7 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { Home, LayoutGrid, ShoppingCart, ClipboardList, User } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useCartCount } from "@/hooks/use-shop";
+import { CartCountBadge } from "@/components/cart-count-badge";
 import { useI18n } from "@/hooks/use-i18n";
 
 const tabs = [
@@ -14,7 +14,6 @@ const tabs = [
 
 export function BottomNav() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const count = useCartCount();
   const { t } = useI18n();
 
   return (
@@ -33,10 +32,8 @@ export function BottomNav() {
             >
               <span className="relative">
                 <Icon className={cn("h-5 w-5", active && "stroke-[2.4]")} />
-                {to === "/cart" && count > 0 && (
-                  <span className="absolute -right-2.5 -top-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-accent px-1 text-[10px] font-bold text-accent-foreground">
-                    {count}
-                  </span>
+                {to === "/cart" && (
+                  <CartCountBadge className="absolute -right-2.5 -top-2 h-4 min-w-4 text-[10px]" />
                 )}
               </span>
               {t(labelKey)}

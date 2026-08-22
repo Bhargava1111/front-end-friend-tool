@@ -31,6 +31,15 @@ def _filter_by_max_price(products: list[Product], max_price: int | None) -> list
     return [p for p in products if _product_price(p) <= ceiling]
 
 
+def _section_applies_max_price(section_def: HomeOfferSection | None) -> bool:
+    if not section_def:
+        return False
+    return (
+        section_def.layout == HomeOfferSection.Layout.BUDGET_RAIL
+        or section_def.fallback_rule == HomeOfferSection.FallbackRule.UNDER_99
+    )
+
+
 def section_products(section: str, *, limit: int = 20, max_price: int | None = None):
     placements = (
         ProductOfferPlacement.objects.filter(section=section, product__is_active=True)
@@ -68,7 +77,11 @@ def all_section_products(*, limit: int = 20) -> dict[str, list]:
         if pid in product_ids_seen[placement.section]:
             continue
         product = placement.product
-        if section_def and section_def.max_price and _product_price(product) > Decimal(str(section_def.max_price)):
+        if (
+            _section_applies_max_price(section_def)
+            and section_def.max_price
+            and _product_price(product) > Decimal(str(section_def.max_price))
+        ):
             continue
         product_ids_seen[placement.section].add(pid)
         bucket.append(product)
@@ -132,7 +145,7 @@ def fallback_products(
 
 def resolve_section_products(section_def: HomeOfferSection, sections_map: dict[str, list], all_serialized: list):
     curated_raw = sections_map.get(section_def.key) or []
-    max_price = section_def.max_price if section_def.layout == HomeOfferSection.Layout.BUDGET_RAIL or section_def.fallback_rule == HomeOfferSection.FallbackRule.UNDER_99 else None
+    max_price = section_def.max_price if _section_applies_max_price(section_def) else None
 
     if curated_raw:
         if max_price:

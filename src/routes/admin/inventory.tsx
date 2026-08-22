@@ -25,7 +25,13 @@ type AdminProduct = {
   stock?: number;
   price?: number;
   is_active?: boolean;
+  category_id?: string | null;
   category_name?: string;
+};
+
+type AdminProductCatalog = {
+  products?: AdminProduct[];
+  categories?: Array<{ id: string; name: string }>;
 };
 
 function stockFromId(id: string, stock?: number) {
@@ -45,10 +51,19 @@ function InventoryPage() {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<"all" | "low" | "out">("all");
   const fetchProducts = useAdminFn(getAdminProducts, getAdminProductsClient);
-  const { data: products = [], isLoading } = useQuery({
+  const { data: catalog, isLoading } = useQuery({
     queryKey: ["admin-products"],
-    queryFn: () => fetchProducts() as Promise<AdminProduct[]>,
+    queryFn: () => fetchProducts() as Promise<AdminProductCatalog>,
   });
+
+  const categories = catalog?.categories ?? [];
+  const categoryName = (id?: string | null) =>
+    categories.find((c) => c.id === id)?.name ?? "—";
+
+  const products = (catalog?.products ?? []).map((p) => ({
+    ...p,
+    category_name: p.category_name ?? categoryName(p.category_id),
+  }));
 
   const withStock = products.map((p) => ({ ...p, stock: stockFromId(p.id, p.stock) }));
   const filtered = withStock

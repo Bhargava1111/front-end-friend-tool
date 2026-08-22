@@ -20,8 +20,9 @@ import { toast } from "sonner";
 import { formatShopError } from "@/lib/auth-session";
 import { getProductBySlug } from "@/lib/catalog.functions";
 import { addToCart, toggleWishlist } from "@/lib/shop.functions";
-import { useCartCount, useSession, useWishlist } from "@/hooks/use-shop";
+import { useSession, useWishlist } from "@/hooks/use-shop";
 import { PageShell, TopBar, EmptyState } from "@/components/page-shell";
+import { CartCountBadge } from "@/components/cart-count-badge";
 import { ProductDetailSkeleton } from "@/components/skeletons";
 import { ProductRail } from "@/components/product-rail";
 import { ImageGallery } from "@/components/image-gallery";
@@ -128,7 +129,6 @@ function ProductPage() {
   const toggle = toggleWishlist;
   const { data: wishlist } = useWishlist();
   const [qty, setQty] = useState(1);
-  const cartCount = useCartCount();
   const variants = useMemo(
     () => (product.variants ?? []).filter((v) => v.is_active !== false),
     [product.variants],
@@ -250,15 +250,11 @@ function ProductPage() {
             </button>
             <Link
               to="/cart"
-              aria-label={`Cart with ${cartCount} items`}
+              aria-label="Cart"
               className="relative grid h-9 w-9 place-items-center rounded-full bg-secondary"
             >
               <ShoppingCart className="h-4 w-4" />
-              {cartCount > 0 && (
-                <span className="absolute -right-0.5 -top-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-foreground">
-                  {cartCount}
-                </span>
-              )}
+              <CartCountBadge className="absolute -right-0.5 -top-0.5 h-4 min-w-4 bg-primary text-primary-foreground" />
             </Link>
             <button
               type="button"

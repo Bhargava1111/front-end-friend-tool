@@ -2,7 +2,7 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import { Heart, MapPin, Search, ShoppingCart, User } from "lucide-react";
 import { NotificationBell } from "./notification-bell";
 import { ThemeToggle } from "./theme-toggle";
-import { useCartCount } from "@/hooks/use-shop";
+import { CartCountBadge } from "./cart-count-badge";
 import { cn } from "@/lib/utils";
 import { isNativePlatform } from "@/lib/capacitor";
 
@@ -26,7 +26,6 @@ const navLinks = [
 /** Wide-screen top navigation. Hidden on mobile, where the bottom tab bar is used. */
 export function DesktopHeader() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const count = useCartCount();
 
   return (
     <header
@@ -81,11 +80,7 @@ export function DesktopHeader() {
           >
             <ShoppingCart className="h-4 w-4" />
             Cart
-            {count > 0 && (
-              <span className="grid h-5 min-w-5 place-items-center rounded-full bg-accent px-1 text-[10px] font-bold text-accent-foreground">
-                {count}
-              </span>
-            )}
+            <CartCountBadge />
           </Link>
           <Link
             to="/profile"

@@ -18,6 +18,7 @@ import { cn } from "@/lib/utils";
 import type { Banner, Product } from "@/lib/types";
 import type { HomeSectionBlock } from "@/lib/offer-sections";
 import { homeSectionDisplaySize } from "@/lib/offer-sections";
+import { resolveHomeSectionBlockProducts, type HomeCatalogData } from "@/lib/offer-section-products";
 import { ProductRail } from "./product-rail";
 
 function useCountdown(target: number) {
@@ -868,18 +869,20 @@ export function ServicePromises() {
 
 function HomeDynamicSection({
   section,
+  homeCatalog,
   allProducts,
   categories,
   offerBanners,
   festiveBanners,
 }: {
   section: HomeSectionBlock;
+  homeCatalog: HomeCatalogData;
   allProducts: Product[];
   categories: Array<{ id: string; name: string; slug: string; image_url?: string | null }>;
   offerBanners: Banner[];
   festiveBanners: Banner[];
 }) {
-  const products = section.products ?? [];
+  const products = resolveHomeSectionBlockProducts(section, homeCatalog);
   const href = section.see_all_tab
     ? { to: "/deals" as const, search: { tab: section.see_all_tab } }
     : undefined;
@@ -956,12 +959,14 @@ function HomeDynamicSection({
 /** Renders admin-configured home offer sections in sort order. */
 export function HomeDynamicSections({
   sections,
+  homeCatalog,
   allProducts,
   categories,
   offerBanners = [],
   festiveBanners = [],
 }: {
   sections: HomeSectionBlock[];
+  homeCatalog: HomeCatalogData;
   allProducts: Product[];
   categories: Array<{ id: string; name: string; slug: string; image_url?: string | null }>;
   offerBanners?: Banner[];
@@ -975,6 +980,7 @@ export function HomeDynamicSections({
         <HomeDynamicSection
           key={section.id}
           section={section}
+          homeCatalog={homeCatalog}
           allProducts={allProducts}
           categories={categories}
           offerBanners={offerBanners}

@@ -1,4 +1,4 @@
-import type { OfferSectionKey, OfferSectionsMap, HomeOfferSectionDef } from "@/lib/offer-sections";
+import type { OfferSectionKey, OfferSectionsMap, HomeOfferSectionDef, HomeSectionBlock } from "@/lib/offer-sections";
 import type { Product } from "@/lib/types";
 
 export type DealsTab =
@@ -96,6 +96,56 @@ export function resolveSectionProducts(
       return withinPrice(discountedProducts(home, limit));
     default:
       return pool.slice(0, limit);
+  }
+}
+
+/** Resolve products for a configured home section block (mirrors backend resolve_section_products). */
+export function resolveHomeSectionBlockProducts(
+  section: HomeSectionBlock,
+  home: HomeCatalogData,
+): Product[] {
+  const limit = section.max_products ?? 12;
+  const applyMaxPrice =
+    section.layout === "budget_rail" || section.fallback_rule === "under_99";
+  const maxPrice = applyMaxPrice ? (section.max_price ?? 99) : undefined;
+
+  const withinPrice = (items: Product[]) =>
+    maxPrice != null ? items.filter((p) => Number(p.price) <= maxPrice) : items;
+
+  const curated =
+    section.products?.length
+      ? section.products
+      : (home.sections?.[section.key] as Product[] | undefined);
+  if (curated?.length) return withinPrice(curated).slice(0, limit);
+
+  if (section.fallback_rule === "manual") return [];
+
+  const pool = allProducts(home);
+  switch (section.fallback_rule) {
+    case "discounted":
+      return withinPrice(discountedProducts(home, limit));
+    case "featured":
+      return withinPrice(
+        (home.featured?.length ? home.featured : pool.filter((p) => p.is_featured)).slice(0, limit),
+      );
+    case "under_99": {
+      const ceiling = maxPrice ?? 99;
+      return pool.filter((p) => Number(p.price) <= ceiling).slice(0, limit);
+    }
+    case "best_seller": {
+      const best = pool.filter((p) => p.is_best_seller);
+      return withinPrice((best.length ? best : pool).slice(0, limit));
+    }
+    case "newest":
+      return withinPrice((home.newest?.length ? home.newest : pool).slice(0, limit));
+    case "recommended": {
+      const rec = pool.filter((p) => p.is_recommended);
+      return withinPrice((rec.length ? rec : pool).slice(0, limit));
+    }
+    case "combo":
+      return withinPrice(pool.filter((p) => p.is_combo).slice(0, limit));
+    default:
+      return withinPrice(pool.slice(0, limit));
   }
 }
 

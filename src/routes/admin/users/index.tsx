@@ -205,8 +205,8 @@ function AdminUsers() {
         ))}
       </div>
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="no-scrollbar flex gap-2 overflow-x-auto">
+      <div className="flex flex-col gap-3">
+        <div className="no-scrollbar flex gap-2 overflow-x-auto pb-1">
           {TABS.map((t) => (
             <button
               key={t}
@@ -223,13 +223,13 @@ function AdminUsers() {
             </button>
           ))}
         </div>
-        <div className="relative w-full sm:max-w-xs">
+        <div className="relative w-full min-w-0">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder="Search name, phone, email, GST, pincode, address…"
-            className="pl-9"
+            className="w-full pl-9"
             aria-label="Search users"
           />
         </div>
@@ -260,8 +260,109 @@ function AdminUsers() {
       )}
 
       {!isLoading && !isError && rows.length > 0 && (
-        <div className="overflow-hidden rounded-2xl border border-border bg-card">
-          <table className="w-full text-left text-sm">
+        <>
+          <div className="space-y-3 lg:hidden">
+            {rows.map((u) => {
+              const status = u.verification_status ?? "pending";
+              const blocked = u.is_active === false;
+              return (
+                <article
+                  key={u.id}
+                  className="rounded-2xl border border-border bg-card p-4 shadow-sm"
+                >
+                  <Link
+                    to="/admin/users/$id"
+                    params={{ id: u.id }}
+                    className="flex min-w-0 items-start gap-3"
+                  >
+                    {u.avatar_url ? (
+                      <img src={u.avatar_url} alt="" className="h-11 w-11 rounded-full object-cover" />
+                    ) : (
+                      <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-primary-soft text-sm font-bold text-primary">
+                        {(u.full_name ?? "U").slice(0, 1).toUpperCase()}
+                      </span>
+                    )}
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate font-semibold text-foreground">
+                        {u.full_name ?? "Unnamed shopper"}
+                      </span>
+                      <span className="block truncate text-xs text-muted-foreground">
+                        {u.phone ?? u.email ?? "—"}
+                      </span>
+                      <div className="mt-2 flex flex-wrap gap-1">
+                        <span
+                          className={cn(
+                            "inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold capitalize",
+                            BADGES[status] ?? BADGES.pending,
+                          )}
+                        >
+                          {STATUS_LABEL[status] ?? status}
+                        </span>
+                        {blocked && (
+                          <span className="inline-flex rounded-full bg-destructive/10 px-2 py-0.5 text-[10px] font-semibold text-destructive">
+                            Blocked
+                          </span>
+                        )}
+                      </div>
+                    </span>
+                    <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+                  </Link>
+                  <div className="mt-3 grid grid-cols-3 gap-2 text-center text-xs">
+                    <div className="rounded-xl bg-secondary/50 px-2 py-2">
+                      <p className="text-muted-foreground">Orders</p>
+                      <p className="font-semibold text-foreground">{u.order_count ?? 0}</p>
+                    </div>
+                    <div className="rounded-xl bg-secondary/50 px-2 py-2">
+                      <p className="text-muted-foreground">Spend</p>
+                      <p className="font-semibold text-foreground">{formatINR(u.total_spend ?? 0)}</p>
+                    </div>
+                    <div className="rounded-xl bg-secondary/50 px-2 py-2">
+                      <p className="text-muted-foreground">Joined</p>
+                      <p className="font-semibold text-foreground">{formatDate(u.created_at)}</p>
+                    </div>
+                  </div>
+                  <div className="mt-3 flex flex-wrap gap-1 border-t border-border pt-3">
+                    <Button size="sm" variant="outline" className="h-8 gap-1.5" asChild>
+                      <Link to="/admin/users/$id" params={{ id: u.id }}>
+                        <Eye className="h-3.5 w-3.5" /> View
+                      </Link>
+                    </Button>
+                    {status !== "verified" && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-8 gap-1.5"
+                        disabled={statusMutation.isPending}
+                        onClick={() => statusMutation.mutate({ userId: u.id, status: "verified" })}
+                      >
+                        <BadgeCheck className="h-3.5 w-3.5" /> Verify
+                      </Button>
+                    )}
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-8 gap-1.5"
+                      disabled={blockMutation.isPending}
+                      onClick={() => blockMutation.mutate({ userId: u.id, is_active: blocked })}
+                    >
+                      {blocked ? (
+                        <>
+                          <Unlock className="h-3.5 w-3.5" /> Unblock
+                        </>
+                      ) : (
+                        <>
+                          <Ban className="h-3.5 w-3.5" /> Block
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+
+          <div className="hidden overflow-x-auto rounded-2xl border border-border bg-card lg:block">
+            <table className="min-w-[960px] w-full text-left text-sm">
             <thead className="bg-secondary/60 text-xs uppercase tracking-wide text-muted-foreground">
               <tr>
                 <th className="px-4 py-3">User</th>
@@ -421,8 +522,9 @@ function AdminUsers() {
                 );
               })}
             </tbody>
-          </table>
-        </div>
+            </table>
+          </div>
+        </>
       )}
     </div>
   );

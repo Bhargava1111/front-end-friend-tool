@@ -174,6 +174,14 @@ function Home() {
       {useDynamicSections ? (
         <HomeDynamicSections
           sections={homeSections}
+          homeCatalog={{
+            all: data.all,
+            newest: data.newest,
+            featured: data.featured,
+            bestSelling: data.bestSelling,
+            recommended: data.recommended,
+            sections,
+          }}
           allProducts={allProducts}
           categories={topCategories}
           offerBanners={offerBanners}

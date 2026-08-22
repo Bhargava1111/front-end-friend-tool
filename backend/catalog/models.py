@@ -170,7 +170,12 @@ class HomeOfferSection(models.Model):
     layout = models.CharField(max_length=30, choices=Layout.choices, default=Layout.RAIL)
     fallback_rule = models.CharField(max_length=30, choices=FallbackRule.choices, default=FallbackRule.MANUAL)
     see_all_tab = models.CharField(max_length=30, blank=True, default="")
-    max_price = models.PositiveIntegerField(default=99, help_text="Price ceiling for budget / under-price sections")
+    max_price = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        default=None,
+        help_text="Price ceiling for budget / under-price sections only",
+    )
     max_products = models.PositiveSmallIntegerField(default=12)
     sort_order = models.IntegerField(default=0)
     is_active = models.BooleanField(default=True)
