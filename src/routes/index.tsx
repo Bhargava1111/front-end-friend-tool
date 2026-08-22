@@ -170,50 +170,51 @@ function Home() {
         <BannerSlider banners={heroBanners} />
       </Reveal>
 
-      <Reveal className="mt-7">
-        <div className="flex items-center justify-between px-4">
-          <h2 className="text-base font-bold text-foreground">Shop by category</h2>
-          <Link to="/categories" className="text-xs font-medium text-primary">
-            See all
-          </Link>
-        </div>
-        <div
-          ref={categoryScrollRef}
-          className="no-scrollbar mt-3 flex gap-3 overflow-x-auto px-4 pb-1"
-        >
-          {topCategories.map((c) => (
-            <Link
-              key={c.id}
-              to="/category/$slug"
-              params={{ slug: c.slug }}
-              className="flex w-[76px] shrink-0 flex-col items-center gap-2 transition-transform active:scale-95"
-            >
-              <div className="h-[76px] w-[76px] overflow-hidden rounded-2xl border border-border bg-accent-soft">
-                {c.image_url && (
-                  <img
-                    src={c.image_url}
-                    alt={c.name}
-                    loading="lazy"
-                    className="h-full w-full object-cover"
-                  />
-                )}
-              </div>
-              <span className="line-clamp-2 text-center text-[11px] font-medium leading-tight text-foreground">
-                {c.name}
-              </span>
-            </Link>
-          ))}
-        </div>
-      </Reveal>
-
       {useDynamicSections ? (
         <HomeDynamicSections
           sections={homeSections}
           allProducts={allProducts}
           categories={topCategories}
+          offerBanners={offerBanners}
+          festiveBanners={festiveBanners}
         />
       ) : (
         <>
+          <Reveal className="mt-7">
+            <div className="flex items-center justify-between px-4">
+              <h2 className="text-base font-bold text-foreground">Shop by category</h2>
+              <Link to="/categories" className="text-xs font-medium text-primary">
+                See all
+              </Link>
+            </div>
+            <div
+              ref={categoryScrollRef}
+              className="no-scrollbar mt-3 flex gap-3 overflow-x-auto px-4 pb-1"
+            >
+              {topCategories.map((c) => (
+                <Link
+                  key={c.id}
+                  to="/category/$slug"
+                  params={{ slug: c.slug }}
+                  className="flex w-[76px] shrink-0 flex-col items-center gap-2 transition-transform active:scale-95"
+                >
+                  <div className="h-[76px] w-[76px] overflow-hidden rounded-2xl border border-border bg-accent-soft">
+                    {c.image_url && (
+                      <img
+                        src={c.image_url}
+                        alt={c.name}
+                        loading="lazy"
+                        className="h-full w-full object-cover"
+                      />
+                    )}
+                  </div>
+                  <span className="line-clamp-2 text-center text-[11px] font-medium leading-tight text-foreground">
+                    {c.name}
+                  </span>
+                </Link>
+              ))}
+            </div>
+          </Reveal>
           <FlashSaleRail products={allProducts} curated={sections.flash_sale} />
           <DealOfTheDay products={allProducts} curated={sections.todays_deals} />
           <Reveal>
@@ -230,64 +231,53 @@ function Home() {
             title="Pooja & festive store"
           />
           <BudgetRail products={allProducts} curated={sections.under_99} />
+          <HomeOffersStrip banners={offerBanners} />
+          <CouponStrip />
+          <FestivalBannerCarousel banners={festiveBanners} />
+          {!dynamicKeys.has("trending") && (
+            <Reveal>
+              <ProductRail
+                size="featured"
+                title="Trending now"
+                products={trending}
+                href={{ to: "/deals", search: { tab: "trending" } }}
+              />
+            </Reveal>
+          )}
+          {!dynamicKeys.has("best_sellers") && (
+            <Reveal>
+              <ProductRail
+                title="Best sellers"
+                products={data.bestSelling}
+                href={{ to: "/deals", search: { tab: "best_sellers" } }}
+              />
+            </Reveal>
+          )}
+          <ShopByNeed categories={topCategories} />
+          <RecentlyViewedRail />
+          {!dynamicKeys.has("recommended") && (
+            <Reveal>
+              <ProductRail
+                size="compact"
+                title="Recommended for you"
+                products={data.recommended}
+                href={{ to: "/deals", search: { tab: "recommended" } }}
+              />
+            </Reveal>
+          )}
+          <BrandRail />
+          <ServicePromises />
+          {!dynamicKeys.has("newest") && (
+            <Reveal>
+              <ProductRail
+                size="compact"
+                title="Newly added"
+                products={data.newest}
+                href={{ to: "/deals", search: { tab: "newest" } }}
+              />
+            </Reveal>
+          )}
         </>
-      )}
-
-      <HomeOffersStrip banners={offerBanners} />
-
-      <CouponStrip />
-
-      <FestivalBannerCarousel banners={festiveBanners} />
-
-      {!dynamicKeys.has("trending") && (
-        <Reveal>
-          <ProductRail
-            size="featured"
-            title="Trending now"
-            products={trending}
-            href={{ to: "/deals", search: { tab: "trending" } }}
-          />
-        </Reveal>
-      )}
-
-      {!dynamicKeys.has("best_sellers") && (
-        <Reveal>
-          <ProductRail
-            title="Best sellers"
-            products={data.bestSelling}
-            href={{ to: "/deals", search: { tab: "best_sellers" } }}
-          />
-        </Reveal>
-      )}
-
-      <ShopByNeed categories={topCategories} />
-
-      <RecentlyViewedRail />
-
-      {!dynamicKeys.has("recommended") && (
-        <Reveal>
-          <ProductRail
-            size="compact"
-            title="Recommended for you"
-            products={data.recommended}
-            href={{ to: "/deals", search: { tab: "recommended" } }}
-          />
-        </Reveal>
-      )}
-
-      <BrandRail />
-
-      <ServicePromises />
-
-      {!dynamicKeys.has("newest") && (
-        <Reveal>
-          <ProductRail
-            size="compact"
-            title="Newly added"
-            products={data.newest}
-            href={{ to: "/deals", search: { tab: "newest" } }}
-          />
-        </Reveal>
       )}
 
 

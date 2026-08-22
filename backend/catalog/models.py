@@ -144,6 +144,14 @@ class HomeOfferSection(models.Model):
         COUNTDOWN_RAIL = "countdown_rail", "Flash sale (countdown)"
         BUDGET_RAIL = "budget_rail", "Budget store rail"
         DEAL_CARD = "deal_card", "Deal of the day card"
+        CATEGORIES = "categories", "Shop by category"
+        OFFERS_STRIP = "offers_strip", "Today's offers strip"
+        COUPON_STRIP = "coupon_strip", "Coupons strip"
+        FESTIVE_BANNERS = "festive_banners", "Festival banner carousel"
+        SHOP_BY_NEED = "shop_by_need", "Shop by need grid"
+        BRANDS = "brands", "Featured brands"
+        RECENTLY_VIEWED = "recently_viewed", "Recently viewed"
+        SERVICE_PROMISES = "service_promises", "Service promises"
 
     class FallbackRule(models.TextChoices):
         MANUAL = "manual", "Manual products only"

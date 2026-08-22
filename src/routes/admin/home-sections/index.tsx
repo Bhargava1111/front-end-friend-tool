@@ -67,27 +67,6 @@ function AdminHomeSectionsPage() {
 
   const serverSections = useMemo(() => sortSections(data ?? []), [data]);
 
-  useEffect(() => {
-    if (!localIds && serverSections.length) {
-      setLocalIds(serverSections.map((s) => s.id));
-    }
-  }, [serverSections, localIds]);
-
-  useEffect(() => {
-    if (localIds && serverSections.length) {
-      const serverIds = serverSections.map((s) => s.id).join(",");
-      const localSorted = localIds
-        .map((id) => serverSections.find((s) => s.id === id))
-        .filter(Boolean)
-        .map((s) => `${s!.id}:${s!.sort_order}`)
-        .join(",");
-      const serverSorted = serverSections.map((s) => `${s.id}:${s.sort_order}`).join(",");
-      if (serverSorted !== localSorted && !draggingId) {
-        setLocalIds(serverSections.map((s) => s.id));
-      }
-    }
-  }, [serverSections, localIds, draggingId]);
-
   const sections = useMemo(() => {
     const byId = new Map(serverSections.map((s) => [s.id, s]));
     const order = localIds ?? serverSections.map((s) => s.id);
@@ -112,7 +91,11 @@ function AdminHomeSectionsPage() {
   const bulkReorderMutation = useMutation({
     mutationFn: (orderedIds: string[]) => bulkReorder({ data: { ordered_ids: orderedIds } }),
     onSuccess: async () => {
-      await queryClient.refetchQueries({ queryKey: ["admin-home-sections"] });
+      const refreshed = (await queryClient.fetchQuery({
+        queryKey: ["admin-home-sections"],
+        queryFn: () => list() as Promise<HomeOfferSectionDef[]>,
+      })) as HomeOfferSectionDef[];
+      setLocalIds(sortSections(refreshed).map((s) => s.id));
       invalidateHomeQueries(queryClient);
       toast.success("Section order saved");
     },
@@ -126,8 +109,11 @@ function AdminHomeSectionsPage() {
     mutationFn: (vars: { id: string; direction: "up" | "down" }) => reorder({ data: vars }),
     onSuccess: async (res) => {
       if (res.moved) {
-        setLocalIds(null);
-        await queryClient.refetchQueries({ queryKey: ["admin-home-sections"] });
+        const refreshed = (await queryClient.fetchQuery({
+          queryKey: ["admin-home-sections"],
+          queryFn: () => list() as Promise<HomeOfferSectionDef[]>,
+        })) as HomeOfferSectionDef[];
+        setLocalIds(sortSections(refreshed).map((s) => s.id));
         invalidateHomeQueries(queryClient);
         toast.success("Section moved");
       } else {
@@ -140,8 +126,11 @@ function AdminHomeSectionsPage() {
   const syncMutation = useMutation({
     mutationFn: () => syncDefaults(),
     onSuccess: async (res) => {
-      setLocalIds(null);
-      await queryClient.refetchQueries({ queryKey: ["admin-home-sections"] });
+      const refreshed = (await queryClient.fetchQuery({
+        queryKey: ["admin-home-sections"],
+        queryFn: () => list() as Promise<HomeOfferSectionDef[]>,
+      })) as HomeOfferSectionDef[];
+      setLocalIds(sortSections(refreshed).map((s) => s.id));
       invalidateHomeQueries(queryClient);
       toast.success(
         res.created > 0
@@ -151,6 +140,38 @@ function AdminHomeSectionsPage() {
     },
     onError: (e: Error) => toast.error(e.message),
   });
+
+  const isReordering = bulkReorderMutation.isPending || moveMutation.isPending;
+
+  useEffect(() => {
+    const serverIds = serverSections.map((s) => s.id);
+    if (!serverIds.length) {
+      setLocalIds(null);
+      return;
+    }
+    if (!localIds) {
+      setLocalIds(serverIds);
+      return;
+    }
+    if (isReordering || draggingId) return;
+
+    const localSet = new Set(localIds);
+    const idsChanged =
+      serverIds.length !== localIds.length ||
+      serverIds.some((id) => !localSet.has(id)) ||
+      localIds.some((id) => !serverIds.includes(id));
+
+    if (idsChanged) {
+      setLocalIds(serverIds);
+      return;
+    }
+
+    const serverOrder = serverIds.join(",");
+    const localOrder = localIds.join(",");
+    if (serverOrder !== localOrder) {
+      setLocalIds(serverIds);
+    }
+  }, [serverSections, localIds, draggingId, isReordering]);
 
   const handleDrop = (targetId: string, sourceId?: string) => {
     const fromId = sourceId ?? draggingId;

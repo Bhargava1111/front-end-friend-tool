@@ -575,17 +575,15 @@ class AdminHomeSectionView(APIView):
         if action in ("move", "reorder"):
             return self._handle_section_reorder(data)
         if action == "sync_defaults":
-            from catalog.home_sections_defaults import ensure_default_home_sections
+            from catalog.home_sections_defaults import ensure_default_home_sections, apply_canonical_sort_order
             from catalog.cache_utils import invalidate_catalog_cache
 
             created = ensure_default_home_sections()
-            # Re-index sort order after sync
-            sections = list(HomeOfferSection.objects.all().order_by("sort_order", "title"))
-            for i, section in enumerate(sections):
-                section.sort_order = i + 1
-            HomeOfferSection.objects.bulk_update(sections, ["sort_order"])
+            if created == 0:
+                apply_canonical_sort_order()
+            total = HomeOfferSection.objects.count()
             invalidate_catalog_cache()
-            return Response({"ok": True, "created": created, "total": len(sections)})
+            return Response({"ok": True, "created": created, "total": total})
 
         sid = data.get("id")
         key = (data.get("key") or "").strip().lower().replace(" ", "_")

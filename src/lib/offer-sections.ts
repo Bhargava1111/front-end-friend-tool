@@ -1,6 +1,7 @@
 import type { Product } from "@/lib/types";
 
 export const DEFAULT_OFFER_SECTIONS = [
+  { key: "categories", label: "Shop by category" },
   { key: "flash_sale", label: "Flash sale" },
   { key: "todays_deals", label: "Today's deals" },
   { key: "deal_of_the_day", label: "Deal of the day" },
@@ -9,7 +10,14 @@ export const DEFAULT_OFFER_SECTIONS = [
   { key: "combo_packs", label: "Combo packs" },
   { key: "trending", label: "Trending now" },
   { key: "best_sellers", label: "Best sellers" },
+  { key: "offers_strip", label: "Today's offers" },
+  { key: "coupon_strip", label: "Coupons" },
+  { key: "festive_banners", label: "Festival banners" },
+  { key: "shop_by_need", label: "Shop by need" },
   { key: "recommended", label: "Recommended" },
+  { key: "brands", label: "Featured brands" },
+  { key: "recently_viewed", label: "Recently viewed" },
+  { key: "service_promises", label: "Service promises" },
   { key: "newest", label: "Newly added" },
   { key: "custom_offers", label: "Custom offers" },
 ] as const;
@@ -21,7 +29,19 @@ export type HomeOfferSectionDef = {
   key: string;
   title: string;
   subtitle?: string;
-  layout: "rail" | "countdown_rail" | "budget_rail" | "deal_card";
+  layout:
+    | "rail"
+    | "countdown_rail"
+    | "budget_rail"
+    | "deal_card"
+    | "categories"
+    | "offers_strip"
+    | "coupon_strip"
+    | "festive_banners"
+    | "shop_by_need"
+    | "brands"
+    | "recently_viewed"
+    | "service_promises";
   fallback_rule: string;
   see_all_tab?: string;
   max_price?: number;
@@ -90,6 +110,14 @@ export const SECTION_LAYOUTS = [
   { value: "countdown_rail", label: "Flash sale (countdown)" },
   { value: "budget_rail", label: "Budget store rail" },
   { value: "deal_card", label: "Deal of the day card" },
+  { value: "categories", label: "Shop by category" },
+  { value: "offers_strip", label: "Today's offers strip" },
+  { value: "coupon_strip", label: "Coupons strip" },
+  { value: "festive_banners", label: "Festival banner carousel" },
+  { value: "shop_by_need", label: "Shop by need grid" },
+  { value: "brands", label: "Featured brands" },
+  { value: "recently_viewed", label: "Recently viewed" },
+  { value: "service_promises", label: "Service promises" },
 ] as const;
 
 export const FALLBACK_RULES = [

@@ -128,7 +128,7 @@ export function FlashSaleRail({
   );
 }
 
-export function CouponStrip() {
+export function CouponStrip({ title = "Coupons for you" }: { title?: string }) {
   const [copied, setCopied] = useState<string | null>(null);
   const { coupons } = useStorefront();
   const list = coupons.length
@@ -146,7 +146,7 @@ export function CouponStrip() {
     <Reveal className="mt-4">
       <div className="flex items-center justify-between px-4">
         <h2 className="flex items-center gap-1.5 text-sm font-bold text-foreground">
-          <Ticket className="h-3.5 w-3.5 text-accent" /> Coupons for you
+          <Ticket className="h-3.5 w-3.5 text-accent" /> {title}
         </h2>
         <SeeAll to="/coupons" />
       </div>
@@ -316,7 +316,7 @@ export function OfferCards({ embedded = false }: { embedded?: boolean }) {
   );
 }
 
-export function BrandRail() {
+export function BrandRail({ title = "Featured brands" }: { title?: string }) {
   const { brands } = useStorefront();
   const list = brands.length
     ? brands.map((b) => ({
@@ -339,7 +339,7 @@ export function BrandRail() {
   return (
     <Reveal className="mt-5">
       <div className="flex items-center justify-between px-4">
-        <h2 className="text-sm font-bold text-foreground sm:text-base">Featured brands</h2>
+        <h2 className="text-sm font-bold text-foreground sm:text-base">{title}</h2>
         <SeeAll to="/brands" />
       </div>
       <div className="no-scrollbar mt-2 flex gap-2 overflow-x-auto px-4 pb-1 sm:gap-3">
@@ -385,7 +385,7 @@ export function BrandRail() {
   );
 }
 
-export function RecentlyViewedRail() {
+export function RecentlyViewedRail({ title = "Recently viewed" }: { title?: string }) {
   const hydrated = useHydrated();
   const items = useRecentlyViewed((s) => s.items);
   const recentScrollRef = useAutoScroll<HTMLDivElement>(items.length > 3);
@@ -393,7 +393,7 @@ export function RecentlyViewedRail() {
   return (
     <Reveal className="mt-8">
       <div className="flex items-center justify-between px-4">
-        <h2 className="text-base font-bold text-foreground">Recently viewed</h2>
+        <h2 className="text-base font-bold text-foreground">{title}</h2>
         <SeeAll to="/search" />
       </div>
       <div
@@ -499,7 +499,15 @@ export function OfferBannerCarousel({ banners }: { banners: Banner[] }) {
 }
 
 /** Tiny grouped block: today's offers + combo chips. */
-export function HomeOffersStrip({ banners }: { banners: Banner[] }) {
+export function HomeOffersStrip({
+  banners,
+  title = "Today's offers",
+  subtitle = "Deals & combos",
+}: {
+  banners: Banner[];
+  title?: string;
+  subtitle?: string;
+}) {
   return (
     <Reveal className="mt-4 px-4">
       <div className="rounded-2xl border border-border/70 bg-card/60 px-3 py-2.5 shadow-sm">
@@ -509,8 +517,8 @@ export function HomeOffersStrip({ banners }: { banners: Banner[] }) {
               <Percent className="h-3 w-3" />
             </span>
             <div className="min-w-0">
-              <h2 className="text-xs font-bold text-foreground">Today&apos;s offers</h2>
-              <p className="truncate text-[10px] text-muted-foreground">Deals &amp; combos</p>
+              <h2 className="text-xs font-bold text-foreground">{title}</h2>
+              <p className="truncate text-[10px] text-muted-foreground">{subtitle}</p>
             </div>
           </div>
           <SeeAll to="/offers" />
@@ -527,7 +535,15 @@ export function HomeOffersStrip({ banners }: { banners: Banner[] }) {
 }
 
 /** Festival / pooja campaign banners — separate from grocery offers. */
-export function FestivalBannerCarousel({ banners }: { banners: Banner[] }) {
+export function FestivalBannerCarousel({
+  banners,
+  title = "Festival picks",
+  subtitle = "Pooja kits, lamps and seasonal specials",
+}: {
+  banners: Banner[];
+  title?: string;
+  subtitle?: string;
+}) {
   const ref = useAutoScroll<HTMLDivElement>(banners.length > 1);
   if (banners.length === 0) return null;
   return (
@@ -539,8 +555,8 @@ export function FestivalBannerCarousel({ banners }: { banners: Banner[] }) {
               <Sparkles className="h-4 w-4" />
             </span>
             <div>
-              <h2 className="text-base font-bold">Festival picks</h2>
-              <p className="text-[11px] text-amber-100/75">Pooja kits, lamps and seasonal specials</p>
+              <h2 className="text-base font-bold">{title}</h2>
+              <p className="text-[11px] text-amber-100/75">{subtitle}</p>
             </div>
           </div>
           <SeeAll to="/deals" search={{ tab: "festive" }} tone="onDark" />
@@ -570,9 +586,11 @@ export function FestivalBannerCarousel({ banners }: { banners: Banner[] }) {
 export function DealOfTheDay({
   products,
   curated,
+  title = "Deal of the day",
 }: {
   products: Product[];
   curated?: Product[];
+  title?: string;
 }) {
   const hydrated = useHydrated();
   const [h, m, s] = useCountdown(flashSaleEndsAt());
@@ -591,7 +609,7 @@ export function DealOfTheDay({
   return (
     <Reveal className="mt-7 px-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-base font-bold text-foreground">Deal of the day</h2>
+        <h2 className="text-base font-bold text-foreground">{title}</h2>
         <div className="flex items-center gap-2">
         <span className="rounded-full bg-primary-soft px-2.5 py-1 text-[11px] font-semibold tabular-nums text-primary">
           {hydrated ? `${h}:${m}:${s}` : "--:--:--"}
@@ -735,14 +753,59 @@ export function BudgetRail({
   );
 }
 
+/** Horizontal category scroller — shop by category row. */
+export function CategoryShopRail({
+  categories,
+  title = "Shop by category",
+}: {
+  categories: Array<{ id: string; name: string; slug: string; image_url?: string | null }>;
+  title?: string;
+}) {
+  const scrollRef = useAutoScroll<HTMLDivElement>(categories.length > 3);
+  if (categories.length === 0) return null;
+  return (
+    <Reveal className="mt-7">
+      <div className="flex items-center justify-between px-4">
+        <h2 className="text-base font-bold text-foreground">{title}</h2>
+        <SeeAll to="/categories" />
+      </div>
+      <div ref={scrollRef} className="no-scrollbar mt-3 flex gap-3 overflow-x-auto px-4 pb-1">
+        {categories.map((c) => (
+          <Link
+            key={c.id}
+            to="/category/$slug"
+            params={{ slug: c.slug }}
+            className="flex w-[76px] shrink-0 flex-col items-center gap-2 transition-transform active:scale-95"
+          >
+            <div className="h-[76px] w-[76px] overflow-hidden rounded-2xl border border-border bg-accent-soft">
+              {c.image_url && (
+                <img src={c.image_url} alt={c.name} loading="lazy" className="h-full w-full object-cover" />
+              )}
+            </div>
+            <span className="line-clamp-2 text-center text-[11px] font-medium leading-tight text-foreground">
+              {c.name}
+            </span>
+          </Link>
+        ))}
+      </div>
+    </Reveal>
+  );
+}
+
 /** Shop-by-need tiles — bento mix of one hero tile + smaller tiles. */
-export function ShopByNeed({ categories }: { categories: Array<{ id: string; name: string; slug: string; image_url: string | null }> }) {
+export function ShopByNeed({
+  categories,
+  title = "Shop by need",
+}: {
+  categories: Array<{ id: string; name: string; slug: string; image_url: string | null }>;
+  title?: string;
+}) {
   const tiles = categories.slice(0, 6);
   if (tiles.length === 0) return null;
   return (
     <Reveal className="mt-8">
       <div className="flex items-center justify-between px-4">
-        <h2 className="text-lg font-bold text-foreground">Shop by need</h2>
+        <h2 className="text-lg font-bold text-foreground">{title}</h2>
         <SeeAll to="/categories" />
       </div>
       <div className="mt-3 grid auto-rows-[88px] grid-cols-4 gap-2 px-4 sm:auto-rows-[96px] sm:gap-3">
@@ -802,14 +865,19 @@ export function ServicePromises() {
   );
 }
 
+
 function HomeDynamicSection({
   section,
   allProducts,
   categories,
+  offerBanners,
+  festiveBanners,
 }: {
   section: HomeSectionBlock;
   allProducts: Product[];
-  categories: Array<{ id: string; name: string; slug: string }>;
+  categories: Array<{ id: string; name: string; slug: string; image_url?: string | null }>;
+  offerBanners: Banner[];
+  festiveBanners: Banner[];
 }) {
   const products = section.products ?? [];
   const href = section.see_all_tab
@@ -817,6 +885,28 @@ function HomeDynamicSection({
     : undefined;
 
   switch (section.layout) {
+    case "categories":
+      return <CategoryShopRail categories={categories} title={section.title} />;
+    case "offers_strip":
+      return <HomeOffersStrip banners={offerBanners} title={section.title} subtitle={section.subtitle} />;
+    case "coupon_strip":
+      return <CouponStrip title={section.title} />;
+    case "festive_banners":
+      return (
+        <FestivalBannerCarousel
+          banners={festiveBanners}
+          title={section.title}
+          subtitle={section.subtitle}
+        />
+      );
+    case "shop_by_need":
+      return <ShopByNeed categories={categories} title={section.title} />;
+    case "brands":
+      return <BrandRail title={section.title} />;
+    case "recently_viewed":
+      return <RecentlyViewedRail title={section.title} />;
+    case "service_promises":
+      return <ServicePromises />;
     case "countdown_rail":
       return (
         <FlashSaleRail
@@ -837,7 +927,9 @@ function HomeDynamicSection({
         />
       );
     case "deal_card":
-      return <DealOfTheDay products={allProducts} curated={products} />;
+      return (
+        <DealOfTheDay products={allProducts} curated={products} title={section.title} />
+      );
     default:
       if (section.key === "festive_picks") {
         return (
@@ -849,6 +941,7 @@ function HomeDynamicSection({
           />
         );
       }
+      if (!products.length) return null;
       return (
         <ProductRail
           title={section.title}
@@ -865,10 +958,14 @@ export function HomeDynamicSections({
   sections,
   allProducts,
   categories,
+  offerBanners = [],
+  festiveBanners = [],
 }: {
   sections: HomeSectionBlock[];
   allProducts: Product[];
-  categories: Array<{ id: string; name: string; slug: string }>;
+  categories: Array<{ id: string; name: string; slug: string; image_url?: string | null }>;
+  offerBanners?: Banner[];
+  festiveBanners?: Banner[];
 }) {
   const sorted = [...sections].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
   if (!sorted.length) return null;
@@ -876,7 +973,13 @@ export function HomeDynamicSections({
     <>
       {sorted.map((section) => (
         <Reveal key={section.id}>
-          <HomeDynamicSection section={section} allProducts={allProducts} categories={categories} />
+          <HomeDynamicSection
+            section={section}
+            allProducts={allProducts}
+            categories={categories}
+            offerBanners={offerBanners}
+            festiveBanners={festiveBanners}
+          />
         </Reveal>
       ))}
     </>
