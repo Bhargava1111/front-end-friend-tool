@@ -35,7 +35,8 @@ import { LiveActivityTicker } from "@/components/live-activity-ticker";
 const homeQuery = queryOptions({
   queryKey: ["home"],
   queryFn: () => getHomeData(),
-  staleTime: 30_000,
+  staleTime: 5_000,
+  refetchOnMount: true,
 });
 
 export const Route = createFileRoute("/")({

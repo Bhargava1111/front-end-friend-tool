@@ -1,11 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAdminFn } from "@/hooks/use-admin-fn";
 import {
   adminListHomeSectionsClient,
   adminDeleteHomeSectionClient,
-  adminReorderHomeSectionClient,
   adminBulkReorderHomeSectionsClient,
   adminSyncHomeSectionsClient,
 } from "@/lib/admin-client.functions";
@@ -14,7 +13,6 @@ import { toast } from "sonner";
 import {
   adminListHomeSections,
   adminDeleteHomeSection,
-  adminReorderHomeSection,
   adminBulkReorderHomeSections,
   adminSyncHomeSections,
 } from "@/lib/admin-extra.functions";
@@ -52,13 +50,13 @@ function reorderIds(ids: string[], fromId: string, toId: string) {
 function AdminHomeSectionsPage() {
   const list = useAdminFn(adminListHomeSections, adminListHomeSectionsClient);
   const remove = useAdminFn(adminDeleteHomeSection, adminDeleteHomeSectionClient);
-  const reorder = useAdminFn(adminReorderHomeSection, adminReorderHomeSectionClient);
   const bulkReorder = useAdminFn(adminBulkReorderHomeSections, adminBulkReorderHomeSectionsClient);
   const syncDefaults = useAdminFn(adminSyncHomeSections, adminSyncHomeSectionsClient);
   const queryClient = useQueryClient();
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [dragOverId, setDragOverId] = useState<string | null>(null);
   const [localIds, setLocalIds] = useState<string[] | null>(null);
+  const reorderLockRef = useRef(false);
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["admin-home-sections"],
@@ -73,77 +71,8 @@ function AdminHomeSectionsPage() {
     return order.map((id) => byId.get(id)).filter((s): s is HomeOfferSectionDef => Boolean(s));
   }, [serverSections, localIds]);
 
-  const deleteMutation = useMutation({
-    mutationFn: (id: string) => remove({ data: { id } }),
-    onSuccess: () => {
-      setLocalIds(null);
-      invalidateHomeQueries(queryClient);
-      toast.success("Section deleted");
-    },
-    onError: (e: Error) => toast.error(e.message),
-  });
-
-  const applyOrder = (nextIds: string[]) => {
-    setLocalIds(nextIds);
-    bulkReorderMutation.mutate(nextIds);
-  };
-
-  const bulkReorderMutation = useMutation({
-    mutationFn: (orderedIds: string[]) => bulkReorder({ data: { ordered_ids: orderedIds } }),
-    onSuccess: async () => {
-      const refreshed = (await queryClient.fetchQuery({
-        queryKey: ["admin-home-sections"],
-        queryFn: () => list() as Promise<HomeOfferSectionDef[]>,
-      })) as HomeOfferSectionDef[];
-      setLocalIds(sortSections(refreshed).map((s) => s.id));
-      invalidateHomeQueries(queryClient);
-      toast.success("Section order saved");
-    },
-    onError: (e: Error) => {
-      setLocalIds(null);
-      toast.error(e.message);
-    },
-  });
-
-  const moveMutation = useMutation({
-    mutationFn: (vars: { id: string; direction: "up" | "down" }) => reorder({ data: vars }),
-    onSuccess: async (res) => {
-      if (res.moved) {
-        const refreshed = (await queryClient.fetchQuery({
-          queryKey: ["admin-home-sections"],
-          queryFn: () => list() as Promise<HomeOfferSectionDef[]>,
-        })) as HomeOfferSectionDef[];
-        setLocalIds(sortSections(refreshed).map((s) => s.id));
-        invalidateHomeQueries(queryClient);
-        toast.success("Section moved");
-      } else {
-        toast.message("Already at the edge");
-      }
-    },
-    onError: (e: Error) => toast.error(e.message),
-  });
-
-  const syncMutation = useMutation({
-    mutationFn: () => syncDefaults(),
-    onSuccess: async (res) => {
-      const refreshed = (await queryClient.fetchQuery({
-        queryKey: ["admin-home-sections"],
-        queryFn: () => list() as Promise<HomeOfferSectionDef[]>,
-      })) as HomeOfferSectionDef[];
-      setLocalIds(sortSections(refreshed).map((s) => s.id));
-      invalidateHomeQueries(queryClient);
-      toast.success(
-        res.created > 0
-          ? `Added ${res.created} missing section${res.created !== 1 ? "s" : ""} (${res.total} total)`
-          : `All ${res.total} default sections present`,
-      );
-    },
-    onError: (e: Error) => toast.error(e.message),
-  });
-
-  const isReordering = bulkReorderMutation.isPending || moveMutation.isPending;
-
   useEffect(() => {
+    if (reorderLockRef.current) return;
     const serverIds = serverSections.map((s) => s.id);
     if (!serverIds.length) {
       setLocalIds(null);
@@ -153,7 +82,6 @@ function AdminHomeSectionsPage() {
       setLocalIds(serverIds);
       return;
     }
-    if (isReordering || draggingId) return;
 
     const localSet = new Set(localIds);
     const idsChanged =
@@ -163,28 +91,79 @@ function AdminHomeSectionsPage() {
 
     if (idsChanged) {
       setLocalIds(serverIds);
-      return;
     }
+  }, [serverSections, localIds]);
 
-    const serverOrder = serverIds.join(",");
-    const localOrder = localIds.join(",");
-    if (serverOrder !== localOrder) {
-      setLocalIds(serverIds);
-    }
-  }, [serverSections, localIds, draggingId, isReordering]);
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => remove({ data: { id } }),
+    onSuccess: () => {
+      reorderLockRef.current = false;
+      setLocalIds(null);
+      invalidateHomeQueries(queryClient);
+      toast.success("Section deleted");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const bulkReorderMutation = useMutation({
+    mutationFn: (orderedIds: string[]) =>
+      bulkReorder({ data: { ordered_ids: orderedIds } }) as Promise<{ ok: boolean; reordered: number }>,
+    onSuccess: async (_res, orderedIds) => {
+      setLocalIds(orderedIds);
+      invalidateHomeQueries(queryClient);
+      await queryClient.refetchQueries({ queryKey: ["admin-home-sections"] });
+      toast.success("Section order saved");
+      reorderLockRef.current = false;
+    },
+    onError: (e: Error) => {
+      reorderLockRef.current = false;
+      setLocalIds(null);
+      toast.error(e.message || "Could not save section order");
+    },
+  });
+
+  const applyOrder = (nextIds: string[]) => {
+    if (bulkReorderMutation.isPending) return;
+    reorderLockRef.current = true;
+    setLocalIds(nextIds);
+    bulkReorderMutation.mutate(nextIds);
+  };
+
+  const syncMutation = useMutation({
+    mutationFn: () => syncDefaults(),
+    onSuccess: async (res) => {
+      reorderLockRef.current = false;
+      setLocalIds(null);
+      invalidateHomeQueries(queryClient);
+      await queryClient.refetchQueries({ queryKey: ["admin-home-sections"] });
+      toast.success(
+        res.created > 0
+          ? `Added ${res.created} missing section${res.created !== 1 ? "s" : ""} (${res.total} total)`
+          : `All ${res.total} default sections present`,
+      );
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
 
   const handleDrop = (targetId: string, sourceId?: string) => {
     const fromId = sourceId ?? draggingId;
     if (!fromId || fromId === targetId) return;
     const ids = sections.map((s) => s.id);
-    const next = reorderIds(ids, fromId, targetId);
-    applyOrder(next);
+    applyOrder(reorderIds(ids, fromId, targetId));
     setDraggingId(null);
     setDragOverId(null);
   };
 
+  const moveByIndex = (index: number, direction: "up" | "down") => {
+    const targetIndex = direction === "up" ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= sections.length) return;
+    const ids = sections.map((s) => s.id);
+    applyOrder(reorderIds(ids, ids[index], ids[targetIndex]));
+  };
+
   const layoutLabel = (v: string) => SECTION_LAYOUTS.find((l) => l.value === v)?.label ?? v;
   const fallbackLabel = (v: string) => FALLBACK_RULES.find((r) => r.value === v)?.label ?? v;
+  const reordering = bulkReorderMutation.isPending;
 
   return (
     <div className="space-y-4">
@@ -192,7 +171,7 @@ function AdminHomeSectionsPage() {
         <div>
           <h1 className="text-lg font-bold text-foreground">Home sections</h1>
           <p className="text-xs text-muted-foreground">
-            Drag the grip handle or use ↑ ↓ — order updates the live home page
+            Drag a row or use ↑ ↓ — order updates the live home page
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -200,7 +179,7 @@ function AdminHomeSectionsPage() {
             size="sm"
             variant="secondary"
             className="rounded-xl"
-            disabled={syncMutation.isPending}
+            disabled={syncMutation.isPending || reordering}
             onClick={() => syncMutation.mutate()}
           >
             <RefreshCw className={cn("mr-1.5 h-4 w-4", syncMutation.isPending && "animate-spin")} />
@@ -227,35 +206,37 @@ function AdminHomeSectionsPage() {
           {sections.map((s, index) => (
             <div
               key={s.id}
+              draggable={!reordering}
+              onDragStart={(e) => {
+                e.dataTransfer.setData("text/plain", s.id);
+                e.dataTransfer.effectAllowed = "move";
+                setDraggingId(s.id);
+              }}
+              onDragEnd={() => {
+                setDraggingId(null);
+                setDragOverId(null);
+              }}
               onDragOver={(e) => {
                 e.preventDefault();
                 e.dataTransfer.dropEffect = "move";
-                setDragOverId(s.id);
+                if (dragOverId !== s.id) setDragOverId(s.id);
               }}
               onDragLeave={() => setDragOverId((id) => (id === s.id ? null : id))}
               onDrop={(e) => {
                 e.preventDefault();
+                e.stopPropagation();
                 const sourceId = e.dataTransfer.getData("text/plain") || draggingId || "";
                 handleDrop(s.id, sourceId || undefined);
               }}
               className={cn(
                 "flex flex-wrap items-center gap-3 rounded-2xl border border-border bg-card p-4 card-elevated transition-shadow",
+                !reordering && "cursor-grab active:cursor-grabbing",
                 draggingId === s.id && "opacity-50",
                 dragOverId === s.id && "ring-2 ring-primary",
               )}
             >
               <div
-                draggable
-                onDragStart={(e) => {
-                  e.dataTransfer.setData("text/plain", s.id);
-                  e.dataTransfer.effectAllowed = "move";
-                  setDraggingId(s.id);
-                }}
-                onDragEnd={() => {
-                  setDraggingId(null);
-                  setDragOverId(null);
-                }}
-                className="flex shrink-0 cursor-grab touch-none flex-col items-center gap-0.5 active:cursor-grabbing"
+                className="flex shrink-0 touch-none flex-col items-center gap-0.5"
                 title="Drag to reorder"
               >
                 <GripVertical className="h-5 w-5 text-muted-foreground" />
@@ -266,9 +247,13 @@ function AdminHomeSectionsPage() {
                   size="icon"
                   variant="ghost"
                   className="h-7 w-7"
-                  disabled={index === 0 || moveMutation.isPending || bulkReorderMutation.isPending}
+                  disabled={index === 0 || reordering}
                   aria-label="Move up"
-                  onClick={() => moveMutation.mutate({ id: s.id, direction: "up" })}
+                  onMouseDown={(e) => e.stopPropagation()}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    moveByIndex(index, "up");
+                  }}
                 >
                   <ChevronUp className="h-4 w-4" />
                 </Button>
@@ -276,11 +261,13 @@ function AdminHomeSectionsPage() {
                   size="icon"
                   variant="ghost"
                   className="h-7 w-7"
-                  disabled={
-                    index === sections.length - 1 || moveMutation.isPending || bulkReorderMutation.isPending
-                  }
+                  disabled={index === sections.length - 1 || reordering}
                   aria-label="Move down"
-                  onClick={() => moveMutation.mutate({ id: s.id, direction: "down" })}
+                  onMouseDown={(e) => e.stopPropagation()}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    moveByIndex(index, "down");
+                  }}
                 >
                   <ChevronDown className="h-4 w-4" />
                 </Button>
@@ -320,6 +307,7 @@ function AdminHomeSectionsPage() {
                 variant="ghost"
                 aria-label={`Delete ${s.title}`}
                 className="text-destructive"
+                onMouseDown={(e) => e.stopPropagation()}
                 onClick={() => {
                   if (confirm(`Delete "${s.title}"? Products will be unassigned from this section.`)) {
                     deleteMutation.mutate(s.id);

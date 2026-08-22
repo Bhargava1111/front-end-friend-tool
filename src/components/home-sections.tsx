@@ -972,15 +972,14 @@ export function HomeDynamicSections({
   return (
     <>
       {sorted.map((section) => (
-        <Reveal key={section.id}>
-          <HomeDynamicSection
-            section={section}
-            allProducts={allProducts}
-            categories={categories}
-            offerBanners={offerBanners}
-            festiveBanners={festiveBanners}
-          />
-        </Reveal>
+        <HomeDynamicSection
+          key={section.id}
+          section={section}
+          allProducts={allProducts}
+          categories={categories}
+          offerBanners={offerBanners}
+          festiveBanners={festiveBanners}
+        />
       ))}
     </>
   );
