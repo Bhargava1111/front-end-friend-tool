@@ -66,12 +66,17 @@ def normalize_section_max_prices(HomeOfferSection=None):
     budget_layout = layout_enum.BUDGET_RAIL if layout_enum else "budget_rail"
     under_99_rule = rule_enum.UNDER_99 if rule_enum else "under_99"
 
-    HomeOfferSection.objects.exclude(layout=budget_layout).exclude(
-        fallback_rule=under_99_rule
-    ).update(max_price=None)
-    return HomeOfferSection.objects.filter(
+    field = HomeOfferSection._meta.get_field("max_price")
+    if field.null:
+        HomeOfferSection.objects.exclude(layout=budget_layout).exclude(
+            fallback_rule=under_99_rule
+        ).update(max_price=None)
+    HomeOfferSection.objects.filter(
         models.Q(layout=budget_layout) | models.Q(fallback_rule=under_99_rule)
     ).update(max_price=99)
+    return HomeOfferSection.objects.filter(
+        models.Q(layout=budget_layout) | models.Q(fallback_rule=under_99_rule)
+    ).count()
 
 
 def ensure_default_home_sections(HomeOfferSection=None):

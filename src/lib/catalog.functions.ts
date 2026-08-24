@@ -52,8 +52,9 @@ export async function searchProducts({
   const res = await apiFetch<
     { count?: number; results?: import("@/lib/types").Product[] } | import("@/lib/types").Product[]
   >(qs ? `/products/?${qs}` : "/products/");
-  if (Array.isArray(res)) return res;
-  return res.results ?? [];
+  if (Array.isArray(res)) return { results: res, count: res.length };
+  const results = res.results ?? [];
+  return { results, count: res.count ?? results.length };
 }
 
 export async function getDeals({ data }: { data: { tab?: string; max_price?: number } }) {

@@ -96,6 +96,16 @@ from storeops.admin_views import (
     AdminTicketView,
     AdminUserManageView,
 )
+from analytics.admin_views import (
+    AdminCustomerBehaviorView,
+    AdminProductViewAnalyticsView,
+    AdminProductViewDetailView,
+    AdminSearchAnalyticsView,
+    AdminSearchQueryDetailView,
+    AdminUserActivityView,
+    AdminZeroResultSearchesView,
+)
+from analytics.views import TrackJourneyView, TrackProductViewView, TrackSearchView
 from storeops.views import (
     AccountDeleteView,
     ActivePromotionsView,
@@ -145,6 +155,9 @@ urlpatterns = [
     path("api/v1/home-sections/", HomeSectionListView.as_view()),
     path("api/v1/categories/", CategoryListView.as_view()),
     path("api/v1/categories/<slug:slug>/products/", CategoryProductsView.as_view()),
+    path("api/v1/analytics/search/", TrackSearchView.as_view()),
+    path("api/v1/analytics/view/", TrackProductViewView.as_view()),
+    path("api/v1/analytics/journey/", TrackJourneyView.as_view()),
     path("api/v1/products/", ProductListView.as_view()),
     path("api/v1/products/<slug:slug>/", ProductDetailView.as_view()),
     path("api/v1/products/<uuid:product_id>/reviews/", ProductReviewsView.as_view()),
@@ -212,6 +225,13 @@ urlpatterns = [
     path("api/v1/admin-api/reviews/", AdminReviewView.as_view()),
     path("api/v1/admin-api/returns/", AdminReturnView.as_view()),
     path("api/v1/admin-api/reports/sales/", AdminSalesReportView.as_view()),
+    path("api/v1/admin-api/analytics/searches/", AdminSearchAnalyticsView.as_view()),
+    path("api/v1/admin-api/analytics/searches/zero-results/", AdminZeroResultSearchesView.as_view()),
+    path("api/v1/admin-api/analytics/searches/query/", AdminSearchQueryDetailView.as_view()),
+    path("api/v1/admin-api/analytics/products/", AdminProductViewAnalyticsView.as_view()),
+    path("api/v1/admin-api/analytics/products/<uuid:pk>/", AdminProductViewDetailView.as_view()),
+    path("api/v1/admin-api/analytics/behavior/", AdminCustomerBehaviorView.as_view()),
+    path("api/v1/admin-api/analytics/activity/", AdminUserActivityView.as_view()),
     path("api/v1/admin-api/notifications/broadcast/", AdminBroadcastNotificationView.as_view()),
     path("api/v1/admin-api/tickets/", AdminTicketView.as_view()),
     path("api/v1/admin-api/bulk-orders/", AdminBulkOrderView.as_view()),

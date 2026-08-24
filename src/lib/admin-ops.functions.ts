@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireAuth } from "@/integrations/django/auth-middleware";
 import { toJsonBody } from "@/lib/api";
 import { adminFetchServer as adminFetch } from "@/lib/admin-api.server";
+import { analyticsQuery, type AnalyticsFilters } from "@/lib/admin-analytics";
 
 function admin(token: string, path: string, init?: RequestInit) {
   return adminFetch(token, path, init);
@@ -97,3 +98,57 @@ export const deleteAdminBlogPost = createServerFn({ method: "POST" })
     void context;
     return { ok: true };
   });
+
+export type { AnalyticsFilters } from "@/lib/admin-analytics";
+export const getAdminSearchAnalytics = createServerFn({ method: "GET" })
+  .middleware([requireAuth])
+  .inputValidator((data?: AnalyticsFilters) => data)
+  .handler(async ({ data, context }) =>
+    admin(context.accessToken, `/admin-api/analytics/searches/?${analyticsQuery(data ?? { preset: "30d", visitor: "all" })}`),
+  );
+
+export const getAdminZeroResultSearches = createServerFn({ method: "GET" })
+  .middleware([requireAuth])
+  .inputValidator((data?: AnalyticsFilters) => data)
+  .handler(async ({ data, context }) =>
+    admin(
+      context.accessToken,
+      `/admin-api/analytics/searches/zero-results/?${analyticsQuery(data ?? { preset: "30d", visitor: "all" })}`,
+    ),
+  );
+
+export const getAdminSearchQueryDetail = createServerFn({ method: "GET" })
+  .middleware([requireAuth])
+  .inputValidator((data: AnalyticsFilters) => data)
+  .handler(async ({ data, context }) =>
+    admin(context.accessToken, `/admin-api/analytics/searches/query/?${analyticsQuery(data)}`),
+  );
+
+export const getAdminProductViewAnalytics = createServerFn({ method: "GET" })
+  .middleware([requireAuth])
+  .inputValidator((data?: AnalyticsFilters) => data)
+  .handler(async ({ data, context }) =>
+    admin(context.accessToken, `/admin-api/analytics/products/?${analyticsQuery(data ?? { preset: "30d", visitor: "all" })}`),
+  );
+
+export const getAdminProductViewDetail = createServerFn({ method: "GET" })
+  .middleware([requireAuth])
+  .inputValidator((data: AnalyticsFilters & { id: string }) => data)
+  .handler(async ({ data, context }) => {
+    const { id, ...filters } = data;
+    return admin(context.accessToken, `/admin-api/analytics/products/${id}/?${analyticsQuery(filters)}`);
+  });
+
+export const getAdminCustomerBehavior = createServerFn({ method: "GET" })
+  .middleware([requireAuth])
+  .inputValidator((data?: AnalyticsFilters) => data)
+  .handler(async ({ data, context }) =>
+    admin(context.accessToken, `/admin-api/analytics/behavior/?${analyticsQuery(data ?? { preset: "30d", visitor: "all" })}`),
+  );
+
+export const getAdminUserActivity = createServerFn({ method: "GET" })
+  .middleware([requireAuth])
+  .inputValidator((data?: AnalyticsFilters) => data)
+  .handler(async ({ data, context }) =>
+    admin(context.accessToken, `/admin-api/analytics/activity/?${analyticsQuery(data ?? { preset: "30d", visitor: "all" })}`),
+  );

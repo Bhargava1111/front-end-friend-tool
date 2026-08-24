@@ -1,1 +1,0 @@
-import{t as e}from"./jsx-runtime-DiK4U9sA.js";import{t}from"./zap-CO6tL0g6.js";import{b as n,y as r}from"./index-BVcLI4w6.js";var i=e(),a=()=>(0,i.jsx)(n,{children:(0,i.jsx)(r,{icon:(0,i.jsx)(t,{className:`h-6 w-6`}),title:`Not found`,description:`This page doesn't exist.`})});export{a as notFoundComponent};

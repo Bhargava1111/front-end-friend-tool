@@ -68,6 +68,21 @@ class CartView(APIView):
         if not created:
             item.quantity += quantity
             item.save()
+        try:
+            from analytics.models import JourneyEvent
+            from analytics.services import analytics_session_id, record_journey
+
+            sid = analytics_session_id(request, request.data)
+            if sid:
+                record_journey(
+                    request=request,
+                    event_type=JourneyEvent.EventType.ADD_TO_CART,
+                    session_id=sid,
+                    search_id=request.data.get("search_id") or request.data.get("searchId"),
+                    product=product,
+                )
+        except Exception:
+            pass
         return Response({"ok": True}, status=201)
 
     def delete(self, request):
@@ -205,6 +220,18 @@ class OrderListView(APIView):
                 line.product.save()
 
         cart.delete()
+
+        try:
+            from analytics.services import analytics_session_id, record_purchase
+
+            record_purchase(
+                request=request,
+                order=order,
+                session_id=analytics_session_id(request, request.data),
+                search_id=request.data.get("search_id") or request.data.get("searchId"),
+            )
+        except Exception:
+            pass
 
         notify_user(
             request.user,

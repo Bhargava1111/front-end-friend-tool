@@ -1,9 +1,9 @@
 {
-  "mode": "production",
+  "mode": "vps-bundled",
   "bundled": true,
   "serverUrl": "",
   "webUrl": "http://200.234.39.88",
   "apiUrl": "http://200.234.39.88/api/v1",
   "vpsIp": "200.234.39.88",
-  "updatedAt": "2026-08-20T19:23:52.477Z"
+  "updatedAt": "2026-08-21T11:17:06.223Z"
 }

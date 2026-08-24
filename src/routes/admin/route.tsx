@@ -27,6 +27,10 @@ import {
   ShoppingCart,
   Zap,
   UsersRound,
+  Search,
+  Eye,
+  GitBranch,
+  Activity,
 } from "lucide-react";
 import { getAdminStatus, getAdminPanelSessionStatus, revokeAdminPanelSession } from "@/lib/admin.functions";
 import { useAdminFn } from "@/hooks/use-admin-fn";
@@ -60,6 +64,10 @@ const groups = [
     links: [
       { to: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
       { to: "/admin/analytics", label: "Analytics", icon: LineChart },
+      { to: "/admin/search-analytics", label: "Search analytics", icon: Search },
+      { to: "/admin/product-views", label: "Product view analytics", icon: Eye },
+      { to: "/admin/customer-behavior", label: "Customer behavior", icon: GitBranch },
+      { to: "/admin/user-activity", label: "User activity", icon: Activity },
       { to: "/admin/reports", label: "Reports", icon: BarChart3 },
     ],
   },

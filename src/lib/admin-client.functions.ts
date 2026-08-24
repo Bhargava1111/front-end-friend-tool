@@ -2,6 +2,7 @@ import { apiFetch, toJsonBody } from "@/lib/api";
 import { adminPanelHeaders } from "@/lib/admin-api";
 import { adminClient, requireAccessToken } from "@/lib/admin-client";
 import type { SalesGranularity } from "@/lib/admin-ops.functions";
+import { analyticsQuery, type AnalyticsFilters } from "@/lib/admin-analytics";
 
 /** Direct Django admin API — bundled Capacitor APK (no server functions). */
 
@@ -533,4 +534,43 @@ export async function saveAdminBlogPostClient(opts: { data: Record<string, unkno
 export async function deleteAdminBlogPostClient(opts: { data: { id: string } }) {
   void opts;
   return { ok: true };
+}
+
+export async function getAdminSearchAnalyticsClient(opts?: { data?: AnalyticsFilters }) {
+  return adminClient(
+    `/admin-api/analytics/searches/?${analyticsQuery(opts?.data ?? { preset: "30d", visitor: "all" })}`,
+  );
+}
+
+export async function getAdminZeroResultSearchesClient(opts?: { data?: AnalyticsFilters }) {
+  return adminClient(
+    `/admin-api/analytics/searches/zero-results/?${analyticsQuery(opts?.data ?? { preset: "30d", visitor: "all" })}`,
+  );
+}
+
+export async function getAdminSearchQueryDetailClient(opts: { data: AnalyticsFilters }) {
+  return adminClient(`/admin-api/analytics/searches/query/?${analyticsQuery(opts.data)}`);
+}
+
+export async function getAdminProductViewAnalyticsClient(opts?: { data?: AnalyticsFilters }) {
+  return adminClient(
+    `/admin-api/analytics/products/?${analyticsQuery(opts?.data ?? { preset: "30d", visitor: "all" })}`,
+  );
+}
+
+export async function getAdminProductViewDetailClient(opts: { data: AnalyticsFilters & { id: string } }) {
+  const { id, ...filters } = opts.data;
+  return adminClient(`/admin-api/analytics/products/${id}/?${analyticsQuery(filters)}`);
+}
+
+export async function getAdminCustomerBehaviorClient(opts?: { data?: AnalyticsFilters }) {
+  return adminClient(
+    `/admin-api/analytics/behavior/?${analyticsQuery(opts?.data ?? { preset: "30d", visitor: "all" })}`,
+  );
+}
+
+export async function getAdminUserActivityClient(opts?: { data?: AnalyticsFilters }) {
+  return adminClient(
+    `/admin-api/analytics/activity/?${analyticsQuery(opts?.data ?? { preset: "30d", visitor: "all" })}`,
+  );
 }

@@ -20,6 +20,7 @@ import { toast } from "sonner";
 import { formatShopError } from "@/lib/auth-session";
 import { getProductBySlug } from "@/lib/catalog.functions";
 import { addToCart, toggleWishlist } from "@/lib/shop.functions";
+import { trackProductView } from "@/lib/analytics";
 import { useSession, useWishlist } from "@/hooks/use-shop";
 import { PageShell, TopBar, EmptyState } from "@/components/page-shell";
 import { CartCountBadge } from "@/components/cart-count-badge";
@@ -152,7 +153,12 @@ function ProductPage() {
 
   useEffect(() => {
     trackViewed(product);
-  }, [product, trackViewed]);
+    void trackProductView({
+      productId: product.id,
+      source: typeof document !== "undefined" && /search/i.test(document.referrer) ? "search" : "direct",
+      referrer: typeof window !== "undefined" ? window.location.pathname : "",
+    });
+  }, [product.id, trackViewed]);
 
   const wishlisted = (wishlist ?? []).some((w) => w.product?.id === product.id);
   const saved = saveLater.items.some((p) => p.id === product.id);

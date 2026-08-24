@@ -1,11 +1,11 @@
 ADMIN_ROLE_PERMISSIONS = {
     "super_admin": {"*"},
-    "operations": {"dashboard", "orders", "returns", "delivery", "customers", "reports", "notifications", "tickets"},
-    "inventory": {"dashboard", "products", "categories", "brands", "banners", "reviews", "reports"},
+    "operations": {"dashboard", "orders", "returns", "delivery", "customers", "reports", "notifications", "tickets", "analytics"},
+    "inventory": {"dashboard", "products", "categories", "brands", "banners", "reviews", "reports", "analytics"},
     "store_manager": {"dashboard", "orders", "stores", "delivery", "customers", "settings", "tickets"},
-    "finance": {"dashboard", "orders", "returns", "reports", "payments", "settings"},
+    "finance": {"dashboard", "orders", "returns", "reports", "payments", "settings", "analytics"},
     "support": {"dashboard", "customers", "returns", "tickets", "notifications", "users"},
-    "marketing": {"dashboard", "banners", "coupons", "blog", "notifications", "products"},
+    "marketing": {"dashboard", "banners", "coupons", "blog", "notifications", "products", "analytics"},
 }
 
 

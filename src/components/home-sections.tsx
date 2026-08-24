@@ -427,10 +427,7 @@ function BannerSlide({
       src={banner.image_url}
       alt={banner.title}
       loading="lazy"
-      className={cn(
-        "h-full w-full",
-        layout === "card" ? "object-contain p-1" : "object-cover",
-      )}
+      className="h-full w-full object-cover"
     />
   ) : (
     <div className="h-full w-full bg-secondary" />
@@ -439,7 +436,7 @@ function BannerSlide({
   const body =
     layout === "card" ? (
       <div className={cn("flex shrink-0 flex-col overflow-hidden rounded-2xl bg-card", className)}>
-        <div className="aspect-[16/9] bg-secondary/80">{imageBlock}</div>
+        <div className="aspect-[5/3] bg-secondary/80">{imageBlock}</div>
         <div className="p-3">
           {badge}
           <p className="text-sm font-bold leading-tight text-foreground">{banner.title}</p>
@@ -476,20 +473,33 @@ function BannerSlide({
   return <div className="shrink-0">{body}</div>;
 }
 
-/** Deal / discount banners only — compact strip, not mixed with festive creatives. */
+/** Deal / discount banners — horizontal scroll or grid when few items. */
 export function OfferBannerCarousel({ banners }: { banners: Banner[] }) {
-  const ref = useAutoScroll<HTMLDivElement>(banners.length > 1);
+  const ref = useAutoScroll<HTMLDivElement>(banners.length > 3);
   if (banners.length === 0) return null;
+  const useGrid = banners.length <= 3;
+
   return (
-    <div ref={ref} className="no-scrollbar flex gap-2 overflow-x-auto pb-0.5">
+    <div
+      ref={useGrid ? undefined : ref}
+      className={cn(
+        useGrid
+          ? "grid gap-3 sm:grid-cols-2 lg:grid-cols-3"
+          : "no-scrollbar flex gap-3 overflow-x-auto pb-1",
+      )}
+    >
       {banners.map((b) => (
         <BannerSlide
           key={b.id}
           banner={b}
-          className="h-[68px] w-[min(58vw,200px)] rounded-xl ring-1 ring-primary/15 sm:w-[188px]"
-          overlayClass="bg-gradient-to-r from-primary/88 via-primary/50 to-transparent"
+          layout="card"
+          className={cn(
+            "shrink-0",
+            useGrid ? "w-full" : "w-[min(88vw,340px)] sm:w-[300px]",
+          )}
+          overlayClass=""
           badge={
-            <span className="mb-0.5 w-fit rounded-full bg-accent px-1.5 py-px text-[8px] font-bold uppercase tracking-wide text-accent-foreground">
+            <span className="mb-1.5 w-fit rounded-full bg-accent px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-accent-foreground">
               Offer
             </span>
           }
@@ -499,7 +509,7 @@ export function OfferBannerCarousel({ banners }: { banners: Banner[] }) {
   );
 }
 
-/** Tiny grouped block: today's offers + combo chips. */
+/** Today's offers block with large promo banners and combo chips. */
 export function HomeOffersStrip({
   banners,
   title = "Today's offers",
@@ -510,25 +520,25 @@ export function HomeOffersStrip({
   subtitle?: string;
 }) {
   return (
-    <Reveal className="mt-4 px-4">
-      <div className="rounded-2xl border border-border/70 bg-card/60 px-3 py-2.5 shadow-sm">
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex min-w-0 items-center gap-1.5">
-            <span className="grid h-6 w-6 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary">
-              <Percent className="h-3 w-3" />
-            </span>
-            <div className="min-w-0">
-              <h2 className="text-xs font-bold text-foreground">{title}</h2>
-              <p className="truncate text-[10px] text-muted-foreground">{subtitle}</p>
-            </div>
+    <Reveal className="mt-8">
+      <div className="flex items-center justify-between px-4">
+        <div className="flex min-w-0 items-center gap-2">
+          <span className="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary">
+            <Percent className="h-4 w-4" />
+          </span>
+          <div className="min-w-0">
+            <h2 className="text-base font-bold text-foreground sm:text-lg">{title}</h2>
+            <p className="text-xs text-muted-foreground">{subtitle}</p>
           </div>
-          <SeeAll to="/offers" />
         </div>
-        {banners.length > 0 && (
-          <div className="mt-2">
-            <OfferBannerCarousel banners={banners} />
-          </div>
-        )}
+        <SeeAll to="/offers" />
+      </div>
+      {banners.length > 0 && (
+        <div className="mt-3 px-4">
+          <OfferBannerCarousel banners={banners} />
+        </div>
+      )}
+      <div className="mt-3 px-4">
         <OfferCards embedded />
       </div>
     </Reveal>

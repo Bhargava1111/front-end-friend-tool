@@ -1,4 +1,5 @@
 import { apiFetch, toJsonBody } from "@/lib/api";
+import { analyticsHeaders, getLastSearch } from "@/lib/analytics";
 import { ensureValidAccessToken } from "@/lib/auth-session";
 
 async function requireToken() {
@@ -24,10 +25,12 @@ export async function addToCart({
   await apiFetch("/cart/", {
     method: "POST",
     token,
+    headers: analyticsHeaders(),
     body: toJsonBody({
       product_id: data.productId,
       variant_id: data.variantId,
       quantity: data.quantity ?? 1,
+      search_id: getLastSearch()?.id,
     }),
   });
   return { ok: true };
@@ -175,12 +178,14 @@ export async function placeOrder({
   return apiFetch<{ id: string; orderNumber: string }>("/orders/", {
     method: "POST",
     token,
+    headers: analyticsHeaders(),
     body: toJsonBody({
       address_id: data.addressId,
       notes: data.notes,
       couponCode: data.couponCode,
       deliverySlot: data.deliverySlot,
       paymentMethod: data.paymentMethod,
+      search_id: getLastSearch()?.id,
     }),
   });
 }

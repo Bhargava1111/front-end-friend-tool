@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { addToCart, toggleWishlist } from "@/lib/shop.functions";
+import { trackJourney } from "@/lib/analytics";
 import { formatShopError } from "@/lib/auth-session";
 import { useSession, useWishlist } from "@/hooks/use-shop";
 import { formatINR } from "@/lib/format";
@@ -12,7 +13,15 @@ import { productQtyOptions, unitPriceForQty } from "@/lib/product-qty";
 import { cn } from "@/lib/utils";
 import type { Product } from "@/lib/types";
 
-export function ProductCard({ product, className }: { product: Product; className?: string }) {
+export function ProductCard({
+  product,
+  className,
+  fromSearch,
+}: {
+  product: Product;
+  className?: string;
+  fromSearch?: boolean;
+}) {
   const { session } = useSession();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -79,6 +88,11 @@ export function ProductCard({ product, className }: { product: Product; classNam
     onError: (e: Error) => toast.error(formatShopError(e)),
   });
 
+  const markSearchClick = () => {
+    if (!fromSearch) return;
+    void trackJourney({ eventType: "click", productId: product.id });
+  };
+
   const requireAuth = () => {
     if (session) return false;
     toast.info("Please sign in to continue");
@@ -96,6 +110,7 @@ export function ProductCard({ product, className }: { product: Product; classNam
       <Link
         to="/product/$slug"
         params={{ slug: product.slug }}
+        onClick={markSearchClick}
         onMouseEnter={() => setCycling(true)}
         onMouseLeave={() => {
           setCycling(false);
@@ -171,7 +186,7 @@ export function ProductCard({ product, className }: { product: Product; classNam
       </button>
 
       <div className="flex flex-1 flex-col gap-1 p-3">
-        <Link to="/product/$slug" params={{ slug: product.slug }}>
+        <Link to="/product/$slug" params={{ slug: product.slug }} onClick={markSearchClick}>
           <h3 className="line-clamp-2 text-sm font-semibold leading-snug text-foreground">
             {product.name}
           </h3>

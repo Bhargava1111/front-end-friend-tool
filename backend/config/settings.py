@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     "notifications",
     "blog",
     "storeops",
+    "analytics",
 ]
 
 MIDDLEWARE = [
@@ -173,6 +174,7 @@ PHONE_EMAIL_DOMAIN = "phone.mnxstore.in"
 
 # Admin panel step-up security (OTP + idle logout)
 ADMIN_PANEL_IDLE_SECONDS = int(os.getenv("ADMIN_PANEL_IDLE_SECONDS", "600"))
+ANALYTICS_VIEW_DEDUP_SECONDS = int(os.getenv("ANALYTICS_VIEW_DEDUP_SECONDS", "1800"))
 
 # Web push (browser / PWA notifications)
 VAPID_PUBLIC_KEY = os.getenv("VAPID_PUBLIC_KEY", "")

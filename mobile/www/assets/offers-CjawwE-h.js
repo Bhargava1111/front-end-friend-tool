@@ -1,0 +1,1 @@
+import{t as e}from"./jsx-runtime-DiK4U9sA.js";import{t}from"./gift-7_qax6Fs.js";import{D as n,O as r}from"./index-GqHOIGT3.js";var i=e(),a=({error:e})=>(0,i.jsx)(r,{children:(0,i.jsx)(n,{icon:(0,i.jsx)(t,{className:`h-6 w-6`}),title:`Couldn't load offers`,description:e.message})});export{a as errorComponent};

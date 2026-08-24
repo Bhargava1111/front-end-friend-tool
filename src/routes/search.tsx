@@ -10,7 +10,7 @@ import {
   TrendingUp,
   Clock,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { searchProducts } from "@/lib/catalog.functions";
 import { PageShell, TopBar, EmptyState } from "@/components/page-shell";
@@ -19,6 +19,7 @@ import { GridSkeleton } from "@/components/skeletons";
 import { Reveal } from "@/components/motion";
 import { useHydrated } from "@/hooks/use-hydrated";
 import { useRecentSearches } from "@/lib/client-store";
+import { trackSearch } from "@/lib/analytics";
 import { TRENDING_SEARCHES } from "@/lib/mock-content";
 import { cn } from "@/lib/utils";
 
@@ -60,6 +61,7 @@ function SearchPage() {
     queryFn: () => searchProducts({ data: { q: term, sort } }),
     enabled: active,
   });
+  const lastTracked = useRef("");
 
   useEffect(() => {
     if (!active) return;
@@ -67,7 +69,22 @@ function SearchPage() {
     return () => clearTimeout(id);
   }, [term, active, addRecent]);
 
-  const results = data ?? [];
+  useEffect(() => {
+    if (!active || isFetching || !data) return;
+    const key = `${term.trim().toLowerCase()}|${sort}|${data.count}`;
+    if (lastTracked.current === key) return;
+    const id = setTimeout(() => {
+      lastTracked.current = key;
+      void trackSearch({
+        query: term.trim(),
+        resultsCount: data.count,
+        filters: { sort },
+      });
+    }, 700);
+    return () => clearTimeout(id);
+  }, [active, isFetching, data, term, sort]);
+
+  const results = data?.results ?? [];
   const suggestions = TRENDING_SEARCHES.filter((t) =>
     active ? t.toLowerCase().includes(term.trim().toLowerCase()) : false,
   ).slice(0, 4);
@@ -226,11 +243,11 @@ function SearchPage() {
         />
       ) : (
         <>
-          <p className="px-4 pt-4 text-xs text-muted-foreground">{results.length} results</p>
+          <p className="px-4 pt-4 text-xs text-muted-foreground">{data?.count ?? results.length} results</p>
           <div className="grid grid-cols-2 gap-3 px-4 pt-2 sm:grid-cols-3 lg:grid-cols-5 lg:gap-4">
             {results.map((p, i) => (
               <Reveal key={p.id} delay={Math.min(i, 6) * 0.03}>
-                <ProductCard product={p} />
+                <ProductCard product={p} fromSearch />
               </Reveal>
             ))}
           </div>

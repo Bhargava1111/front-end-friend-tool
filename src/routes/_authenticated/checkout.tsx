@@ -22,6 +22,7 @@ import {
   PAYMENT_METHODS,
 } from "@/lib/commerce";
 import { useAppliedCoupon } from "@/lib/client-store";
+import { trackJourney } from "@/lib/analytics";
 import type { Address } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -67,6 +68,10 @@ function CheckoutPage() {
     queryFn: () => fetchAddresses() as Promise<Address[]>,
     enabled: !!session,
   });
+
+  useEffect(() => {
+    void trackJourney({ eventType: "checkout" });
+  }, []);
 
   useEffect(() => {
     if (!addressId && addresses?.length) {
