@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { GitBranch } from "lucide-react";
 import { useAdminFn } from "@/hooks/use-admin-fn";
 import { AnalyticsFiltersBar } from "@/components/admin/analytics-filters";
-import { DEFAULT_ANALYTICS_FILTERS, type AnalyticsFilters, type FunnelResponse } from "@/lib/admin-analytics";
+import { DEFAULT_ANALYTICS_FILTERS, ADMIN_ANALYTICS_REFETCH_MS, type AnalyticsFilters, type FunnelResponse } from "@/lib/admin-analytics";
 import { getAdminCustomerBehavior } from "@/lib/admin-ops.functions";
 import { getAdminCustomerBehaviorClient } from "@/lib/admin-client.functions";
 
@@ -24,6 +24,8 @@ function CustomerBehaviorPage() {
   const { data, isLoading } = useQuery({
     queryKey: ["admin-behavior", filters],
     queryFn: () => fetchFunnel({ data: filters }) as Promise<FunnelResponse>,
+    refetchInterval: ADMIN_ANALYTICS_REFETCH_MS,
+    staleTime: 5_000,
   });
   const max = Math.max(...(data?.stages.map((s) => s.count) ?? [1]), 1);
 

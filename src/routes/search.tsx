@@ -61,7 +61,8 @@ function SearchPage() {
     queryFn: () => searchProducts({ data: { q: term, sort } }),
     enabled: active,
   });
-  const lastTracked = useRef("");
+  const lastTracked = useRef<{ key: string; at: number } | null>(null);
+  const SEARCH_TRACK_COOLDOWN_MS = 30_000;
 
   useEffect(() => {
     if (!active) return;
@@ -72,9 +73,16 @@ function SearchPage() {
   useEffect(() => {
     if (!active || isFetching || !data) return;
     const key = `${term.trim().toLowerCase()}|${sort}|${data.count}`;
-    if (lastTracked.current === key) return;
+    const now = Date.now();
+    if (
+      lastTracked.current &&
+      lastTracked.current.key === key &&
+      now - lastTracked.current.at < SEARCH_TRACK_COOLDOWN_MS
+    ) {
+      return;
+    }
     const id = setTimeout(() => {
-      lastTracked.current = key;
+      lastTracked.current = { key, at: Date.now() };
       void trackSearch({
         query: term.trim(),
         resultsCount: data.count,

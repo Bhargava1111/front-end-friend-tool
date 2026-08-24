@@ -1,6 +1,7 @@
 import uuid
 
 from django.contrib.auth import get_user_model
+from django.core.cache import cache
 from django.test import TestCase, override_settings
 from rest_framework.test import APIClient
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -18,6 +19,7 @@ User = get_user_model()
 )
 class AnalyticsTrackingTests(TestCase):
     def setUp(self):
+        cache.clear()
         self.client = APIClient()
         self.session = str(uuid.uuid4())
         self.product = Product.objects.create(
@@ -151,6 +153,18 @@ class AnalyticsTrackingTests(TestCase):
         zeros = self.client.get("/api/v1/admin-api/analytics/searches/zero-results/")
         self.assertEqual(zeros.status_code, 200)
         self.assertEqual(zeros.data["rows"][0]["query"], "iphone 17 pro max")
+
+    def test_admin_search_cache_invalidates_after_new_search(self):
+        self._admin()
+        before = self.client.get("/api/v1/admin-api/analytics/searches/?preset=30d")
+        self.assertEqual(before.data["kpis"]["total_searches"], 0)
+        self.client.post(
+            "/api/v1/analytics/search/",
+            {"session_id": self.session, "query": "fresh search", "results_count": 2},
+            format="json",
+        )
+        after = self.client.get("/api/v1/admin-api/analytics/searches/?preset=30d")
+        self.assertEqual(after.data["kpis"]["total_searches"], 1)
 
     def test_admin_product_and_funnel_endpoints(self):
         search = SearchEvent.objects.create(

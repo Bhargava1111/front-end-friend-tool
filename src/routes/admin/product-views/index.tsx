@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Eye } from "lucide-react";
 import { useAdminFn } from "@/hooks/use-admin-fn";
 import { AnalyticsFiltersBar } from "@/components/admin/analytics-filters";
-import { DEFAULT_ANALYTICS_FILTERS, type AnalyticsFilters, type ProductViewRow } from "@/lib/admin-analytics";
+import { DEFAULT_ANALYTICS_FILTERS, ADMIN_ANALYTICS_REFETCH_MS, type AnalyticsFilters, type ProductViewRow } from "@/lib/admin-analytics";
 import { getAdminProductViewAnalytics } from "@/lib/admin-ops.functions";
 import { getAdminProductViewAnalyticsClient } from "@/lib/admin-client.functions";
 
@@ -30,6 +30,8 @@ function ProductViewsPage() {
         page: number;
         page_size: number;
       }>,
+    refetchInterval: ADMIN_ANALYTICS_REFETCH_MS,
+    staleTime: 5_000,
   });
   const rows = data?.rows ?? [];
 

@@ -26,9 +26,20 @@ def resolve_user(request):
     return None
 
 
-def invalidate_analytics_cache():
+ANALYTICS_CACHE_VERSION_KEY = "analytics:cache_version"
+
+
+def get_analytics_cache_version() -> int:
     try:
-        cache.delete_many(["analytics:funnel", "analytics:search-kpis", "analytics:catalog-terms"])
+        return int(cache.get(ANALYTICS_CACHE_VERSION_KEY) or 0)
+    except Exception:
+        return 0
+
+
+def invalidate_analytics_cache():
+    """Bump version so admin analytics cache keys miss after new events."""
+    try:
+        cache.set(ANALYTICS_CACHE_VERSION_KEY, get_analytics_cache_version() + 1, None)
     except Exception:
         pass
 

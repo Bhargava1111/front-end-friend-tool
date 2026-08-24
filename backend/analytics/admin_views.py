@@ -8,11 +8,11 @@ from accounts.permissions import IsAdminRole
 from analytics.detect import normalize_query
 from analytics.models import JourneyEvent, ProductViewEvent, SearchEvent
 from analytics.query import apply_visitor_filter, page_args, parse_range
-from analytics.services import rate
+from analytics.services import get_analytics_cache_version, rate
 from catalog.models import Product
 
 
-CACHE_TTL = 60
+CACHE_TTL = 15
 
 
 def _cache_get(key):
@@ -68,7 +68,10 @@ class AdminSearchAnalyticsView(APIView):
     def get(self, request):
         searches, start, end, preset = _range_qs(SearchEvent, request)
         page, size, offset = page_args(request.query_params)
-        cache_key = f"analytics:search:{start.date()}:{end.date()}:{preset}:{request.query_params.urlencode()}"
+        cache_key = (
+            f"analytics:search:v{get_analytics_cache_version()}:"
+            f"{start.date()}:{end.date()}:{preset}:{request.query_params.urlencode()}"
+        )
         cached = _cache_get(cache_key)
         if cached:
             return Response(cached)
@@ -348,7 +351,10 @@ class AdminCustomerBehaviorView(APIView):
 
     def get(self, request):
         start, end, preset = parse_range(request.query_params)
-        cache_key = f"analytics:funnel:{start.date()}:{end.date()}:{request.query_params.urlencode()}"
+        cache_key = (
+            f"analytics:funnel:v{get_analytics_cache_version()}:"
+            f"{start.date()}:{end.date()}:{request.query_params.urlencode()}"
+        )
         cached = _cache_get(cache_key)
         if cached:
             return Response(cached)

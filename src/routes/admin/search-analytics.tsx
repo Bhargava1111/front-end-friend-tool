@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Search } from "lucide-react";
 import { useAdminFn } from "@/hooks/use-admin-fn";
 import { AnalyticsFiltersBar } from "@/components/admin/analytics-filters";
-import { DEFAULT_ANALYTICS_FILTERS, type AnalyticsFilters, type SearchAnalyticsResponse } from "@/lib/admin-analytics";
+import { DEFAULT_ANALYTICS_FILTERS, ADMIN_ANALYTICS_REFETCH_MS, type AnalyticsFilters, type SearchAnalyticsResponse } from "@/lib/admin-analytics";
 import {
   getAdminSearchAnalytics,
   getAdminSearchQueryDetail,
@@ -34,14 +34,18 @@ function SearchAnalyticsPage() {
   const fetchZeros = useAdminFn(getAdminZeroResultSearches, getAdminZeroResultSearchesClient);
   const fetchDetail = useAdminFn(getAdminSearchQueryDetail, getAdminSearchQueryDetailClient);
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, refetch, isFetching } = useQuery({
     queryKey: ["admin-search-analytics", filters],
     queryFn: () => fetchSearches({ data: filters }) as Promise<SearchAnalyticsResponse>,
+    refetchInterval: ADMIN_ANALYTICS_REFETCH_MS,
+    staleTime: 5_000,
   });
   const { data: zeros } = useQuery({
     queryKey: ["admin-zero-searches", filters],
     queryFn: () =>
       fetchZeros({ data: filters }) as Promise<{ rows: Array<{ query: string; searches: number }> }>,
+    refetchInterval: ADMIN_ANALYTICS_REFETCH_MS,
+    staleTime: 5_000,
   });
   const detailFilters = useMemo(
     () => ({ ...filters, query: selectedQuery }),
@@ -56,6 +60,8 @@ function SearchAnalyticsPage() {
         top_viewed_products: Array<{ product_id: string | null; product_name: string; views: number }>;
       }>,
     enabled: selectedQuery.length > 1,
+    refetchInterval: ADMIN_ANALYTICS_REFETCH_MS,
+    staleTime: 5_000,
   });
 
   const kpis = data?.kpis;
@@ -71,11 +77,23 @@ function SearchAnalyticsPage() {
 
   return (
     <div className="space-y-5">
-      <div>
-        <h1 className="flex items-center gap-2 text-base font-semibold">
-          <Search className="h-4 w-4" /> Search analytics
-        </h1>
-        <p className="text-xs text-muted-foreground">Which searches convert into clicks and orders.</p>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="flex items-center gap-2 text-base font-semibold">
+            <Search className="h-4 w-4" /> Search analytics
+          </h1>
+          <p className="text-xs text-muted-foreground">
+            Which searches convert into clicks and orders. Auto-refreshes every 15s.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => void refetch()}
+          disabled={isFetching}
+          className="rounded-full border border-border px-3 py-1.5 text-xs font-medium text-foreground disabled:opacity-50"
+        >
+          {isFetching ? "Refreshing…" : "Refresh now"}
+        </button>
       </div>
       <AnalyticsFiltersBar value={filters} onChange={setFilters} />
       {isLoading || !data ? (

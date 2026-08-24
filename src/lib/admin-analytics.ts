@@ -23,6 +23,9 @@ export const DEFAULT_ANALYTICS_FILTERS: AnalyticsFilters = {
   page_size: 25,
 };
 
+/** Auto-refresh admin analytics dashboards while the page is open. */
+export const ADMIN_ANALYTICS_REFETCH_MS = 15_000;
+
 export function analyticsQuery(filters: AnalyticsFilters): string {
   const params = new URLSearchParams();
   params.set("preset", filters.preset);

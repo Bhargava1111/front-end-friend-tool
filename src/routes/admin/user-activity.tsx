@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Activity } from "lucide-react";
 import { useAdminFn } from "@/hooks/use-admin-fn";
 import { AnalyticsFiltersBar } from "@/components/admin/analytics-filters";
-import { DEFAULT_ANALYTICS_FILTERS, type AnalyticsFilters } from "@/lib/admin-analytics";
+import { DEFAULT_ANALYTICS_FILTERS, ADMIN_ANALYTICS_REFETCH_MS, type AnalyticsFilters } from "@/lib/admin-analytics";
 import { getAdminUserActivity } from "@/lib/admin-ops.functions";
 import { getAdminUserActivityClient } from "@/lib/admin-client.functions";
 
@@ -34,6 +34,8 @@ function UserActivityPage() {
           created_at: string;
         }>;
       }>,
+    refetchInterval: ADMIN_ANALYTICS_REFETCH_MS,
+    staleTime: 5_000,
   });
 
   return (
