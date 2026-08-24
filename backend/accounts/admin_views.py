@@ -5,6 +5,7 @@ from decimal import Decimal
 
 from django.conf import settings
 from datetime import timedelta
+from django.http import Http404
 
 from django.db.models import Count, Max, Q, Sum
 from django.shortcuts import get_object_or_404
@@ -838,6 +839,7 @@ class AdminCustomerListView(APIView):
     def get(self, request):
         users = (
             User.objects.filter(role="customer")
+            .exclude(Q(full_name="Deleted User") | Q(email__endswith="@deleted.local", is_active=False))
             .annotate(
                 order_count=Count("orders", distinct=True),
                 total_spend=Sum("orders__total"),
@@ -869,7 +871,11 @@ class AdminCustomerDetailView(APIView):
         from accounts.models import Address
         from orders.models import CartItem, WishlistItem
 
-        user = get_object_or_404(User, id=pk)
+        user = get_object_or_404(User, id=pk, role="customer")
+        if user.full_name == "Deleted User" or (
+            user.is_active is False and (user.email or "").endswith("@deleted.local")
+        ):
+            raise Http404
         profile = Profile.objects.filter(user=user).first()
         stats_row = Order.objects.filter(user=user).aggregate(
             orders=Count("id"),

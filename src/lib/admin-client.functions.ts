@@ -3,6 +3,7 @@ import { adminPanelHeaders } from "@/lib/admin-api";
 import { adminClient, requireAccessToken } from "@/lib/admin-client";
 import type { SalesGranularity } from "@/lib/admin-ops.functions";
 import { analyticsQuery, type AnalyticsFilters } from "@/lib/admin-analytics";
+import { withoutDeletedCustomers } from "@/lib/admin-customers";
 
 /** Direct Django admin API — bundled Capacitor APK (no server functions). */
 
@@ -165,7 +166,8 @@ export async function setProductPlacementsClient(opts: {
 }
 
 export async function getAdminCustomersClient() {
-  return adminClient("/admin-api/customers/");
+  const rows = await adminClient("/admin-api/customers/");
+  return withoutDeletedCustomers(rows as Parameters<typeof withoutDeletedCustomers>[0]);
 }
 
 export async function getAdminStoresClient() {

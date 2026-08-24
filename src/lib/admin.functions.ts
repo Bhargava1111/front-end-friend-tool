@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireAuth } from "@/integrations/django/auth-middleware";
 import { apiFetch, toJsonBody } from "@/lib/api";
 import { adminFetchServer as adminFetch, adminPanelHeadersServer as adminPanelHeaders } from "@/lib/admin-api.server";
+import { withoutDeletedCustomers } from "@/lib/admin-customers";
 import type { OrderStatus } from "@/lib/types";
 
 function admin(token: string, path: string, init?: RequestInit) {
@@ -199,7 +200,10 @@ export const setProductPlacements = createServerFn({ method: "POST" })
 
 export const getAdminCustomers = createServerFn({ method: "GET" })
   .middleware([requireAuth])
-  .handler(async ({ context }) => admin(context.accessToken, "/admin-api/customers/"));
+  .handler(async ({ context }) => {
+    const rows = await admin(context.accessToken, "/admin-api/customers/");
+    return withoutDeletedCustomers(rows as Parameters<typeof withoutDeletedCustomers>[0]);
+  });
 
 export const getAdminStores = createServerFn({ method: "GET" })
   .middleware([requireAuth])
