@@ -679,6 +679,27 @@ class AdminHomeSectionView(APIView):
             invalidate_catalog_cache()
             return Response({"ok": True, "reordered": len(ordered_ids)})
 
+        if action == "set_position":
+            section_id = str(data.get("id", ""))
+            try:
+                position = int(data.get("position", 0))
+            except (TypeError, ValueError):
+                return Response({"detail": "position must be a number"}, status=400)
+            if position < 1:
+                return Response({"detail": "position must be >= 1"}, status=400)
+            sections = list(HomeOfferSection.objects.all().order_by("sort_order", "title"))
+            idx = next((i for i, s in enumerate(sections) if str(s.id) == section_id), None)
+            if idx is None:
+                return Response({"detail": "Section not found"}, status=404)
+            target = min(position - 1, len(sections) - 1)
+            section = sections.pop(idx)
+            sections.insert(target, section)
+            for i, item in enumerate(sections):
+                item.sort_order = i
+            HomeOfferSection.objects.bulk_update(sections, ["sort_order"])
+            invalidate_catalog_cache()
+            return Response({"ok": True, "position": target + 1, "ordered_ids": [str(s.id) for s in sections]})
+
         return Response({"detail": "Unknown action"}, status=400)
 
 

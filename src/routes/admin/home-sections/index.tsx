@@ -7,6 +7,7 @@ import {
   adminDeleteHomeSectionClient,
   adminBulkReorderHomeSectionsClient,
   adminSyncHomeSectionsClient,
+  adminSetHomeSectionPositionClient,
 } from "@/lib/admin-client.functions";
 import { Pencil, Plus, Trash2, ChevronUp, ChevronDown, GripVertical, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
@@ -15,8 +16,16 @@ import {
   adminDeleteHomeSection,
   adminBulkReorderHomeSections,
   adminSyncHomeSections,
+  adminSetHomeSectionPosition,
 } from "@/lib/admin-extra.functions";
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Skeleton } from "@/components/skeletons";
 import { ErrorState } from "@/components/state-blocks";
 import type { HomeOfferSectionDef } from "@/lib/offer-sections";
@@ -48,10 +57,18 @@ function reorderIds(ids: string[], fromId: string, toId: string) {
   return next;
 }
 
+function willShowOnStorefront(section: HomeOfferSectionDef) {
+  if (!section.show_on_home || !section.is_active) return false;
+  if (section.layout === "categories" || section.layout === "brands") return true;
+  if (section.fallback_rule === "manual" && (section.display_count ?? 0) === 0) return false;
+  return true;
+}
+
 function AdminHomeSectionsPage() {
   const list = useAdminFn(adminListHomeSections, adminListHomeSectionsClient);
   const remove = useAdminFn(adminDeleteHomeSection, adminDeleteHomeSectionClient);
   const bulkReorder = useAdminFn(adminBulkReorderHomeSections, adminBulkReorderHomeSectionsClient);
+  const setSectionPosition = useAdminFn(adminSetHomeSectionPosition, adminSetHomeSectionPositionClient);
   const syncDefaults = useAdminFn(adminSyncHomeSections, adminSyncHomeSectionsClient);
   const queryClient = useQueryClient();
   const [draggingId, setDraggingId] = useState<string | null>(null);
@@ -104,6 +121,28 @@ function AdminHomeSectionsPage() {
       toast.success("Section deleted");
     },
     onError: (e: Error) => toast.error(e.message),
+  });
+
+  const setPositionMutation = useMutation({
+    mutationFn: ({ id, position }: { id: string; position: number }) =>
+      setSectionPosition({ data: { id, position } }) as Promise<{
+        ok: boolean;
+        position: number;
+        ordered_ids: string[];
+      }>,
+    onSuccess: async (res) => {
+      if (res.ordered_ids?.length) setLocalIds(res.ordered_ids);
+      else setLocalIds(null);
+      invalidateHomeQueries(queryClient);
+      await queryClient.refetchQueries({ queryKey: ["admin-home-sections"] });
+      toast.success("Section position saved");
+      reorderLockRef.current = false;
+    },
+    onError: (e: Error) => {
+      reorderLockRef.current = false;
+      setLocalIds(null);
+      toast.error(e.message || "Could not save section position");
+    },
   });
 
   const bulkReorderMutation = useMutation({
@@ -162,9 +201,16 @@ function AdminHomeSectionsPage() {
     applyOrder(reorderIds(ids, ids[index], ids[targetIndex]));
   };
 
+  const setPosition = (sectionId: string, position: number) => {
+    if (setPositionMutation.isPending || bulkReorderMutation.isPending) return;
+    reorderLockRef.current = true;
+    setPositionMutation.mutate({ id: sectionId, position });
+  };
+
+  const storefrontOrder = sections.filter(willShowOnStorefront).map((s) => s.title);
   const layoutLabel = (v: string) => SECTION_LAYOUTS.find((l) => l.value === v)?.label ?? v;
   const fallbackLabel = (v: string) => FALLBACK_RULES.find((r) => r.value === v)?.label ?? v;
-  const reordering = bulkReorderMutation.isPending;
+  const reordering = bulkReorderMutation.isPending || setPositionMutation.isPending;
 
   return (
     <div className="space-y-4">
@@ -172,7 +218,7 @@ function AdminHomeSectionsPage() {
         <div>
           <h1 className="text-lg font-bold text-foreground">Home sections</h1>
           <p className="text-xs text-muted-foreground">
-            Drag a row or use ↑ ↓ — order updates the live home page
+            Use the position dropdown, drag rows, or ↑ ↓ — changes save to the live home page
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -204,6 +250,12 @@ function AdminHomeSectionsPage() {
         </div>
       ) : (
         <div className="space-y-2">
+          {storefrontOrder.length > 0 && (
+            <div className="rounded-xl border border-border bg-secondary/30 px-4 py-3 text-xs text-muted-foreground">
+              <span className="font-semibold text-foreground">Visible on store home: </span>
+              {storefrontOrder.join(" → ")}
+            </div>
+          )}
           {sections.map((s, index) => (
             <div
               key={s.id}
@@ -242,6 +294,30 @@ function AdminHomeSectionsPage() {
               >
                 <GripVertical className="h-5 w-5 text-muted-foreground" />
                 <span className="text-[10px] font-bold text-muted-foreground">#{index + 1}</span>
+              </div>
+              <div className="flex shrink-0 flex-col items-center gap-1">
+                <label className="text-[10px] font-medium text-muted-foreground">Position</label>
+                <Select
+                  value={String(index + 1)}
+                  onValueChange={(value) => setPosition(s.id, Number(value))}
+                  disabled={reordering}
+                >
+                  <SelectTrigger
+                    className="h-8 w-[92px] rounded-lg text-xs"
+                    onMouseDown={(e) => e.stopPropagation()}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {sections.map((_, i) => (
+                      <SelectItem key={i + 1} value={String(i + 1)}>
+                        {i + 1}
+                        {i === 0 ? " (top)" : i === sections.length - 1 ? " (bottom)" : ""}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="flex shrink-0 flex-col gap-0.5">
                 <Button

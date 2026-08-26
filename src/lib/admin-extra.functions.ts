@@ -70,6 +70,16 @@ export const adminBulkReorderHomeSections = createServerFn({ method: "POST" })
     }) as Promise<{ ok: boolean; reordered: number }>;
   });
 
+export const adminSetHomeSectionPosition = createServerFn({ method: "POST" })
+  .middleware([requireAuth])
+  .inputValidator((data: { id: string; position: number }) => data)
+  .handler(async ({ data, context }) => {
+    return admin(context.accessToken, "/admin-api/home-sections/", {
+      method: "POST",
+      body: toJsonBody({ action: "set_position", id: data.id, position: data.position }),
+    }) as Promise<{ ok: boolean; position: number; ordered_ids: string[] }>;
+  });
+
 export const adminSyncHomeSections = createServerFn({ method: "POST" })
   .middleware([requireAuth])
   .handler(async ({ context }) => {

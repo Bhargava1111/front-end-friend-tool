@@ -292,6 +292,17 @@ export async function adminBulkReorderHomeSectionsClient(opts: { data: { ordered
   }) as Promise<{ ok: boolean; reordered: number }>;
 }
 
+export async function adminSetHomeSectionPositionClient(opts: { data: { id: string; position: number } }) {
+  return adminClient("/admin-api/home-sections/", {
+    method: "POST",
+    body: toJsonBody({
+      action: "set_position",
+      id: opts.data.id,
+      position: opts.data.position,
+    }),
+  }) as Promise<{ ok: boolean; position: number; ordered_ids: string[] }>;
+}
+
 export async function adminSyncHomeSectionsClient() {
   return adminClient("/admin-api/home-sections/", {
     method: "POST",
