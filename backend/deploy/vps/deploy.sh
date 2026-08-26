@@ -46,11 +46,18 @@ sudo -u "${APP_USER}" bash -c "
   ${VENV_DIR}/bin/python manage.py check
   ${VENV_DIR}/bin/python manage.py migrate --noinput
   ${VENV_DIR}/bin/python manage.py collectstatic --noinput
-  if [[ \"\${ALLOW_DEMO_SEED:-}\" =~ ^(1|true|yes)$ ]]; then
-    echo 'Ensuring demo admin accounts...'
-    ALLOW_DEMO_SEED=1 ${VENV_DIR}/bin/python manage.py ensure_demo_admins || true
-  fi
 "
+
+if grep -qE "ALLOW_DEMO_SEED=(1|true|yes)" "${ENV_FILE}" 2>/dev/null; then
+  echo "Ensuring demo admin accounts..."
+  sudo -u "${APP_USER}" bash -c "
+    set -a
+    source ${ENV_FILE}
+    set +a
+    cd ${BACKEND_DIR}
+    ALLOW_DEMO_SEED=1 ${VENV_DIR}/bin/python manage.py ensure_demo_admins
+  " || echo "WARN: ensure_demo_admins finished with warnings"
+fi
 
 systemctl restart mnxstore-api.service
 systemctl restart mnxstore-celery.service || true
