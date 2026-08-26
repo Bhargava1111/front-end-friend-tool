@@ -9,6 +9,7 @@ import { getAdminCustomerBehavior } from "@/lib/admin-ops.functions";
 import { getAdminCustomerBehaviorClient } from "@/lib/admin-client.functions";
 
 export const Route = createFileRoute("/admin/customer-behavior")({
+  ssr: false,
   head: () => ({
     meta: [
       { title: "Customer Behavior — Admin | Sri Mahalakshmi Stores" },
@@ -21,13 +22,15 @@ export const Route = createFileRoute("/admin/customer-behavior")({
 function CustomerBehaviorPage() {
   const [filters, setFilters] = useState<AnalyticsFilters>(DEFAULT_ANALYTICS_FILTERS);
   const fetchFunnel = useAdminFn(getAdminCustomerBehavior, getAdminCustomerBehaviorClient);
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["admin-behavior", filters],
     queryFn: () => fetchFunnel({ data: filters }) as Promise<FunnelResponse>,
     refetchInterval: ADMIN_ANALYTICS_REFETCH_MS,
     staleTime: 5_000,
+    retry: 1,
+    throwOnError: false,
   });
-  const max = Math.max(...(data?.stages.map((s) => s.count) ?? [1]), 1);
+  const max = Math.max(...(data?.stages?.map((s) => s.count) ?? [1]), 1);
 
   return (
     <div className="space-y-5">
@@ -38,7 +41,19 @@ function CustomerBehaviorPage() {
         <p className="text-xs text-muted-foreground">How shoppers move from search to purchase.</p>
       </div>
       <AnalyticsFiltersBar value={filters} onChange={setFilters} />
-      {isLoading || !data ? (
+      {isError ? (
+        <div className="rounded-2xl border border-border bg-card p-8 text-center">
+          <p className="text-sm font-semibold text-foreground">Couldn&apos;t load behavior analytics</p>
+          <p className="mt-1 text-xs text-muted-foreground">{(error as Error)?.message}</p>
+          <button
+            type="button"
+            onClick={() => void refetch()}
+            className="mt-4 rounded-full bg-primary px-4 py-1.5 text-xs font-semibold text-primary-foreground"
+          >
+            Try again
+          </button>
+        </div>
+      ) : isLoading || !data ? (
         <div className="h-64 animate-pulse rounded-2xl bg-card" />
       ) : (
         <div className="rounded-2xl border border-border bg-card p-5">

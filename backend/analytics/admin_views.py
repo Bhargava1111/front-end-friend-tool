@@ -68,13 +68,6 @@ class AdminSearchAnalyticsView(APIView):
     def get(self, request):
         searches, start, end, preset = _range_qs(SearchEvent, request)
         page, size, offset = page_args(request.query_params)
-        cache_key = (
-            f"analytics:search:v{get_analytics_cache_version()}:"
-            f"{start.date()}:{end.date()}:{preset}:{request.query_params.urlencode()}"
-        )
-        cached = _cache_get(cache_key)
-        if cached:
-            return Response(cached)
 
         total = searches.count()
         unique = searches.values("query_normalized").distinct().count()
@@ -153,7 +146,6 @@ class AdminSearchAnalyticsView(APIView):
             "page_size": size,
             "total_rows": searches.values("query_normalized").distinct().count(),
         }
-        _cache_set(cache_key, payload)
         return Response(payload)
 
 

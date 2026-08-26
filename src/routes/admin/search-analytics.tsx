@@ -18,6 +18,7 @@ import {
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/admin/search-analytics")({
+  ssr: false,
   head: () => ({
     meta: [
       { title: "Search Analytics — Admin | Sri Mahalakshmi Stores" },
@@ -34,18 +35,34 @@ function SearchAnalyticsPage() {
   const fetchZeros = useAdminFn(getAdminZeroResultSearches, getAdminZeroResultSearchesClient);
   const fetchDetail = useAdminFn(getAdminSearchQueryDetail, getAdminSearchQueryDetailClient);
 
-  const { data, isLoading, refetch, isFetching } = useQuery({
+  const {
+    data,
+    isLoading,
+    isError,
+    error,
+    refetch,
+    isFetching,
+  } = useQuery({
     queryKey: ["admin-search-analytics", filters],
     queryFn: () => fetchSearches({ data: filters }) as Promise<SearchAnalyticsResponse>,
     refetchInterval: ADMIN_ANALYTICS_REFETCH_MS,
     staleTime: 5_000,
+    retry: 1,
+    throwOnError: false,
   });
-  const { data: zeros } = useQuery({
+  const {
+    data: zeros,
+    isError: zerosError,
+    error: zerosErr,
+    refetch: refetchZeros,
+  } = useQuery({
     queryKey: ["admin-zero-searches", filters],
     queryFn: () =>
       fetchZeros({ data: filters }) as Promise<{ rows: Array<{ query: string; searches: number }> }>,
     refetchInterval: ADMIN_ANALYTICS_REFETCH_MS,
     staleTime: 5_000,
+    retry: 1,
+    throwOnError: false,
   });
   const detailFilters = useMemo(
     () => ({ ...filters, query: selectedQuery }),
@@ -62,6 +79,8 @@ function SearchAnalyticsPage() {
     enabled: selectedQuery.length > 1,
     refetchInterval: ADMIN_ANALYTICS_REFETCH_MS,
     staleTime: 5_000,
+    retry: 1,
+    throwOnError: false,
   });
 
   const kpis = data?.kpis;
@@ -96,7 +115,19 @@ function SearchAnalyticsPage() {
         </button>
       </div>
       <AnalyticsFiltersBar value={filters} onChange={setFilters} />
-      {isLoading || !data ? (
+      {isError ? (
+        <div className="rounded-2xl border border-border bg-card p-8 text-center">
+          <p className="text-sm font-semibold text-foreground">Couldn&apos;t load search analytics</p>
+          <p className="mt-1 text-xs text-muted-foreground">{(error as Error)?.message}</p>
+          <button
+            type="button"
+            onClick={() => void refetch()}
+            className="mt-4 rounded-full bg-primary px-4 py-1.5 text-xs font-semibold text-primary-foreground"
+          >
+            Try again
+          </button>
+        </div>
+      ) : isLoading || !data ? (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {[0, 1, 2, 3].map((i) => (
             <div key={i} className="h-20 animate-pulse rounded-2xl bg-card" />
@@ -198,8 +229,24 @@ function SearchAnalyticsPage() {
       )}
 
       <section className="rounded-2xl border border-border bg-card p-4">
-        <h2 className="text-sm font-semibold">Zero-result searches</h2>
-        <p className="mt-1 text-xs text-muted-foreground">Demand with no matching catalogue items.</p>
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <h2 className="text-sm font-semibold">Zero-result searches</h2>
+            <p className="mt-1 text-xs text-muted-foreground">Demand with no matching catalogue items.</p>
+          </div>
+          {zerosError && (
+            <button
+              type="button"
+              onClick={() => void refetchZeros()}
+              className="rounded-full border border-border px-3 py-1 text-xs"
+            >
+              Retry
+            </button>
+          )}
+        </div>
+        {zerosError ? (
+          <p className="mt-3 text-xs text-muted-foreground">{(zerosErr as Error)?.message}</p>
+        ) : (
         <ul className="mt-3 space-y-2">
           {(zeros?.rows ?? []).map((row) => (
             <li key={row.query} className="flex justify-between text-sm">
@@ -211,6 +258,7 @@ function SearchAnalyticsPage() {
             <p className="text-xs text-muted-foreground">No zero-result searches in this range.</p>
           )}
         </ul>
+        )}
       </section>
     </div>
   );
