@@ -433,11 +433,17 @@ export function AdminProductForm({
                     <Label className="text-[11px] text-muted-foreground">Qty</Label>
                     <Input
                       aria-label="Pack size value"
+                      type="text"
                       inputMode="decimal"
                       placeholder="500"
                       className="w-20"
                       value={v.unit_value}
                       onChange={(e) => update({ unit_value: e.target.value })}
+                      onBlur={() =>
+                        update({
+                          unit_value: v.unit_value.trim() || "1",
+                        })
+                      }
                     />
                   </div>
                   <div>

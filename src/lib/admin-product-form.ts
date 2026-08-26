@@ -78,9 +78,8 @@ export const emptyVariant: VariantRow = {
   is_active: true,
 };
 
-/** Keep label, unit and numeric value in sync for admin forms and API payloads. */
+/** Keep label, unit and numeric value in sync when saving — not on every keystroke. */
 export function normalizeVariantRow(v: Partial<VariantRow> & Pick<VariantRow, "label" | "unit" | "unit_value">): VariantRow {
-  const parsed = parsePackLabel(v.label);
   const unit = resolveVariantUnit(v.label, v.unit);
   const value = resolveVariantValue(v.label, v.unit_value, unit);
   const label = v.label.trim() || formatPackLabel(value, unit);
@@ -109,27 +108,49 @@ export function syncVariantPatch(
   if (patch.label != null && patch.label !== current.label) {
     const parsed = parsePackLabel(patch.label);
     if (parsed) {
-      return normalizeVariantRow({
+      return {
         ...next,
+        label: patch.label,
         unit: parsed.unit,
         unit_value: String(parsed.value),
-      });
+      };
     }
-    return normalizeVariantRow(next);
+    return { ...next, label: patch.label };
   }
 
-  if (patch.unit != null || patch.unit_value != null) {
+  if (patch.unit_value != null) {
     const unit = normalizeUnit(patch.unit ?? next.unit);
-    const value = resolveVariantValue(next.label, patch.unit_value ?? next.unit_value, unit);
-    return normalizeVariantRow({
+    const raw = String(patch.unit_value);
+    const trimmed = raw.trim();
+    const numeric = Number(trimmed);
+    const label =
+      trimmed !== "" && Number.isFinite(numeric) && numeric > 0
+        ? formatPackLabel(numeric, unit) || next.label
+        : next.label;
+    return {
       ...next,
       unit,
-      unit_value: String(value),
-      label: formatPackLabel(value, unit) || next.label,
-    });
+      unit_value: raw,
+      label,
+    };
   }
 
-  return normalizeVariantRow(next);
+  if (patch.unit != null) {
+    const unit = normalizeUnit(patch.unit);
+    const trimmed = String(next.unit_value).trim();
+    const numeric = Number(trimmed);
+    const label =
+      trimmed !== "" && Number.isFinite(numeric) && numeric > 0
+        ? formatPackLabel(numeric, unit) || next.label
+        : next.label;
+    return {
+      ...next,
+      unit,
+      label,
+    };
+  }
+
+  return next;
 }
 
 export const emptyPriceTier: PriceTierRow = {

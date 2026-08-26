@@ -72,10 +72,9 @@ export function resolveVariantUnit(label: string, unit: string): CanonicalUnit {
 
 export function resolveVariantValue(label: string, unitValue: number | string, unit: string): number {
   const parsed = parsePackLabel(label);
-  const numeric = typeof unitValue === "string" ? Number(unitValue) : unitValue;
-  if (parsed && (!numeric || numeric <= 0 || normalizeUnit(unit) !== parsed.unit)) {
-    return parsed.value;
-  }
-  if (numeric && numeric > 0) return numeric;
-  return parsed?.value ?? 1;
+  const raw = typeof unitValue === "string" ? unitValue.trim() : String(unitValue);
+  const numeric = raw === "" ? NaN : Number(raw);
+  if (Number.isFinite(numeric) && numeric > 0) return numeric;
+  if (parsed?.value && parsed.value > 0) return parsed.value;
+  return 1;
 }
