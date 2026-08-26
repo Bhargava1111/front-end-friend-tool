@@ -219,7 +219,7 @@ if [[ -f "${APP_DIR}/package.json" ]]; then
     cd ${APP_DIR}
     npm ci
     NITRO_PRESET=node-server \
-      VITE_API_URL=http://127.0.0.1/api/v1 \
+      VITE_API_URL=/api/v1 \
       API_URL=http://127.0.0.1/api/v1 \
       VITE_PUBLIC_WEB_URL=http://${VPS_IP} \
       VITE_APP_URL=http://${VPS_IP} \

@@ -46,6 +46,10 @@ sudo -u "${APP_USER}" bash -c "
   ${VENV_DIR}/bin/python manage.py check
   ${VENV_DIR}/bin/python manage.py migrate --noinput
   ${VENV_DIR}/bin/python manage.py collectstatic --noinput
+  if [[ \"\${ALLOW_DEMO_SEED:-}\" =~ ^(1|true|yes)$ ]]; then
+    echo 'Ensuring demo admin accounts...'
+    ALLOW_DEMO_SEED=1 ${VENV_DIR}/bin/python manage.py ensure_demo_admins || true
+  fi
 "
 
 systemctl restart mnxstore-api.service
@@ -81,7 +85,7 @@ if [[ -f "${APP_DIR}/package.json" ]] && command -v node >/dev/null 2>&1; then
     rm -rf node_modules/.cache 2>/dev/null || true
     npm ci
     NITRO_PRESET=node-server \
-      VITE_API_URL=http://127.0.0.1/api/v1 \
+      VITE_API_URL=/api/v1 \
       API_URL=http://127.0.0.1/api/v1 \
       VITE_PUBLIC_WEB_URL=http://${VPS_IP} \
       VITE_APP_URL=http://${VPS_IP} \
@@ -109,6 +113,11 @@ for i in 1 2 3 4 5; do
   if curl -sf "http://127.0.0.1/api/v1/health/" >/dev/null; then
     echo "Health check OK"
     curl -s "http://127.0.0.1/api/v1/health/"; echo
+    if grep -qE "ALLOW_DEMO_SEED=(1|true|yes)" "${ENV_FILE}" 2>/dev/null; then
+      curl -sf -X POST "http://127.0.0.1/api/v1/bootstrap/demo-users/" \
+        -H "Content-Type: application/json" \
+        -d '{}' >/dev/null && echo "Demo admin accounts OK" || echo "WARN: demo admin bootstrap failed"
+    fi
     break
   fi
   echo "Health check retry ${i}/5..."

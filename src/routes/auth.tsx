@@ -201,13 +201,17 @@ function AuthPage() {
         toast.success("Signed in");
         navigate({ to: "/", replace: true });
       } catch (fallbackErr) {
-        toast.error(
+        const message =
           fallbackErr instanceof Error
             ? fallbackErr.message
             : err instanceof Error
               ? err.message
-              : "Something went wrong",
-        );
+              : "Something went wrong";
+        if (message.toLowerCase().includes("invalid credentials")) {
+          toast.error("Invalid email/phone or password. Admin: admin@mnxstore.in / Demo@12345");
+        } else {
+          toast.error(message);
+        }
       }
     } finally {
       setBusy(false);

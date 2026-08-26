@@ -135,7 +135,27 @@ export function getApiBase() {
     // keep absolute URL
   }
 
-  return base;
+  return normalizeClientApiBase(base);
+}
+
+/** Production builds must not bake loopback URLs into the browser bundle. */
+function normalizeClientApiBase(base: string): string {
+  const trimmed = base.replace(/\/$/, "");
+  if (typeof window === "undefined") return trimmed;
+
+  try {
+    const parsed = new URL(trimmed, window.location.origin);
+    const pointsToLoopback = parsed.hostname === "127.0.0.1" || parsed.hostname === "localhost";
+    const onRemoteHost = !isPrivateLanHost(window.location.hostname);
+    if (pointsToLoopback && onRemoteHost) {
+      const path = parsed.pathname.replace(/\/$/, "") || "/api/v1";
+      return path.startsWith("/") ? path : `/${path}`;
+    }
+  } catch {
+    // keep original
+  }
+
+  return trimmed;
 }
 
 function headersToRecord(headers: Headers): Record<string, string> {

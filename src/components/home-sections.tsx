@@ -672,7 +672,7 @@ export function FestivalPicks({
   const [active, setActive] = useState(tabs[0]?.id ?? "");
   const activeTab = tabs.find((t) => t.id === (active || tabs[0]?.id));
   const categoryList = products.filter((p) => p.category_id === (active || tabs[0]?.id)).slice(0, 10);
-  const list = curated && curated.length > 0 ? curated : categoryList;
+  const list = curated != null ? curated : categoryList;
   const ref = useAutoScroll<HTMLDivElement>(list.length > 3);
 
   if (tabs.length === 0 && list.length === 0) return null;
@@ -945,6 +945,7 @@ function HomeDynamicSection({
       );
     default:
       if (section.key === "festive_picks") {
+        if (!products.length && section.fallback_rule === "manual") return null;
         return (
           <FestivalPicks
             categories={categories}
