@@ -9,6 +9,11 @@ export type ProductVariant = {
   stock: number;
   sku?: string | null;
   image_url?: string | null;
+  price_tiers?: Array<{
+    min_qty: number;
+    max_qty: number;
+    unit_price: number;
+  }> | null;
   is_default: boolean;
   is_active?: boolean;
   sort_order?: number;

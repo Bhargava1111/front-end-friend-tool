@@ -28,7 +28,13 @@ import { ProductDetailSkeleton } from "@/components/skeletons";
 import { ProductRail } from "@/components/product-rail";
 import { ImageGallery } from "@/components/image-gallery";
 import { VariantPicker, pickDefaultVariant } from "@/components/variant-picker";
-import { QtyPriceTable, unitPriceForQty } from "@/components/qty-price-table";
+import {
+  QtyPriceTable,
+  referenceTierUnitPrice,
+  resolveVariantPriceTiers,
+  unitPriceForQty,
+} from "@/components/qty-price-table";
+import { formatVariantDisplayLabel } from "@/lib/pack-units";
 import { ProductReviews } from "@/components/product-reviews";
 import { ProductCard } from "@/components/product-card";
 import {
@@ -145,8 +151,48 @@ function ProductPage() {
   const price = Number(variant?.price ?? product.price);
   const mrp = variant ? (variant.mrp ? Number(variant.mrp) : null) : product.mrp ? Number(product.mrp) : null;
   const stock = variant ? variant.stock : product.stock;
-  const packLabel = variant?.label ?? product.weight;
-  const activeUnitPrice = unitPriceForQty(qty, price, product.price_tiers);
+  const packLabel = variant
+    ? formatVariantDisplayLabel({
+        label: variant.label,
+        unit: variant.unit,
+        unit_value: variant.unit_value,
+      })
+    : product.weight;
+  const referencePrice = useMemo(() => {
+    const defaultVariant = pickDefaultVariant(product.variants);
+    return referenceTierUnitPrice(
+      product.price_tiers,
+      Number(defaultVariant?.price ?? product.price),
+    );
+  }, [product.price, product.price_tiers, product.variants]);
+  const pricingTiers = useMemo(() => {
+    if (variant?.price_tiers?.length) return variant.price_tiers;
+    if (variants.length > 0) {
+      return resolveVariantPriceTiers(product.price_tiers, price, referencePrice);
+    }
+    return product.price_tiers;
+  }, [
+    price,
+    product.price_tiers,
+    referencePrice,
+    variant?.price_tiers,
+    variants.length,
+  ]);
+  const activeUnitPrice = unitPriceForQty(qty, price, pricingTiers);
+  const galleryImages = useMemo(() => {
+    const seen = new Set<string>();
+    const out: string[] = [];
+    const push = (src?: string | null) => {
+      const trimmed = src?.trim();
+      if (!trimmed || seen.has(trimmed)) return;
+      seen.add(trimmed);
+      out.push(trimmed);
+    };
+    push(variant?.image_url);
+    for (const src of product.images ?? []) push(src);
+    push(product.image_url);
+    return out;
+  }, [product.image_url, product.images, variant?.image_url]);
   const trackViewed = useRecentlyViewed((s) => s.add);
   const saveLater = useSaveForLater();
   const compareList = useCompareList();
@@ -163,7 +209,7 @@ function ProductPage() {
   const wishlisted = (wishlist ?? []).some((w) => w.product?.id === product.id);
   const saved = saveLater.items.some((p) => p.id === product.id);
   const inCompare = compareList.has(product.id);
-  const discount = mrp && mrp > price ? Math.round(((mrp - price) / mrp) * 100) : 0;
+  const discount = mrp && mrp > activeUnitPrice ? Math.round(((mrp - activeUnitPrice) / mrp) * 100) : 0;
 
   const bundle = (data.related ?? []).slice(0, 2);
   const bundleTotal = price + bundle.reduce((s, p) => s + Number(p.price), 0);
@@ -278,10 +324,8 @@ function ProductPage() {
       />
 
       <ImageGallery
-        images={[
-          ...(product.images ?? []),
-          ...(product.image_url ? [product.image_url] : []),
-        ].filter((src, i, all) => src && all.indexOf(src) === i)}
+        key={variantId ?? product.id}
+        images={galleryImages}
         alt={product.name}
         badge={
           discount > 0 ? (
@@ -393,16 +437,24 @@ function ProductPage() {
             setVariantId(v.id);
             setQty(1);
           }}
-        />
-
-        <QtyPriceTable
+          priceTiers={pricingTiers}
           unitPrice={price}
           mrp={mrp}
           maxQty={stock > 0 ? stock : 999}
           selectedQty={qty}
           onSelectQty={(next) => setQty(Math.min(stock || 99, Math.max(1, next)))}
-          adminTiers={product.price_tiers}
         />
+
+        {variants.length === 0 && (
+          <QtyPriceTable
+            unitPrice={price}
+            mrp={mrp}
+            maxQty={stock > 0 ? stock : 999}
+            selectedQty={qty}
+            onSelectQty={(next) => setQty(Math.min(stock || 99, Math.max(1, next)))}
+            adminTiers={product.price_tiers}
+          />
+        )}
 
         {product.description && (
           <div className="mt-5">

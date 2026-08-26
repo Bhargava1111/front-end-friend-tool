@@ -8,6 +8,7 @@ import { trackJourney } from "@/lib/analytics";
 import { formatShopError } from "@/lib/auth-session";
 import { useSession, useWishlist } from "@/hooks/use-shop";
 import { formatINR } from "@/lib/format";
+import { formatVariantDisplayLabel } from "@/lib/pack-units";
 import { pickDefaultVariant } from "@/components/variant-picker";
 import { productQtyOptions, unitPriceForQty } from "@/lib/product-qty";
 import { cn } from "@/lib/utils";
@@ -63,6 +64,13 @@ export function ProductCard({
       ? Number(product.mrp)
       : null;
   const discount = mrp && mrp > price ? Math.round(((mrp - price) / mrp) * 100) : 0;
+  const packLabel = defaultVariant
+    ? formatVariantDisplayLabel({
+        label: defaultVariant.label,
+        unit: defaultVariant.unit,
+        unit_value: defaultVariant.unit_value,
+      })
+    : product.weight;
 
   const addMutation = useMutation({
     mutationFn: (quantity: number) =>
@@ -116,14 +124,14 @@ export function ProductCard({
           setCycling(false);
           setFrame(0);
         }}
-        className="relative block aspect-square overflow-hidden bg-secondary/60 p-2"
+        className="relative block aspect-square overflow-hidden bg-white"
       >
         {images.length ? (
           <img
             src={images[Math.min(frame, images.length - 1)]}
             alt={product.name}
             loading="lazy"
-            className="h-full w-full object-contain transition-transform duration-500 group-hover:scale-[1.02]"
+            className="h-full w-full object-contain p-1 transition-transform duration-500 group-hover:scale-[1.04]"
           />
         ) : (
           <div className="flex h-full items-center justify-center text-xs text-muted-foreground">
@@ -192,9 +200,9 @@ export function ProductCard({
           </h3>
         </Link>
         <div className="flex flex-wrap items-center gap-1.5">
-          {(defaultVariant?.label ?? product.weight) && (
+          {packLabel && (
             <p className="text-xs text-muted-foreground">
-              {defaultVariant?.label ?? product.weight}
+              {packLabel}
             </p>
           )}
           {packCount > 1 && (

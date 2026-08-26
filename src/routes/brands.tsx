@@ -3,8 +3,12 @@ import { useQuery } from "@tanstack/react-query";
 import { Tag } from "lucide-react";
 import { getBrandDirectory } from "@/lib/storefront.functions";
 import { PageShell, TopBar, EmptyState } from "@/components/page-shell";
+import { ProductCard } from "@/components/product-card";
 import { ProductRail } from "@/components/product-rail";
 import { Reveal } from "@/components/motion";
+import { brandGradient, brandInitials, brandRailVisual } from "@/lib/brand-ui";
+import { cn } from "@/lib/utils";
+import type { Product } from "@/lib/types";
 
 export const Route = createFileRoute("/brands")({
   head: () => ({
@@ -23,6 +27,37 @@ export const Route = createFileRoute("/brands")({
   component: BrandsPage,
 });
 
+function BrandProducts({ name, products }: { name: string; products: Product[] }) {
+  if (products.length === 0) {
+    return (
+      <p className="px-4 py-6 text-center text-sm text-muted-foreground">
+        Products from this brand are coming soon.
+      </p>
+    );
+  }
+
+  if (products.length <= 4) {
+    return (
+      <div
+        className={cn(
+          "mx-auto grid max-w-4xl gap-4 p-4",
+          products.length === 1
+            ? "max-w-[220px] grid-cols-1"
+            : products.length === 2
+              ? "max-w-2xl grid-cols-2"
+              : "grid-cols-2 sm:grid-cols-3",
+        )}
+      >
+        {products.map((p) => (
+          <ProductCard key={p.id} product={p} className="w-full" />
+        ))}
+      </div>
+    );
+  }
+
+  return <ProductRail title={`From ${name}`} products={products} size="default" />;
+}
+
 function BrandsPage() {
   const { data, isLoading } = useQuery({
     queryKey: ["brand-directory"],
@@ -36,7 +71,7 @@ function BrandsPage() {
       {isLoading ? (
         <div className="space-y-3 p-4">
           {[0, 1, 2].map((i) => (
-            <div key={i} className="h-40 animate-pulse rounded-3xl bg-card" />
+            <div key={i} className="h-48 animate-pulse rounded-3xl bg-card" />
           ))}
         </div>
       ) : !data || data.brands.length === 0 ? (
@@ -46,51 +81,50 @@ function BrandsPage() {
           description="Brands will appear here once the store adds them."
         />
       ) : (
-        <div className="pb-4">
-          {data.brands.map((b, i) => (
-            <Reveal key={b.id} delay={i * 0.03} className="mt-4">
-              <div className="mx-4 overflow-hidden rounded-3xl border border-border bg-card card-elevated">
-                <div className="relative h-[120px] w-full bg-secondary">
-                  {b.banner_url && (
-                    <img
-                      src={b.banner_url}
-                      alt={`${b.name} offers`}
-                      loading="lazy"
-                      className="h-full w-full object-cover"
-                    />
-                  )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-foreground/80 to-transparent" />
-                  <div className="absolute inset-x-0 bottom-0 flex items-center gap-3 p-4">
-                    {b.logo_url ? (
-                      <img
-                        src={b.logo_url}
-                        alt={b.name}
-                        loading="lazy"
-                        className="h-11 w-11 rounded-full border border-background/60 object-cover"
-                      />
+        <div className="space-y-4 pb-28">
+          {data.brands.map((b, i) => {
+            const visual = brandRailVisual(b.logo_url);
+            return (
+              <Reveal key={b.id} delay={i * 0.03}>
+                <article
+                  id={`brand-${b.slug}`}
+                  className="mx-4 overflow-hidden rounded-3xl border border-border bg-card shadow-sm"
+                >
+                  <div
+                    className={cn(
+                      "flex items-center gap-4 px-4 py-4 text-white sm:px-5",
+                      visual.type === "logo" ? "bg-gradient-to-r from-primary to-primary/85" : `bg-gradient-to-r ${brandGradient(b.name)}`,
+                    )}
+                  >
+                    {visual.type === "logo" ? (
+                      <div className="grid h-16 w-16 shrink-0 place-items-center rounded-2xl bg-white/95 p-1.5 shadow-sm">
+                        <img
+                          src={visual.src}
+                          alt={b.name}
+                          loading="lazy"
+                          className="h-full w-full object-contain"
+                        />
+                      </div>
                     ) : (
-                      <span className="grid h-11 w-11 place-items-center rounded-full bg-background text-sm font-bold text-primary">
-                        {b.name.slice(0, 2).toUpperCase()}
+                      <span className="grid h-16 w-16 shrink-0 place-items-center rounded-2xl bg-white/20 text-lg font-bold backdrop-blur-sm">
+                        {brandInitials(b.name)}
                       </span>
                     )}
                     <div className="min-w-0">
-                      <p className="text-sm font-bold text-background">{b.name}</p>
-                      <p className="line-clamp-1 text-[11px] text-background/80">
-                        {b.tagline ?? "Trusted brand"}
-                      </p>
+                      <h2 className="text-lg font-bold leading-tight">{b.name}</h2>
+                      <p className="mt-0.5 text-sm text-white/85">{b.tagline ?? "Trusted brand"}</p>
+                      {b.products.length > 0 && (
+                        <p className="mt-1 text-xs text-white/70">
+                          {b.products.length} product{b.products.length !== 1 ? "s" : ""}
+                        </p>
+                      )}
                     </div>
                   </div>
-                </div>
-                {b.products.length > 0 ? (
-                  <ProductRail title={`From ${b.name}`} products={b.products} />
-                ) : (
-                  <p className="px-4 py-5 text-xs text-muted-foreground">
-                    Products from this brand are coming soon.
-                  </p>
-                )}
-              </div>
-            </Reveal>
-          ))}
+                  <BrandProducts name={b.name} products={b.products} />
+                </article>
+              </Reveal>
+            );
+          })}
         </div>
       )}
     </PageShell>

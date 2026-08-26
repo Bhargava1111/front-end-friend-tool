@@ -23,6 +23,114 @@ import {
   type VariantRow,
 } from "@/lib/admin-product-form";
 
+function VariantQtyTiersEditor({
+  tiers,
+  fallbackPrice,
+  fallbackMrp,
+  onChange,
+}: {
+  tiers: PriceTierRow[];
+  fallbackPrice: string;
+  fallbackMrp: string;
+  onChange: (next: PriceTierRow[]) => void;
+}) {
+  return (
+    <div className="mt-3 border-t border-border/70 pt-3">
+      <div className="flex items-center justify-between gap-2">
+        <div>
+          <Label className="text-xs">Qty price tiers</Label>
+          <p className="mt-0.5 text-[10px] text-muted-foreground">
+            Shown on the product page for this pack (Qty / ₹/pc / Profit).
+          </p>
+        </div>
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          className="h-8"
+          onClick={() =>
+            onChange([
+              ...tiers,
+              {
+                ...emptyPriceTier,
+                min_qty: tiers.length === 0 ? "1" : "6",
+                max_qty: tiers.length === 0 ? "5" : "999",
+                unit_price: fallbackPrice,
+              },
+            ])
+          }
+        >
+          <Plus className="mr-1 h-3.5 w-3.5" /> Add tier
+        </Button>
+      </div>
+
+      {tiers.length === 0 ? (
+        <p className="mt-2 text-[11px] text-muted-foreground">No qty tiers for this pack yet.</p>
+      ) : (
+        <div className="mt-2 space-y-2">
+          {tiers.map((tier, i) => {
+            const update = (patch: Partial<PriceTierRow>) =>
+              onChange(tiers.map((row, idx) => (idx === i ? { ...row, ...patch } : row)));
+            const mrp = Number(fallbackMrp || 0);
+            const unit = Number(tier.unit_price || 0);
+            const profit =
+              mrp > 0 && unit > 0 && mrp > unit
+                ? (((mrp - unit) / mrp) * 100).toFixed(2)
+                : null;
+            return (
+              <div key={i} className="rounded-lg border border-border/60 bg-card/80 p-2">
+                <div className="grid grid-cols-[1fr_1fr_1fr_auto] items-end gap-2">
+                  <div>
+                    <Label className="text-[10px] text-muted-foreground">Min qty</Label>
+                    <Input
+                      aria-label={`Pack tier ${i + 1} min qty`}
+                      inputMode="numeric"
+                      value={tier.min_qty}
+                      onChange={(e) => update({ min_qty: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-[10px] text-muted-foreground">Max qty</Label>
+                    <Input
+                      aria-label={`Pack tier ${i + 1} max qty`}
+                      inputMode="numeric"
+                      value={tier.max_qty}
+                      onChange={(e) => update({ max_qty: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-[10px] text-muted-foreground">₹ / pc</Label>
+                    <Input
+                      aria-label={`Pack tier ${i + 1} unit price`}
+                      inputMode="decimal"
+                      placeholder={fallbackPrice || "Price"}
+                      value={tier.unit_price}
+                      onChange={(e) => update({ unit_price: e.target.value })}
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    aria-label={`Remove pack tier ${i + 1}`}
+                    onClick={() => onChange(tiers.filter((_, idx) => idx !== i))}
+                    className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-destructive/10 text-destructive"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+                {profit && (
+                  <p className="mt-1 text-[10px] font-medium text-emerald-600 dark:text-emerald-400">
+                    Profit vs MRP: {profit}%
+                  </p>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 type Category = { id: string; name: string };
 
 export function AdminProductForm({
@@ -254,114 +362,6 @@ export function AdminProductForm({
 
       <div className="rounded-2xl border border-border p-3">
         <div className="flex items-center justify-between">
-          <div>
-            <Label>Qty price tiers</Label>
-            <p className="mt-0.5 text-[11px] text-muted-foreground">
-              Shown on product page (Qty / ₹/pc / Profit). Example: 1–2 @ ₹230.99, 3–999 @ ₹226.
-            </p>
-          </div>
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            onClick={() =>
-              setForm({
-                ...form,
-                price_tiers: [
-                  ...form.price_tiers,
-                  {
-                    ...emptyPriceTier,
-                    min_qty: form.price_tiers.length === 0 ? "1" : "3",
-                    max_qty: form.price_tiers.length === 0 ? "2" : "999",
-                    unit_price: form.price,
-                  },
-                ],
-              })
-            }
-          >
-            <Plus className="mr-1 h-3.5 w-3.5" /> Add tier
-          </Button>
-        </div>
-
-        {form.price_tiers.length === 0 && (
-          <p className="mt-2 text-xs text-muted-foreground">
-            No qty tiers yet — storefront will show default price only.
-          </p>
-        )}
-
-        <div className="mt-3 space-y-2">
-          {form.price_tiers.map((tier, i) => {
-            const update = (patch: Partial<PriceTierRow>) =>
-              setForm({
-                ...form,
-                price_tiers: form.price_tiers.map((row, idx) =>
-                  idx === i ? { ...row, ...patch } : row,
-                ),
-              });
-            const mrp = Number(form.mrp || 0);
-            const unit = Number(tier.unit_price || 0);
-            const profit =
-              mrp > 0 && unit > 0 && mrp > unit
-                ? (((mrp - unit) / mrp) * 100).toFixed(2)
-                : null;
-            return (
-              <div key={i} className="rounded-xl bg-secondary/50 p-2.5">
-                <div className="grid grid-cols-[1fr_1fr_1fr_auto] items-end gap-2">
-                  <div>
-                    <Label className="text-[11px] text-muted-foreground">Min qty</Label>
-                    <Input
-                      aria-label={`Tier ${i + 1} min qty`}
-                      inputMode="numeric"
-                      value={tier.min_qty}
-                      onChange={(e) => update({ min_qty: e.target.value })}
-                    />
-                  </div>
-                  <div>
-                    <Label className="text-[11px] text-muted-foreground">Max qty</Label>
-                    <Input
-                      aria-label={`Tier ${i + 1} max qty`}
-                      inputMode="numeric"
-                      value={tier.max_qty}
-                      onChange={(e) => update({ max_qty: e.target.value })}
-                    />
-                  </div>
-                  <div>
-                    <Label className="text-[11px] text-muted-foreground">₹ / pc</Label>
-                    <Input
-                      aria-label={`Tier ${i + 1} unit price`}
-                      inputMode="decimal"
-                      placeholder={form.price || "Price"}
-                      value={tier.unit_price}
-                      onChange={(e) => update({ unit_price: e.target.value })}
-                    />
-                  </div>
-                  <button
-                    type="button"
-                    aria-label={`Remove tier ${i + 1}`}
-                    onClick={() =>
-                      setForm({
-                        ...form,
-                        price_tiers: form.price_tiers.filter((_, idx) => idx !== i),
-                      })
-                    }
-                    className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-destructive/10 text-destructive"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                </div>
-                {profit && (
-                  <p className="mt-1.5 text-[11px] font-medium text-emerald-600 dark:text-emerald-400">
-                    Profit vs MRP: {profit}%
-                  </p>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      <div className="rounded-2xl border border-border p-3">
-        <div className="flex items-center justify-between">
           <Label>Pack sizes / variants</Label>
           <Button
             type="button"
@@ -537,10 +537,27 @@ export function AdminProductForm({
                     Active
                   </label>
                 </div>
+                <VariantQtyTiersEditor
+                  tiers={v.price_tiers}
+                  fallbackPrice={v.price || form.price}
+                  fallbackMrp={v.mrp || form.mrp}
+                  onChange={(price_tiers) => update({ price_tiers })}
+                />
               </div>
             );
           })}
         </div>
+
+        {form.variants.length === 0 && (
+          <div className="mt-4 border-t border-border pt-4">
+            <VariantQtyTiersEditor
+              tiers={form.price_tiers}
+              fallbackPrice={form.price}
+              fallbackMrp={form.mrp}
+              onChange={(price_tiers) => setForm({ ...form, price_tiers })}
+            />
+          </div>
+        )}
       </div>
 
       <div className="flex flex-wrap gap-5 pt-1">

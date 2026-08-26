@@ -75,16 +75,18 @@ def _normalize_pack_unit(unit: str, fallback: str = "g") -> str:
 def _format_pack_label(unit_value: float, unit: str) -> str:
     if not unit_value or unit_value <= 0:
         return ""
+    if unit == "kg":
+        display_value = int(unit_value) if unit_value == int(unit_value) else round(unit_value, 2)
+        return f"{display_value} kg"
     if unit == "l":
         display_value = int(unit_value) if unit_value == int(unit_value) else round(unit_value, 2)
         return f"{display_value} L"
     if unit == "pcs":
         display_value = int(unit_value) if unit_value == int(unit_value) else round(unit_value, 2)
-        return f"{display_value} pc"
-    display_value = int(unit_value) if unit in {"g", "ml"} else (
-        int(unit_value) if unit_value == int(unit_value) else round(unit_value, 2)
-    )
-    return f"{display_value} {unit}"
+        return f"{display_value}pc"
+    if unit == "ml":
+        return f"{int(round(unit_value))}ml"
+    return f"{int(round(unit_value))}g"
 
 
 def _normalize_variant_payload(v: dict) -> dict:
@@ -99,6 +101,10 @@ def _normalize_variant_payload(v: dict) -> dict:
         if not unit_value or unit_value <= 0 or unit != parsed_unit:
             unit_value = parsed_value
             unit = parsed_unit
+        label = _format_pack_label(unit_value, unit)
+    elif re.match(r"^\d+(?:\.\d+)?$", label):
+        unit_value = float(label)
+        label = _format_pack_label(unit_value, unit)
 
     if not unit_value or unit_value <= 0:
         unit_value = 1
@@ -511,6 +517,7 @@ class AdminProductView(APIView):
                     stock=int(normalized.get("stock") or 0),
                     sku=normalized.get("sku") or "",
                     image_url=normalized.get("image_url") or "",
+                    price_tiers=normalize_price_tiers(normalized.get("price_tiers") or []),
                     is_default=bool(normalized.get("is_default", False)),
                     is_active=bool(normalized.get("is_active", True)),
                     sort_order=int(normalized.get("sort_order") or 0),

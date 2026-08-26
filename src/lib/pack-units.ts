@@ -50,6 +50,15 @@ export function parsePackLabel(label: string): { value: number; unit: CanonicalU
 }
 
 export function formatPackLabel(value: number | string, unit: string): string {
+  return formatPackLabelCompact(value, unit, { spaced: true });
+}
+
+/** Storefront-friendly pack label: 100g, 500ml, 1 kg, 1 L */
+export function formatPackLabelCompact(
+  value: number | string,
+  unit: string,
+  options?: { spaced?: boolean },
+): string {
   const num = typeof value === "string" ? Number(value) : value;
   const u = normalizeUnit(unit);
   if (!Number.isFinite(num) || num <= 0) return "";
@@ -61,8 +70,33 @@ export function formatPackLabel(value: number | string, unit: string): string {
         : Number(num.toFixed(2))
       : Math.round(num);
 
-  const displayUnit = u === "l" ? "L" : u === "pcs" ? "pc" : u;
-  return `${displayValue} ${displayUnit}`;
+  const spaced = options?.spaced ?? false;
+  if (u === "kg") return spaced ? `${displayValue} kg` : `${displayValue} kg`;
+  if (u === "l") return spaced ? `${displayValue} L` : `${displayValue} L`;
+  if (u === "ml") return spaced ? `${displayValue} ml` : `${displayValue}ml`;
+  if (u === "pcs") return spaced ? `${displayValue} pc` : `${displayValue}pc`;
+  return spaced ? `${displayValue} g` : `${displayValue}g`;
+}
+
+/** Always show value + unit even when admin saved label as plain "100" or "500". */
+export function formatVariantDisplayLabel(input: {
+  label?: string | null;
+  unit?: string | null;
+  unit_value?: number | string | null;
+}): string {
+  const rawLabel = (input.label ?? "").trim();
+  const parsed = rawLabel ? parsePackLabel(rawLabel) : null;
+  if (parsed) return formatPackLabelCompact(parsed.value, parsed.unit);
+
+  const unit = normalizeUnit(input.unit, "g");
+  const value = resolveVariantValue(rawLabel, input.unit_value ?? "", unit);
+
+  if (rawLabel && /^\d+(?:\.\d+)?$/.test(rawLabel)) {
+    return formatPackLabelCompact(Number(rawLabel), unit);
+  }
+
+  if (rawLabel) return rawLabel;
+  return formatPackLabelCompact(value, unit);
 }
 
 export function resolveVariantUnit(label: string, unit: string): CanonicalUnit {

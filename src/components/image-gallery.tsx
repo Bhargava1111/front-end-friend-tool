@@ -27,7 +27,7 @@ export function ImageGallery({
   return (
     <>
       <div
-        className="relative aspect-square w-full overflow-hidden bg-secondary"
+        className="relative aspect-square w-full overflow-hidden bg-white"
         onMouseMove={(e) => {
           const r = e.currentTarget.getBoundingClientRect();
           setOrigin(`${((e.clientX - r.left) / r.width) * 100}% ${((e.clientY - r.top) / r.height) * 100}%`);
@@ -37,7 +37,7 @@ export function ImageGallery({
           src={list[active]}
           alt={alt}
           style={{ transformOrigin: origin }}
-          className="h-full w-full object-contain transition-transform duration-300 md:hover:scale-[1.15]"
+          className="h-full w-full object-contain p-2 transition-transform duration-300 sm:p-4 md:hover:scale-[1.12]"
         />
         {badge}
         <button

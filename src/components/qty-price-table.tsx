@@ -15,6 +15,42 @@ type AdminTier = {
   unit_price?: number;
 };
 
+function normalizeAdminTiers(adminTiers?: AdminTier[] | null) {
+  return (adminTiers ?? [])
+    .map((t) => ({
+      min: Number(t.min_qty ?? 1),
+      max: Number(t.max_qty ?? 999),
+      unitPrice: Number(t.unit_price ?? 0),
+    }))
+    .filter((t) => t.min >= 1 && t.max >= t.min && t.unitPrice > 0)
+    .sort((a, b) => a.min - b.min || a.max - b.max);
+}
+
+/** Base tier price used to scale qty breaks across pack sizes. */
+export function referenceTierUnitPrice(adminTiers: AdminTier[] | null | undefined, fallback: number) {
+  const tiers = normalizeAdminTiers(adminTiers);
+  const coverOne = tiers.find((t) => t.min <= 1 && t.max >= 1);
+  return coverOne?.unitPrice ?? tiers[0]?.unitPrice ?? fallback;
+}
+
+/** Scale admin qty tiers to match the selected pack variant price. */
+export function resolveVariantPriceTiers(
+  adminTiers: AdminTier[] | null | undefined,
+  variantPrice: number,
+  referencePrice: number,
+): AdminTier[] | null {
+  const tiers = adminTiers ?? [];
+  if (tiers.length === 0) return null;
+  if (referencePrice <= 0) return tiers;
+  const ratio = variantPrice / referencePrice;
+  if (Math.abs(ratio - 1) < 0.0001) return tiers;
+  return tiers.map((t) => ({
+    min_qty: t.min_qty,
+    max_qty: t.max_qty,
+    unit_price: Math.round(Number(t.unit_price ?? 0) * ratio * 100) / 100,
+  }));
+}
+
 function profitPct(unitPrice: number, mrp: number | null | undefined) {
   return mrp && mrp > unitPrice ? Math.round(((mrp - unitPrice) / mrp) * 10000) / 100 : 0;
 }
@@ -27,14 +63,7 @@ export function buildQtyPriceTiers(
   adminTiers?: AdminTier[] | null,
 ): QtyPriceTier[] {
   const cap = Math.max(1, Math.min(999, maxQty || 999));
-  const configured = (adminTiers ?? [])
-    .map((t) => ({
-      min: Number(t.min_qty ?? 1),
-      max: Number(t.max_qty ?? 999),
-      unitPrice: Number(t.unit_price ?? 0),
-    }))
-    .filter((t) => t.min >= 1 && t.max >= t.min && t.unitPrice > 0)
-    .sort((a, b) => a.min - b.min || a.max - b.max);
+  const configured = normalizeAdminTiers(adminTiers);
 
   if (configured.length > 0) {
     return configured.map((t) => ({
@@ -81,13 +110,7 @@ export function unitPriceForQty(
   basePrice: number,
   adminTiers?: AdminTier[] | null,
 ) {
-  const tiers = (adminTiers ?? [])
-    .map((t) => ({
-      min: Number(t.min_qty ?? 1),
-      max: Number(t.max_qty ?? 999),
-      unitPrice: Number(t.unit_price ?? 0),
-    }))
-    .filter((t) => t.min >= 1 && t.max >= t.min && t.unitPrice > 0);
+  const tiers = normalizeAdminTiers(adminTiers);
 
   for (const t of tiers) {
     if (qty >= t.min && qty <= t.max) return t.unitPrice;
@@ -102,6 +125,7 @@ export function QtyPriceTable({
   selectedQty,
   onSelectQty,
   adminTiers,
+  embedded = false,
 }: {
   unitPrice: number;
   mrp: number | null | undefined;
@@ -109,6 +133,7 @@ export function QtyPriceTable({
   selectedQty: number;
   onSelectQty: (qty: number) => void;
   adminTiers?: AdminTier[] | null;
+  embedded?: boolean;
 }) {
   const cap = Math.max(1, Math.min(999, maxQty || 999));
   const tiers = buildQtyPriceTiers(unitPrice, mrp, cap, adminTiers);
@@ -116,7 +141,7 @@ export function QtyPriceTable({
   const activeUnit = unitPriceForQty(selectedQty, unitPrice, adminTiers);
 
   return (
-    <div className="mt-4 space-y-2">
+    <div className={embedded ? "mt-2 space-y-2" : "mt-4 space-y-2"}>
       <p className="text-sm text-muted-foreground">
         MRP:{" "}
         <span className="font-semibold text-foreground">

@@ -19,7 +19,7 @@ import type { Banner, Product } from "@/lib/types";
 import type { HomeSectionBlock } from "@/lib/offer-sections";
 import { homeSectionDisplaySize, sortHomeSections } from "@/lib/offer-sections";
 import { resolveHomeSectionBlockProducts, type HomeCatalogData } from "@/lib/offer-section-products";
-import { brandCardImage, brandGradient, brandInitials } from "@/lib/brand-ui";
+import { brandGradient, brandInitials, brandRailVisual } from "@/lib/brand-ui";
 import { ProductRail } from "./product-rail";
 
 function useCountdown(target: number) {
@@ -326,14 +326,14 @@ export function BrandRail({ title = "Featured brands" }: { title?: string }) {
         name: b.name,
         slug: b.slug,
         tagline: b.tagline ?? "Trusted brand",
-        image: brandCardImage(b.logo_url, b.banner_url),
+        image: brandRailVisual(b.logo_url),
       }))
     : BRANDS.map((b) => ({
         key: b.name,
         name: b.name,
         slug: b.name.toLowerCase().replace(/\s+/g, "-"),
         tagline: b.tagline,
-        image: brandCardImage(null, null),
+        image: brandRailVisual(null),
       }));
 
   if (!list.length) return null;
@@ -344,18 +344,17 @@ export function BrandRail({ title = "Featured brands" }: { title?: string }) {
         <h2 className="text-base font-bold text-foreground">{title}</h2>
         <SeeAll to="/brands" />
       </div>
-      <div className="no-scrollbar mt-3 flex gap-3 overflow-x-auto px-4 pb-1">
+      <div className="no-scrollbar mt-3 flex gap-3 overflow-x-auto px-4 pb-2">
         {list.map((b) => (
           <Link
             key={b.key}
-            to="/search"
-            search={{ q: b.name }}
-            className="group flex w-[108px] shrink-0 flex-col overflow-hidden rounded-2xl border border-border/80 bg-card shadow-sm transition-transform active:scale-[0.97] sm:w-[118px]"
+            to="/brands"
+            className="group flex w-[132px] shrink-0 flex-col overflow-hidden rounded-2xl border border-border/70 bg-card shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md active:scale-[0.98] sm:w-[148px]"
           >
             <div
               className={cn(
-                "relative flex h-[76px] items-center justify-center bg-gradient-to-br p-3 sm:h-[82px]",
-                b.image.type === "logo" ? "from-secondary to-secondary/70" : brandGradient(b.name),
+                "relative flex aspect-square items-center justify-center overflow-hidden",
+                b.image.type === "logo" ? "bg-white" : `bg-gradient-to-br ${brandGradient(b.name)}`,
               )}
             >
               {b.image.type === "logo" ? (
@@ -363,32 +362,17 @@ export function BrandRail({ title = "Featured brands" }: { title?: string }) {
                   src={b.image.src}
                   alt={b.name}
                   loading="lazy"
-                  className="max-h-full max-w-full object-contain drop-shadow-sm"
+                  className="h-[88%] w-[88%] object-contain"
                 />
-              ) : b.image.type === "banner" ? (
-                <>
-                  <img
-                    src={b.image.src}
-                    alt=""
-                    loading="lazy"
-                    className="absolute inset-0 h-full w-full object-cover opacity-90"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/15 to-transparent" />
-                  <span className="relative text-lg font-bold text-white drop-shadow">
-                    {brandInitials(b.name)}
-                  </span>
-                </>
               ) : (
-                <span className="grid h-12 w-12 place-items-center rounded-2xl bg-white/20 text-sm font-bold text-white backdrop-blur-sm">
+                <span className="grid h-16 w-16 place-items-center rounded-2xl bg-white/25 text-lg font-bold text-white shadow-inner backdrop-blur-sm">
                   {brandInitials(b.name)}
                 </span>
               )}
             </div>
-            <div className="flex min-h-[52px] flex-col justify-center px-2.5 py-2 text-center">
-              <span className="line-clamp-1 text-[11px] font-semibold text-foreground">{b.name}</span>
-              <span className="mt-0.5 line-clamp-2 text-[9px] leading-snug text-muted-foreground">
-                {b.tagline}
-              </span>
+            <div className="flex flex-col items-center px-2 py-2.5 text-center">
+              <span className="line-clamp-1 text-xs font-semibold text-foreground">{b.name}</span>
+              <span className="mt-0.5 line-clamp-1 text-[10px] text-muted-foreground">{b.tagline}</span>
             </div>
           </Link>
         ))}
@@ -484,30 +468,20 @@ function BannerSlide({
   return <div className="shrink-0">{body}</div>;
 }
 
-/** Deal / discount banners — horizontal scroll or grid when few items. */
+/** Deal / discount banners — horizontal scroll. */
 export function OfferBannerCarousel({ banners }: { banners: Banner[] }) {
-  const ref = useAutoScroll<HTMLDivElement>(banners.length > 3);
+  const ref = useAutoScroll<HTMLDivElement>(banners.length > 2);
+
   if (banners.length === 0) return null;
-  const useGrid = banners.length <= 3;
 
   return (
-    <div
-      ref={useGrid ? undefined : ref}
-      className={cn(
-        useGrid
-          ? "grid gap-3 sm:grid-cols-2 lg:grid-cols-3"
-          : "no-scrollbar flex gap-3 overflow-x-auto pb-1",
-      )}
-    >
+    <div ref={ref} className="no-scrollbar flex gap-3 overflow-x-auto pb-1">
       {banners.map((b) => (
         <BannerSlide
           key={b.id}
           banner={b}
           layout="card"
-          className={cn(
-            "shrink-0",
-            useGrid ? "w-full" : "w-[min(88vw,340px)] sm:w-[300px]",
-          )}
+          className="w-[min(78vw,280px)] shrink-0 sm:w-[260px]"
           overlayClass=""
           badge={
             <span className="mb-1.5 w-fit rounded-full bg-accent px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-accent-foreground">
@@ -549,7 +523,7 @@ export function HomeOffersStrip({
           <OfferBannerCarousel banners={banners} />
         </div>
       )}
-      <div className="mt-3 px-4">
+      <div className="mt-4 px-4">
         <OfferCards embedded />
       </div>
     </Reveal>

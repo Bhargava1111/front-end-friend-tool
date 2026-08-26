@@ -78,6 +78,7 @@ class ProductVariant(models.Model):
     stock = models.IntegerField(default=0)
     sku = models.CharField(max_length=50, blank=True, default="")
     image_url = models.URLField(blank=True, default="")
+    price_tiers = models.JSONField(default=list, blank=True)
     is_default = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     sort_order = models.IntegerField(default=0)

@@ -1,5 +1,6 @@
 import {
   formatPackLabel,
+  formatPackLabelCompact,
   normalizeUnit,
   parsePackLabel,
   resolveVariantUnit,
@@ -16,6 +17,7 @@ export type VariantRow = {
   stock: string;
   sku: string;
   image_url: string;
+  price_tiers: PriceTierRow[];
   is_default: boolean;
   is_active: boolean;
 };
@@ -54,15 +56,15 @@ export type ProductForm = {
 export const UNITS = ["g", "kg", "ml", "l", "pcs"] as const;
 
 export const PACK_PRESETS: Array<{ label: string; unit: string; unit_value: string }> = [
-  { label: "50 g", unit: "g", unit_value: "50" },
-  { label: "100 g", unit: "g", unit_value: "100" },
-  { label: "250 g", unit: "g", unit_value: "250" },
-  { label: "500 g", unit: "g", unit_value: "500" },
+  { label: "50g", unit: "g", unit_value: "50" },
+  { label: "100g", unit: "g", unit_value: "100" },
+  { label: "250g", unit: "g", unit_value: "250" },
+  { label: "500g", unit: "g", unit_value: "500" },
   { label: "1 kg", unit: "kg", unit_value: "1" },
-  { label: "200 ml", unit: "ml", unit_value: "200" },
-  { label: "500 ml", unit: "ml", unit_value: "500" },
+  { label: "200ml", unit: "ml", unit_value: "200" },
+  { label: "500ml", unit: "ml", unit_value: "500" },
   { label: "1 L", unit: "l", unit_value: "1" },
-  { label: "1 pc", unit: "pcs", unit_value: "1" },
+  { label: "1pc", unit: "pcs", unit_value: "1" },
 ];
 
 export const emptyVariant: VariantRow = {
@@ -74,6 +76,7 @@ export const emptyVariant: VariantRow = {
   stock: "0",
   sku: "",
   image_url: "",
+  price_tiers: [],
   is_default: false,
   is_active: true,
 };
@@ -82,7 +85,13 @@ export const emptyVariant: VariantRow = {
 export function normalizeVariantRow(v: Partial<VariantRow> & Pick<VariantRow, "label" | "unit" | "unit_value">): VariantRow {
   const unit = resolveVariantUnit(v.label, v.unit);
   const value = resolveVariantValue(v.label, v.unit_value, unit);
-  const label = v.label.trim() || formatPackLabel(value, unit);
+  const trimmed = v.label.trim();
+  const parsed = trimmed ? parsePackLabel(trimmed) : null;
+  const label = parsed
+    ? formatPackLabelCompact(parsed.value, parsed.unit)
+    : /^\d+(?:\.\d+)?$/.test(trimmed)
+      ? formatPackLabelCompact(Number(trimmed), unit)
+      : trimmed || formatPackLabelCompact(value, unit);
 
   return {
     id: v.id,
@@ -94,6 +103,7 @@ export function normalizeVariantRow(v: Partial<VariantRow> & Pick<VariantRow, "l
     stock: v.stock ?? "0",
     sku: v.sku ?? "",
     image_url: v.image_url ?? "",
+    price_tiers: v.price_tiers ?? [],
     is_default: v.is_default ?? false,
     is_active: v.is_active ?? true,
   };
@@ -110,9 +120,18 @@ export function syncVariantPatch(
     if (parsed) {
       return {
         ...next,
-        label: patch.label,
+        label: formatPackLabelCompact(parsed.value, parsed.unit),
         unit: parsed.unit,
         unit_value: String(parsed.value),
+      };
+    }
+    if (/^\d+(?:\.\d+)?$/.test(patch.label.trim())) {
+      const unit = normalizeUnit(patch.unit ?? next.unit);
+      return {
+        ...next,
+        label: formatPackLabelCompact(Number(patch.label.trim()), unit),
+        unit,
+        unit_value: patch.label.trim(),
       };
     }
     return { ...next, label: patch.label };
@@ -125,7 +144,7 @@ export function syncVariantPatch(
     const numeric = Number(trimmed);
     const label =
       trimmed !== "" && Number.isFinite(numeric) && numeric > 0
-        ? formatPackLabel(numeric, unit) || next.label
+        ? formatPackLabelCompact(numeric, unit) || next.label
         : next.label;
     return {
       ...next,
@@ -141,7 +160,7 @@ export function syncVariantPatch(
     const numeric = Number(trimmed);
     const label =
       trimmed !== "" && Number.isFinite(numeric) && numeric > 0
-        ? formatPackLabel(numeric, unit) || next.label
+        ? formatPackLabelCompact(numeric, unit) || next.label
         : next.label;
     return {
       ...next,
@@ -158,6 +177,26 @@ export const emptyPriceTier: PriceTierRow = {
   max_qty: "2",
   unit_price: "",
 };
+
+export function mapPriceTierRows(
+  tiers?: Array<{ min_qty?: number; max_qty?: number; unit_price?: number }> | null,
+): PriceTierRow[] {
+  return (tiers ?? []).map((t) => ({
+    min_qty: String(t.min_qty ?? 1),
+    max_qty: String(t.max_qty ?? 999),
+    unit_price: String(t.unit_price ?? ""),
+  }));
+}
+
+export function serializePriceTierRows(rows: PriceTierRow[]) {
+  return rows
+    .map((t) => ({
+      min_qty: Number(t.min_qty || 1),
+      max_qty: Number(t.max_qty || 999),
+      unit_price: Number(t.unit_price || 0),
+    }))
+    .filter((t) => t.min_qty >= 1 && t.max_qty >= t.min_qty && t.unit_price > 0);
+}
 
 export const emptyProductForm: ProductForm = {
   name: "",
@@ -224,17 +263,12 @@ export function productFormToPayload(f: ProductForm) {
         stock: Number(row.stock || 0),
         sku: row.sku || "",
         image_url: row.image_url || "",
+        price_tiers: serializePriceTierRows(v.price_tiers ?? []),
         is_default: row.is_default,
         is_active: row.is_active,
       };
     }),
-    price_tiers: f.price_tiers
-      .map((t) => ({
-        min_qty: Number(t.min_qty || 1),
-        max_qty: Number(t.max_qty || 999),
-        unit_price: Number(t.unit_price || 0),
-      }))
-      .filter((t) => t.min_qty >= 1 && t.max_qty >= t.min_qty && t.unit_price > 0),
+    price_tiers: serializePriceTierRows(f.price_tiers),
     is_combo: f.is_combo,
     combo_items: f.is_combo
       ? f.combo_items
@@ -277,6 +311,11 @@ export function productToForm(p: {
     stock: number;
     sku?: string | null;
     image_url?: string | null;
+    price_tiers?: Array<{
+      min_qty?: number;
+      max_qty?: number;
+      unit_price?: number;
+    }> | null;
     is_default: boolean;
     is_active: boolean;
   }>;
@@ -307,8 +346,10 @@ export function productToForm(p: {
     benefits: (p.benefits ?? []).join("\n"),
     shelf_life: p.shelf_life ?? "",
     origin: p.origin ?? "",
-    variants: (p.variants ?? []).map((v) =>
-      normalizeVariantRow({
+    variants: (p.variants ?? []).map((v) => {
+      const sharedTiers = mapPriceTierRows(p.price_tiers);
+      const variantTiers = mapPriceTierRows(v.price_tiers);
+      return normalizeVariantRow({
         id: v.id,
         label: v.label,
         unit: v.unit,
@@ -318,15 +359,12 @@ export function productToForm(p: {
         stock: String(v.stock),
         sku: v.sku ?? "",
         image_url: v.image_url ?? "",
+        price_tiers: variantTiers.length > 0 ? variantTiers : sharedTiers,
         is_default: v.is_default,
         is_active: v.is_active,
-      }),
-    ),
-    price_tiers: (p.price_tiers ?? []).map((t) => ({
-      min_qty: String(t.min_qty ?? 1),
-      max_qty: String(t.max_qty ?? 999),
-      unit_price: String(t.unit_price ?? ""),
-    })),
+      });
+    }),
+    price_tiers: mapPriceTierRows(p.price_tiers),
     is_combo: Boolean(p.is_combo),
     combo_items: (p.combo_items ?? []).map((item) => ({
       product_id: item.product_id,

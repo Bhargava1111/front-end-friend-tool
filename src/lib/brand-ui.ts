@@ -23,6 +23,12 @@ export function brandInitials(name: string) {
   return name.slice(0, 2).toUpperCase();
 }
 
+/** Compact home-rail cards: logo or gradient initials only (never category banner photos). */
+export function brandRailVisual(logo?: string | null) {
+  if (logo?.trim()) return { type: "logo" as const, src: logo.trim() };
+  return { type: "initials" as const, src: null };
+}
+
 /** Prefer logo; ignore generic banner strips on compact brand cards. */
 export function brandCardImage(logo?: string | null, banner?: string | null) {
   if (logo?.trim()) return { type: "logo" as const, src: logo.trim() };

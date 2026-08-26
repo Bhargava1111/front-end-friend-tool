@@ -21,7 +21,7 @@ class ProductVariantSerializer(serializers.ModelSerializer):
         model = ProductVariant
         fields = (
             "id", "product_id", "label", "unit", "unit_value", "price", "mrp",
-            "stock", "sku", "image_url", "is_default", "is_active", "sort_order",
+            "stock", "sku", "image_url", "price_tiers", "is_default", "is_active", "sort_order",
         )
 
     def get_price(self, obj):
