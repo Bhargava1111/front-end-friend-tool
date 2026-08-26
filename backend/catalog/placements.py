@@ -214,6 +214,8 @@ def home_sections_payload(sections_map: dict[str, list], all_serialized: list):
             "max_price": s.max_price,
             "max_products": s.max_products,
             "sort_order": s.sort_order,
+            "is_active": s.is_active,
+            "show_on_home": s.show_on_home,
             "products": products,
         })
     return payload

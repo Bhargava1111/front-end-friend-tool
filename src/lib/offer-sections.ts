@@ -60,6 +60,17 @@ export type HomeSectionBlock = HomeOfferSectionDef & {
 
 export type OfferSectionsMap = Partial<Record<string, Product[]>>;
 
+/** Stable sort for home sections — matches admin drag order. */
+export function sortHomeSections<T extends { sort_order?: number; title?: string; key?: string }>(
+  sections: T[],
+): T[] {
+  return [...sections].sort((a, b) => {
+    const order = (a.sort_order ?? 0) - (b.sort_order ?? 0);
+    if (order !== 0) return order;
+    return (a.title ?? a.key ?? "").localeCompare(b.title ?? b.key ?? "");
+  });
+}
+
 /** Build ordered home sections from API payload (supports older cached responses). */
 export function resolveHomeSections(data: {
   home_sections?: HomeSectionBlock[];
@@ -68,15 +79,16 @@ export function resolveHomeSections(data: {
   all?: Product[];
 }): HomeSectionBlock[] {
   if (data.home_sections?.length) {
-    return [...data.home_sections].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
+    return sortHomeSections(
+      data.home_sections.filter((s) => s.is_active !== false && s.show_on_home !== false),
+    );
   }
   const meta = data.section_meta ?? [];
   if (!meta.length) return [];
   const byId = new Map((data.all ?? []).map((p) => [p.id, p]));
-  return meta
-    .filter((s) => s.is_active !== false && s.show_on_home !== false)
-    .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
-    .map((s) => {
+  return sortHomeSections(
+    meta.filter((s) => s.is_active !== false && s.show_on_home !== false),
+  ).map((s) => {
       const fromIds = (s.resolved_product_ids ?? [])
         .map((id) => byId.get(id))
         .filter((p): p is Product => Boolean(p));

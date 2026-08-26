@@ -17,8 +17,9 @@ import { formatINR } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { Banner, Product } from "@/lib/types";
 import type { HomeSectionBlock } from "@/lib/offer-sections";
-import { homeSectionDisplaySize } from "@/lib/offer-sections";
+import { homeSectionDisplaySize, sortHomeSections } from "@/lib/offer-sections";
 import { resolveHomeSectionBlockProducts, type HomeCatalogData } from "@/lib/offer-section-products";
+import { brandCardImage, brandGradient, brandInitials } from "@/lib/brand-ui";
 import { ProductRail } from "./product-rail";
 
 function useCountdown(target: number) {
@@ -323,62 +324,72 @@ export function BrandRail({ title = "Featured brands" }: { title?: string }) {
     ? brands.map((b) => ({
         key: b.id,
         name: b.name,
+        slug: b.slug,
         tagline: b.tagline ?? "Trusted brand",
-        logo: b.logo_url,
-        banner: b.banner_url,
-        initials: b.name.slice(0, 2).toUpperCase(),
+        image: brandCardImage(b.logo_url, b.banner_url),
       }))
     : BRANDS.map((b) => ({
         key: b.name,
         name: b.name,
+        slug: b.name.toLowerCase().replace(/\s+/g, "-"),
         tagline: b.tagline,
-        logo: null,
-        banner: null,
-        initials: b.initials,
+        image: brandCardImage(null, null),
       }));
 
+  if (!list.length) return null;
+
   return (
-    <Reveal className="mt-5">
+    <Reveal className="mt-7">
       <div className="flex items-center justify-between px-4">
-        <h2 className="text-sm font-bold text-foreground sm:text-base">{title}</h2>
+        <h2 className="text-base font-bold text-foreground">{title}</h2>
         <SeeAll to="/brands" />
       </div>
-      <div className="no-scrollbar mt-2 flex gap-2 overflow-x-auto px-4 pb-1 sm:gap-3">
+      <div className="no-scrollbar mt-3 flex gap-3 overflow-x-auto px-4 pb-1">
         {list.map((b) => (
           <Link
             key={b.key}
-            to="/brands"
-            className="relative flex w-[120px] shrink-0 flex-col overflow-hidden rounded-xl border border-border bg-card text-center card-elevated transition-transform active:scale-[0.97] sm:w-[140px]"
+            to="/search"
+            search={{ q: b.name }}
+            className="group flex w-[108px] shrink-0 flex-col overflow-hidden rounded-2xl border border-border/80 bg-card shadow-sm transition-transform active:scale-[0.97] sm:w-[118px]"
           >
-            <span className="relative block h-[58px] w-full bg-secondary sm:h-[68px]">
-              {b.banner ? (
-                <img
-                  src={b.banner}
-                  alt={`${b.name} offers`}
-                  loading="lazy"
-                  className="h-full w-full object-cover"
-                />
-              ) : (
-                <span className="block h-full w-full bg-gradient-to-br from-primary to-primary/70" />
+            <div
+              className={cn(
+                "relative flex h-[76px] items-center justify-center bg-gradient-to-br p-3 sm:h-[82px]",
+                b.image.type === "logo" ? "from-secondary to-secondary/70" : brandGradient(b.name),
               )}
-              <span className="absolute inset-0 bg-gradient-to-t from-foreground/70 to-transparent" />
-            </span>
-            <span className="-mt-5 flex flex-col items-center gap-1 px-2 pb-2">
-              {b.logo ? (
+            >
+              {b.image.type === "logo" ? (
                 <img
-                  src={b.logo}
+                  src={b.image.src}
                   alt={b.name}
                   loading="lazy"
-                  className="h-9 w-9 rounded-full border-2 border-card object-cover"
+                  className="max-h-full max-w-full object-contain drop-shadow-sm"
                 />
+              ) : b.image.type === "banner" ? (
+                <>
+                  <img
+                    src={b.image.src}
+                    alt=""
+                    loading="lazy"
+                    className="absolute inset-0 h-full w-full object-cover opacity-90"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/15 to-transparent" />
+                  <span className="relative text-lg font-bold text-white drop-shadow">
+                    {brandInitials(b.name)}
+                  </span>
+                </>
               ) : (
-                <span className="grid h-9 w-9 place-items-center rounded-full border-2 border-card bg-primary-soft text-xs font-bold text-primary">
-                  {b.initials}
+                <span className="grid h-12 w-12 place-items-center rounded-2xl bg-white/20 text-sm font-bold text-white backdrop-blur-sm">
+                  {brandInitials(b.name)}
                 </span>
               )}
-              <span className="line-clamp-1 text-[10px] font-semibold text-foreground">{b.name}</span>
-              <span className="line-clamp-1 text-[9px] text-muted-foreground">{b.tagline}</span>
-            </span>
+            </div>
+            <div className="flex min-h-[52px] flex-col justify-center px-2.5 py-2 text-center">
+              <span className="line-clamp-1 text-[11px] font-semibold text-foreground">{b.name}</span>
+              <span className="mt-0.5 line-clamp-2 text-[9px] leading-snug text-muted-foreground">
+                {b.tagline}
+              </span>
+            </div>
           </Link>
         ))}
       </div>
@@ -983,7 +994,7 @@ export function HomeDynamicSections({
   offerBanners?: Banner[];
   festiveBanners?: Banner[];
 }) {
-  const sorted = [...sections].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
+  const sorted = sortHomeSections(sections);
   if (!sorted.length) return null;
   return (
     <>

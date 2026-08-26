@@ -30,6 +30,7 @@ export const Route = createFileRoute("/admin/home-sections/")({
 function invalidateHomeQueries(queryClient: ReturnType<typeof useQueryClient>) {
   queryClient.invalidateQueries({ queryKey: ["admin-home-sections"] });
   queryClient.invalidateQueries({ queryKey: ["home"] });
+  queryClient.invalidateQueries({ queryKey: ["storefront-meta"] });
   queryClient.invalidateQueries({ queryKey: ["admin-products"] });
 }
 
@@ -283,7 +284,10 @@ function AdminHomeSectionsPage() {
                 <p className="text-xs text-muted-foreground">
                   {s.placed_count ?? 0} manually placed · {s.display_count ?? 0} shown on store
                   {" · sort "}
-                  {index + 1}
+                  {(s.sort_order ?? index) + 1}
+                  {s.fallback_rule === "manual" && (s.display_count ?? 0) === 0
+                    ? " · hidden on store until products are added"
+                    : ""}
                 </p>
                 {s.subtitle ? <p className="mt-0.5 text-xs text-muted-foreground">{s.subtitle}</p> : null}
               </div>
