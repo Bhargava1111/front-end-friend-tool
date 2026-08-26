@@ -71,6 +71,15 @@ systemctl restart mnxstore-web.service
 sleep 2
 
 echo ""
+echo "=== Updating Nginx (web on /, API on /api/) ==="
+sed "s|SERVER_NAME_PLACEHOLDER|${VPS_IP}|" \
+  "${APP_DIR}/backend/deploy/vps/nginx/mnxstore.conf" \
+  > /etc/nginx/sites-available/mnxstore
+ln -sf /etc/nginx/sites-available/mnxstore /etc/nginx/sites-enabled/mnxstore
+rm -f /etc/nginx/sites-enabled/default
+nginx -t && systemctl reload nginx
+
+echo ""
 echo "=== Status ==="
 systemctl is-active mnxstore-web.service || true
 curl -sf -o /dev/null -w "Homepage HTTP %{http_code}\n" "http://127.0.0.1:3000/" || echo "Homepage check failed"

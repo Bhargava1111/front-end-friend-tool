@@ -217,8 +217,20 @@ if [[ "${SCENARIO}" == "B" ]]; then
   echo "  systemd + nginx configs installed."
 fi
 
-# Scenario B and C: start services
+# Scenario B and C: start services + ensure nginx routes web on /
 if [[ "${SCENARIO}" == "B" ]] || [[ "${SCENARIO}" == "C" ]]; then
+  section "Repair — nginx + web routing"
+  if [[ -n "${DEPLOY_DIR}" ]] && [[ -f "${DEPLOY_DIR}/nginx/mnxstore.conf" ]]; then
+    sed "s|SERVER_NAME_PLACEHOLDER|${VPS_IP}|" \
+      "${DEPLOY_DIR}/nginx/mnxstore.conf" \
+      > /etc/nginx/sites-available/mnxstore
+    ln -sf /etc/nginx/sites-available/mnxstore /etc/nginx/sites-enabled/mnxstore
+    rm -f /etc/nginx/sites-enabled/default
+    nginx -t && systemctl reload nginx
+  fi
+  if [[ -f "${DEPLOY_DIR}/fix-web-frontend.sh" ]] && [[ ! -d "${APP_DIR}/web-output" ]]; then
+    bash "${DEPLOY_DIR}/fix-web-frontend.sh"
+  fi
   section "Repair — start services"
   if [[ -f "${DEPLOY_DIR}/fix-http.sh" ]]; then
     bash "${DEPLOY_DIR}/fix-http.sh"

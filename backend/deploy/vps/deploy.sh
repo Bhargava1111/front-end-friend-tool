@@ -77,6 +77,24 @@ ensure_node_22() {
   echo "Node: $(node -v)"
 }
 
+ensure_nginx_config() {
+  local deploy_dir="${BACKEND_DIR}/deploy/vps"
+  local vps_ip="${VPS_IP:-200.234.39.88}"
+  if [[ ! -f "${deploy_dir}/nginx/mnxstore.conf" ]]; then
+    echo "WARN: ${deploy_dir}/nginx/mnxstore.conf not found — skipping nginx update."
+    return 0
+  fi
+  echo "=== Updating Nginx (web on /, API on /api/) ==="
+  sed "s|SERVER_NAME_PLACEHOLDER|${vps_ip}|" \
+    "${deploy_dir}/nginx/mnxstore.conf" \
+    > /etc/nginx/sites-available/mnxstore
+  ln -sf /etc/nginx/sites-available/mnxstore /etc/nginx/sites-enabled/mnxstore
+  rm -f /etc/nginx/sites-enabled/default
+  nginx -t
+  systemctl enable nginx >/dev/null 2>&1 || true
+  systemctl reload nginx
+}
+
 ensure_node_22
 chown -R "${APP_USER}:${APP_USER}" "${APP_DIR}"
 
@@ -109,13 +127,15 @@ if [[ -f "${APP_DIR}/package.json" ]] && command -v node >/dev/null 2>&1; then
   fi
 fi
 
-nginx -t && systemctl reload nginx
+ensure_nginx_config
 
 echo ""
 echo "=== Deploy complete ==="
 systemctl is-active mnxstore-api.service || true
 systemctl is-active mnxstore-web.service || true
 sleep 2
+curl -sf -o /dev/null -w "Web homepage HTTP %{http_code}\n" "http://127.0.0.1:3000/" || echo "WARN: web app not responding on :3000"
+curl -sf -o /dev/null -w "Nginx homepage HTTP %{http_code}\n" "http://127.0.0.1/" || echo "WARN: nginx homepage check failed"
 for i in 1 2 3 4 5; do
   if curl -sf "http://127.0.0.1/api/v1/health/" >/dev/null; then
     echo "Health check OK"
