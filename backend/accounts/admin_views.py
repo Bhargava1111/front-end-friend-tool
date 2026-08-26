@@ -573,7 +573,7 @@ class AdminHomeSectionView(APIView):
     def post(self, request):
         data = request.data
         action = data.get("action")
-        if action in ("move", "reorder"):
+        if action in ("move", "reorder", "set_position"):
             return self._handle_section_reorder(data)
         if action == "sync_defaults":
             from catalog.home_sections_defaults import ensure_default_home_sections, apply_canonical_sort_order, normalize_section_max_prices
