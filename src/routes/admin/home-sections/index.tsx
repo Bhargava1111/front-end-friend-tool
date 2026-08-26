@@ -282,122 +282,158 @@ function AdminHomeSectionsPage() {
                 handleDrop(s.id, sourceId || undefined);
               }}
               className={cn(
-                "flex flex-wrap items-center gap-3 rounded-2xl border border-border bg-card p-4 card-elevated transition-shadow",
+                "flex flex-col gap-3 rounded-2xl border border-border bg-card p-3 card-elevated transition-shadow sm:p-4",
                 !reordering && "cursor-grab active:cursor-grabbing",
                 draggingId === s.id && "opacity-50",
                 dragOverId === s.id && "ring-2 ring-primary",
               )}
             >
-              <div
-                className="flex shrink-0 touch-none flex-col items-center gap-0.5"
-                title="Drag to reorder"
-              >
-                <GripVertical className="h-5 w-5 text-muted-foreground" />
-                <span className="text-[10px] font-bold text-muted-foreground">#{index + 1}</span>
-              </div>
-              <div className="flex shrink-0 flex-col items-center gap-1">
-                <label className="text-[10px] font-medium text-muted-foreground">Position</label>
-                <Select
-                  value={String(index + 1)}
-                  onValueChange={(value) => setPosition(s.id, Number(value))}
-                  disabled={reordering}
+              <div className="flex items-center gap-2">
+                <div
+                  className="flex shrink-0 touch-none flex-col items-center gap-0.5"
+                  title="Drag to reorder"
                 >
-                  <SelectTrigger
-                    className="h-8 w-[92px] rounded-lg text-xs"
+                  <GripVertical className="h-5 w-5 text-muted-foreground" />
+                  <span className="text-[10px] font-bold text-muted-foreground">#{index + 1}</span>
+                </div>
+                <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
+                  <div className="flex shrink-0 flex-col gap-1">
+                    <label className="text-[10px] font-medium text-muted-foreground">Position</label>
+                    <Select
+                      value={String(index + 1)}
+                      onValueChange={(value) => setPosition(s.id, Number(value))}
+                      disabled={reordering}
+                    >
+                      <SelectTrigger
+                        className="h-8 w-[104px] rounded-lg text-xs"
+                        onMouseDown={(e) => e.stopPropagation()}
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {sections.map((_, i) => (
+                          <SelectItem key={i + 1} value={String(i + 1)}>
+                            {i + 1}
+                            {i === 0 ? " (top)" : i === sections.length - 1 ? " (bottom)" : ""}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex shrink-0 gap-0.5">
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-8 w-8"
+                      disabled={index === 0 || reordering}
+                      aria-label="Move up"
+                      onMouseDown={(e) => e.stopPropagation()}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        moveByIndex(index, "up");
+                      }}
+                    >
+                      <ChevronUp className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-8 w-8"
+                      disabled={index === sections.length - 1 || reordering}
+                      aria-label="Move down"
+                      onMouseDown={(e) => e.stopPropagation()}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        moveByIndex(index, "down");
+                      }}
+                    >
+                      <ChevronDown className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+                <div className="ml-auto flex shrink-0 items-center gap-1 lg:hidden">
+                  <Button size="icon" variant="ghost" aria-label={`Edit ${s.title}`} asChild>
+                    <Link to="/admin/home-sections/$id" params={{ id: s.id }}>
+                      <Pencil className="h-4 w-4" />
+                    </Link>
+                  </Button>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    aria-label={`Delete ${s.title}`}
+                    className="text-destructive"
                     onMouseDown={(e) => e.stopPropagation()}
-                    onClick={(e) => e.stopPropagation()}
+                    onClick={() => {
+                      if (confirm(`Delete "${s.title}"? Products will be unassigned from this section.`)) {
+                        deleteMutation.mutate(s.id);
+                      }
+                    }}
                   >
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {sections.map((_, i) => (
-                      <SelectItem key={i + 1} value={String(i + 1)}>
-                        {i + 1}
-                        {i === 0 ? " (top)" : i === sections.length - 1 ? " (bottom)" : ""}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
-              <div className="flex shrink-0 flex-col gap-0.5">
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  className="h-7 w-7"
-                  disabled={index === 0 || reordering}
-                  aria-label="Move up"
-                  onMouseDown={(e) => e.stopPropagation()}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    moveByIndex(index, "up");
-                  }}
-                >
-                  <ChevronUp className="h-4 w-4" />
-                </Button>
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  className="h-7 w-7"
-                  disabled={index === sections.length - 1 || reordering}
-                  aria-label="Move down"
-                  onMouseDown={(e) => e.stopPropagation()}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    moveByIndex(index, "down");
-                  }}
-                >
-                  <ChevronDown className="h-4 w-4" />
-                </Button>
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-semibold text-foreground">{s.title}</p>
-                <p className="text-xs text-muted-foreground">
+
+              <div className="min-w-0">
+                <p className="text-sm font-semibold leading-snug text-foreground">{s.title}</p>
+                <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
                   {layoutLabel(s.layout)} · {fallbackLabel(s.fallback_rule)} · key: {s.key}
                   {(s.layout === "budget_rail" || s.fallback_rule === "under_99") && s.max_price
                     ? ` · max ₹${s.max_price}`
                     : ""}
                 </p>
-                <p className="text-xs text-muted-foreground">
-                  {s.placed_count ?? 0} manually placed · {s.display_count ?? 0} shown on store
-                  {" · sort "}
+                <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
+                  {s.placed_count ?? 0} manually placed · {s.display_count ?? 0} shown on store · sort{" "}
                   {(s.sort_order ?? index) + 1}
                   {s.fallback_rule === "manual" && (s.display_count ?? 0) === 0
                     ? " · hidden on store until products are added"
                     : ""}
                 </p>
-                {s.subtitle ? <p className="mt-0.5 text-xs text-muted-foreground">{s.subtitle}</p> : null}
+                {s.subtitle ? (
+                  <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{s.subtitle}</p>
+                ) : null}
               </div>
-              <div className="flex flex-wrap gap-1.5">
-                {!s.is_active && (
-                  <span className="rounded-full bg-secondary px-2 py-0.5 text-[10px] font-semibold">Hidden</span>
-                )}
-                {s.show_on_home ? (
-                  <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
-                    On home
-                  </span>
-                ) : (
-                  <span className="rounded-full bg-secondary px-2 py-0.5 text-[10px] font-semibold">Products only</span>
-                )}
+
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="flex flex-wrap gap-1.5">
+                  {!s.is_active && (
+                    <span className="rounded-full bg-secondary px-2 py-0.5 text-[10px] font-semibold">
+                      Hidden
+                    </span>
+                  )}
+                  {s.show_on_home ? (
+                    <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
+                      On home
+                    </span>
+                  ) : (
+                    <span className="rounded-full bg-secondary px-2 py-0.5 text-[10px] font-semibold">
+                      Products only
+                    </span>
+                  )}
+                </div>
+                <div className="hidden items-center gap-1 lg:flex">
+                  <Button size="icon" variant="ghost" aria-label={`Edit ${s.title}`} asChild>
+                    <Link to="/admin/home-sections/$id" params={{ id: s.id }}>
+                      <Pencil className="h-4 w-4" />
+                    </Link>
+                  </Button>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    aria-label={`Delete ${s.title}`}
+                    className="text-destructive"
+                    onMouseDown={(e) => e.stopPropagation()}
+                    onClick={() => {
+                      if (confirm(`Delete "${s.title}"? Products will be unassigned from this section.`)) {
+                        deleteMutation.mutate(s.id);
+                      }
+                    }}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
-              <Button size="icon" variant="ghost" aria-label={`Edit ${s.title}`} asChild>
-                <Link to="/admin/home-sections/$id" params={{ id: s.id }}>
-                  <Pencil className="h-4 w-4" />
-                </Link>
-              </Button>
-              <Button
-                size="icon"
-                variant="ghost"
-                aria-label={`Delete ${s.title}`}
-                className="text-destructive"
-                onMouseDown={(e) => e.stopPropagation()}
-                onClick={() => {
-                  if (confirm(`Delete "${s.title}"? Products will be unassigned from this section.`)) {
-                    deleteMutation.mutate(s.id);
-                  }
-                }}
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
             </div>
           ))}
           {sections.length === 0 && (
