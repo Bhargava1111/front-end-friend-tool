@@ -31,9 +31,19 @@ function extractApiError(data: unknown, status: number): string {
   return `Request failed (${status})`;
 }
 
+function hostServesLocalApi(host: string) {
+  if (isPrivateLanHost(host)) return true;
+  if (host === "200.234.39.88") return true;
+  if (host.endsWith("srimahalakshmistores.in")) return true;
+  return false;
+}
+
 function resolveServerApiBase(): string {
   const configured = (process.env.API_URL || env.serverApiUrl || "").replace(/\/$/, "");
   if (configured && !configured.startsWith("/")) return configured;
+
+  const vpsApi = env.vpsApiUrl.replace(/\/$/, "");
+  if (vpsApi.startsWith("http")) return vpsApi;
 
   // Relative API path on the server — resolve against the Django backend origin.
   const apiPath = configured || env.apiUrl || "/api/v1";
@@ -91,8 +101,14 @@ export function getApiBase() {
     }
   }
 
-  // Same-origin relative path — works in browser (Vite /api/v1 proxy).
-  if (base.startsWith("/")) return base;
+  // Same-origin relative path — local dev / VPS web proxy /api/v1 to Django.
+  if (base.startsWith("/")) {
+    const host = window.location.hostname;
+    if (hostServesLocalApi(host)) return base;
+    const vpsApi = env.vpsApiUrl.replace(/\/$/, "");
+    if (vpsApi.startsWith("http")) return vpsApi;
+    return base;
+  }
 
   const host = window.location.hostname;
 

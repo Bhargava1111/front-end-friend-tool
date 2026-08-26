@@ -10,13 +10,18 @@ function read(key: string, fallback = ""): string {
   return fallback;
 }
 
+const DEFAULT_VPS_HOST = "200.234.39.88";
+const DEFAULT_VPS_API = `http://${DEFAULT_VPS_HOST}/api/v1`;
+
 export const env = {
   /** Browser/client API base (relative or absolute). */
   apiUrl: read("VITE_API_URL", "/api/v1"),
   /** Server-side API base for TanStack server functions. */
-  serverApiUrl: read("API_URL", read("VITE_API_URL", "/api/v1")),
+  serverApiUrl: read("API_URL", read("VITE_VPS_API_URL", DEFAULT_VPS_API)),
+  /** Live store API used by mobile APK and remote web deployments. */
+  vpsApiUrl: read("VITE_VPS_API_URL", DEFAULT_VPS_API),
   /** Vite dev proxy target for /api/v1. */
-  apiProxyTarget: read("VITE_API_PROXY_TARGET", "http://127.0.0.1:8000"),
+  apiProxyTarget: read("VITE_API_PROXY_TARGET", `http://${DEFAULT_VPS_HOST}`),
   /** Public web app URL (Capacitor server, install links). */
   appUrl: read("VITE_APP_URL", "http://localhost:8080"),
   /** Production web app URL. */
@@ -24,7 +29,7 @@ export const env = {
   /** Capacitor WebView server URL. */
   capacitorServerUrl: read("CAPACITOR_SERVER_URL", read("VITE_PUBLIC_WEB_URL", "https://front-end-friend-tool.lovable.app")),
   /** Optional CDN/media base for resolving relative image paths. */
-  mediaBaseUrl: read("VITE_MEDIA_BASE_URL", ""),
+  mediaBaseUrl: read("VITE_MEDIA_BASE_URL", `http://${DEFAULT_VPS_HOST}/media`),
   /** Google Maps JavaScript API key. */
   googleMapsApiKey: read("VITE_GOOGLE_MAPS_API_KEY", read("VITE_LOVABLE_CONNECTOR_GOOGLE_MAPS_BROWSER_KEY", "")),
   googleMapsTrackingId: read("VITE_GOOGLE_MAPS_TRACKING_ID", read("VITE_LOVABLE_CONNECTOR_GOOGLE_MAPS_TRACKING_ID", "")),
