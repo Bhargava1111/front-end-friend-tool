@@ -13,12 +13,18 @@ function isInsecureMobileBrowser() {
   return window.location.protocol === "http:" && !isLocal;
 }
 
+export function canUseBrowserGps(): boolean {
+  if (Capacitor.isNativePlatform()) return true;
+  if (typeof navigator === "undefined" || !navigator.geolocation) return false;
+  return !isInsecureMobileBrowser();
+}
+
 export function locationErrorMessage(err?: GeolocationPositionError) {
   if (Capacitor.isNativePlatform()) {
     return "Couldn't get your location. Open phone Settings → Apps → Sri Mahalakshmi Stores → Permissions → Location → Allow.";
   }
   if (isInsecureMobileBrowser()) {
-    return "GPS is blocked in the mobile browser over HTTP. Enter your address manually, use pincode, or install the Android app.";
+    return "GPS isn't available in the mobile browser on HTTP. Enter your pincode and tap the map to place your pin, or use the Android app.";
   }
   if (err?.code === 1) {
     return "Location permission denied. Allow location access in your browser or phone settings.";
@@ -61,6 +67,10 @@ async function readOnce(): Promise<DeviceCoords> {
   }
 
   return new Promise((resolve, reject) => {
+    if (!canUseBrowserGps()) {
+      reject(new Error(locationErrorMessage()));
+      return;
+    }
     if (typeof navigator === "undefined" || !navigator.geolocation) {
       reject(new Error("Location is not available on this device"));
       return;

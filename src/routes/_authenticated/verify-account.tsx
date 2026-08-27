@@ -13,8 +13,8 @@ import { useNativeFn } from "@/hooks/use-admin-fn";
 import { useSession } from "@/hooks/use-shop";
 import { useStores } from "@/components/location-bar";
 import { StoreMap } from "@/components/store-map";
-import { addressFromCoords } from "@/lib/geo";
-import { getDeviceCoords } from "@/lib/device-location";
+import { addressFromCoords, coordsFromPincode } from "@/lib/geo";
+import { canUseBrowserGps, getDeviceCoords } from "@/lib/device-location";
 import { toLocalPhoneDigits } from "@/lib/phone-utils";
 import { PageShell, TopBar } from "@/components/page-shell";
 import { Button } from "@/components/ui/button";
@@ -61,6 +61,8 @@ function VerifyAccount() {
     null,
   );
   const [locating, setLocating] = useState(false);
+  const [pinFromPincode, setPinFromPincode] = useState(false);
+  const gpsAvailable = canUseBrowserGps();
 
   useEffect(() => {
     if (!data) return;
@@ -96,6 +98,29 @@ function VerifyAccount() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  async function placePinFromPincode(showToast = true) {
+    const digits = pincode.replace(/\D/g, "");
+    if (digits.length !== 6) {
+      if (showToast) toast.error("Enter a valid 6-digit pincode first");
+      return;
+    }
+    setLocating(true);
+    try {
+      const next = await coordsFromPincode(digits, stores);
+      if (!next) {
+        if (showToast) toast.error("Couldn't locate this pincode — tap the map to place your pin");
+        return;
+      }
+      setCoords({ lat: next.lat, lng: next.lng, accuracy: null });
+      setPinFromPincode(true);
+      if (showToast) {
+        toast.success("Pin placed — tap the map to move it to your exact door");
+      }
+    } finally {
+      setLocating(false);
+    }
+  }
+
   async function detect() {
     setLocating(true);
     try {
@@ -114,6 +139,7 @@ function VerifyAccount() {
           .join(", ");
       setAddress(fullAddress);
       if (place.pincode) setPincode(place.pincode);
+      setPinFromPincode(false);
 
       toast.success(
         pos.accuracy && pos.accuracy > 150
@@ -228,7 +254,13 @@ function VerifyAccount() {
                   required
                   inputMode="numeric"
                   value={pincode}
-                  onChange={(e) => setPincode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                  onChange={(e) => {
+                    setPincode(e.target.value.replace(/\D/g, "").slice(0, 6));
+                    setPinFromPincode(false);
+                  }}
+                  onBlur={() => {
+                    if (pincode.length === 6 && !coords) void placePinFromPincode(false);
+                  }}
                 />
               </div>
             </div>
@@ -244,16 +276,35 @@ function VerifyAccount() {
               />
             </div>
 
-            <Button
-              type="button"
-              variant="secondary"
-              className="w-full gap-2"
-              disabled={locating}
-              onClick={detect}
-            >
-              <LocateFixed className="h-4 w-4" />
-              {locating ? "Reading GPS…" : coords ? "Recapture my location" : "Capture my location"}
-            </Button>
+            {gpsAvailable ? (
+              <Button
+                type="button"
+                variant="secondary"
+                className="w-full gap-2"
+                disabled={locating}
+                onClick={detect}
+              >
+                <LocateFixed className="h-4 w-4" />
+                {locating ? "Reading GPS…" : coords ? "Recapture my location" : "Capture my location"}
+              </Button>
+            ) : (
+              <div className="space-y-2">
+                <p className="rounded-xl border border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+                  GPS is not available in the mobile browser over HTTP. Enter your pincode, then tap the
+                  map to mark your door — or install the Android app for one-tap GPS.
+                </p>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  className="w-full gap-2"
+                  disabled={locating || pincode.length !== 6}
+                  onClick={() => void placePinFromPincode()}
+                >
+                  <LocateFixed className="h-4 w-4" />
+                  {locating ? "Placing pin…" : "Place pin from pincode"}
+                </Button>
+              </div>
+            )}
 
             {coords && (
               <p className="text-xs text-muted-foreground">
@@ -281,9 +332,20 @@ function VerifyAccount() {
           <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             Confirm the pin
           </p>
-          <StoreMap stores={stores} center={coords} className="h-64 lg:h-[26rem]" />
+          <StoreMap
+            stores={stores}
+            center={coords}
+            onCenterChange={(next) => {
+              setCoords({ lat: next.lat, lng: next.lng, accuracy: null });
+              setPinFromPincode(false);
+            }}
+            className="h-64 lg:h-[26rem]"
+          />
           <p className="text-xs text-muted-foreground">
-            Drop the pin exactly at your door. Our team compares it with the address before approving.
+            {gpsAvailable
+              ? "Drop the pin exactly at your door. Our team compares it with the address before approving."
+              : "Tap the map to place the pin at your door. Drag it if needed. Our team checks it against your address."}
+            {pinFromPincode && !gpsAvailable ? " Pin started from your pincode — adjust it to your building." : ""}
           </p>
         </div>
       </div>

@@ -64,7 +64,7 @@ from catalog.views import (
     ProductListView,
     ProductReviewsView,
 )
-from locations.views import ReverseGeocodeView, StoreListView
+from locations.views import ForwardGeocodeView, ReverseGeocodeView, StoreListView
 from notifications.views import (
     NotificationDeleteView,
     NotificationListView,
@@ -193,6 +193,7 @@ urlpatterns = [
     path("api/v1/promotions/", ActivePromotionsView.as_view()),
     path("api/v1/stores/", StoreListView.as_view()),
     path("api/v1/geocode/reverse/", ReverseGeocodeView.as_view()),
+    path("api/v1/geocode/forward/", ForwardGeocodeView.as_view()),
     path("api/v1/notifications/", NotificationListView.as_view()),
     path("api/v1/notifications/read-all/", NotificationReadAllView.as_view()),
     path("api/v1/notifications/<uuid:pk>/read/", NotificationReadView.as_view()),

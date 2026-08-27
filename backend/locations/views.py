@@ -251,6 +251,61 @@ def _resolve_location(lat: float, lng: float) -> dict:
     }
 
 
+def _photon_forward_pincode(pincode: str) -> tuple[float, float] | None:
+    """Resolve an Indian pincode to approximate coordinates."""
+    if not re.fullmatch(r"\d{6}", pincode):
+        return None
+    params = urlencode({"q": f"{pincode} India", "limit": 15})
+    data = _fetch_json(f"{PHOTON_SEARCH}?{params}")
+    if not isinstance(data, dict):
+        return None
+    for feature in data.get("features") or []:
+        props = feature.get("properties") or {}
+        postcode = str(props.get("postcode") or "").strip()
+        if postcode != pincode:
+            continue
+        coords = (feature.get("geometry") or {}).get("coordinates") or []
+        if len(coords) >= 2:
+            return float(coords[1]), float(coords[0])
+    # Fallback: first result in India with a postcode
+    for feature in data.get("features") or []:
+        props = feature.get("properties") or {}
+        if str(props.get("countrycode") or "").lower() not in {"", "in"}:
+            continue
+        coords = (feature.get("geometry") or {}).get("coordinates") or []
+        if len(coords) >= 2:
+            return float(coords[1]), float(coords[0])
+    return None
+
+
+class ForwardGeocodeView(APIView):
+    """Resolve a pincode to approximate coordinates for map placement."""
+
+    def get(self, request):
+        pincode = str(request.query_params.get("pincode") or "").strip()
+        if not re.fullmatch(r"\d{6}", pincode):
+            return Response({"detail": "Enter a valid 6-digit pincode."}, status=400)
+
+        store = StoreLocation.objects.filter(is_active=True, pincode=pincode).first()
+        if store:
+            return Response({
+                "latitude": store.latitude,
+                "longitude": store.longitude,
+                "source": "store",
+                "label": f"{store.city} {pincode}",
+            })
+
+        coords = _photon_forward_pincode(pincode)
+        if not coords:
+            return Response({"detail": "Could not locate this pincode."}, status=404)
+        return Response({
+            "latitude": coords[0],
+            "longitude": coords[1],
+            "source": "geocode",
+            "label": f"Pincode {pincode}",
+        })
+
+
 class ReverseGeocodeView(APIView):
     """Resolve GPS coordinates to a street-level label via Photon + OpenStreetMap."""
 

@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type MouseEvent } from "react";
 import { MapPin, Navigation } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { env } from "@/lib/env";
-import { projectPoints, type LatLng, type StoreLocation } from "@/lib/geo";
+import { projectPoints, unprojectPoint, type LatLng, type StoreLocation } from "@/lib/geo";
 
 const BROWSER_KEY = env.googleMapsApiKey || undefined;
 const TRACKING_ID = env.googleMapsTrackingId || undefined;
@@ -40,6 +40,8 @@ type MapProps = {
   center?: LatLng | null;
   activeId?: string | null;
   onSelect?: (store: StoreLocation) => void;
+  /** Let the user tap/drag to move the delivery pin. */
+  onCenterChange?: (coords: LatLng) => void;
   className?: string;
 };
 
@@ -47,13 +49,23 @@ type MapProps = {
  * Renders a live Google map when a Maps key is connected, and a styled
  * schematic map (same data, same interactions) when it is not.
  */
-export function StoreMap({ stores, center, activeId, onSelect, className }: MapProps) {
+export function StoreMap({
+  stores,
+  center,
+  activeId,
+  onSelect,
+  onCenterChange,
+  className,
+}: MapProps) {
   const [hasLiveMap, setHasLiveMap] = useState(false);
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const schematicRef = useRef<HTMLDivElement | null>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const mapRef = useRef<any>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const markersRef = useRef<any[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const centerMarkerRef = useRef<any>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -90,17 +102,65 @@ export function StoreMap({ stores, center, activeId, onSelect, className }: MapP
       marker.addListener("click", () => onSelect?.(store));
       return marker;
     });
-    if (center) mapRef.current.panTo(center);
-  }, [hasLiveMap, stores, center, onSelect]);
 
-  const points = useMemo(
-    () =>
-      projectPoints([
-        ...stores.map((s) => ({ lat: s.latitude, lng: s.longitude })),
-        ...(center ? [center] : []),
-      ]),
+    if (centerMarkerRef.current) {
+      centerMarkerRef.current.setMap(null);
+      centerMarkerRef.current = null;
+    }
+    if (center) {
+      centerMarkerRef.current = new g.maps.Marker({
+        position: center,
+        map: mapRef.current,
+        draggable: !!onCenterChange,
+        icon: {
+          path: g.maps.SymbolPath.CIRCLE,
+          scale: 8,
+          fillColor: "#16a34a",
+          fillOpacity: 1,
+          strokeColor: "#ffffff",
+          strokeWeight: 2,
+        },
+      });
+      if (onCenterChange) {
+        centerMarkerRef.current.addListener("dragend", () => {
+          const pos = centerMarkerRef.current.getPosition();
+          if (pos) onCenterChange({ lat: pos.lat(), lng: pos.lng() });
+        });
+      }
+      mapRef.current.panTo(center);
+    }
+  }, [hasLiveMap, stores, center, onSelect, onCenterChange]);
+
+  useEffect(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const g = (typeof window !== "undefined" ? window.google : undefined) as any;
+    if (!hasLiveMap || !g?.maps || !mapRef.current || !onCenterChange) return;
+    const listener = mapRef.current.addListener("click", (e: { latLng: { lat: () => number; lng: () => number } }) => {
+      const lat = e.latLng.lat();
+      const lng = e.latLng.lng();
+      onCenterChange({ lat, lng });
+    });
+    return () => g.maps.event.removeListener(listener);
+  }, [hasLiveMap, onCenterChange]);
+
+  const mapPoints = useMemo(
+    () => [
+      ...stores.map((s) => ({ lat: s.latitude, lng: s.longitude })),
+      ...(center ? [center] : []),
+    ],
     [stores, center],
   );
+
+  const points = useMemo(() => projectPoints(mapPoints), [mapPoints]);
+
+  function handleSchematicTap(e: MouseEvent<HTMLDivElement>) {
+    if (!onCenterChange || !schematicRef.current) return;
+    const rect = schematicRef.current.getBoundingClientRect();
+    const xPct = ((e.clientX - rect.left) / rect.width) * 100;
+    const yPct = ((e.clientY - rect.top) / rect.height) * 100;
+    const coords = unprojectPoint(xPct, yPct, mapPoints.length ? mapPoints : stores.map((s) => ({ lat: s.latitude, lng: s.longitude })));
+    if (coords) onCenterChange(coords);
+  }
 
   return (
     <div
@@ -112,7 +172,13 @@ export function StoreMap({ stores, center, activeId, onSelect, className }: MapP
       {BROWSER_KEY && <div ref={containerRef} className="absolute inset-0" />}
 
       {!hasLiveMap && (
-        <div className="absolute inset-0">
+        <div
+          ref={schematicRef}
+          className={cn("absolute inset-0", onCenterChange && "cursor-crosshair")}
+          onClick={handleSchematicTap}
+          role={onCenterChange ? "button" : undefined}
+          aria-label={onCenterChange ? "Tap to place delivery pin" : undefined}
+        >
           {/* schematic street grid */}
           <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-background to-accent/10" />
           <svg className="absolute inset-0 h-full w-full opacity-40" aria-hidden>
@@ -154,7 +220,10 @@ export function StoreMap({ stores, center, activeId, onSelect, className }: MapP
               <button
                 key={store.id}
                 type="button"
-                onClick={() => onSelect?.(store)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onSelect?.(store);
+                }}
                 style={{ left: `${p.x}%`, top: `${p.y}%` }}
                 className="absolute -translate-x-1/2 -translate-y-full"
                 aria-label={store.name}

@@ -67,6 +67,40 @@ export function projectPoints(points: LatLng[], padding = 12) {
   }));
 }
 
+/** Inverse of projectPoints — convert a tap on the schematic map to lat/lng. */
+export function unprojectPoint(
+  xPct: number,
+  yPct: number,
+  points: LatLng[],
+  padding = 12,
+): LatLng | null {
+  if (points.length === 0) return null;
+  const lats = points.map((p) => p.lat);
+  const lngs = points.map((p) => p.lng);
+  const minLat = Math.min(...lats);
+  const maxLat = Math.max(...lats);
+  const minLng = Math.min(...lngs);
+  const maxLng = Math.max(...lngs);
+  const spanLat = Math.max(maxLat - minLat, 0.01);
+  const spanLng = Math.max(maxLng - minLng, 0.01);
+  const usable = 100 - padding * 2;
+  const lng = minLng + ((xPct - padding) / usable) * spanLng;
+  const lat = maxLat - ((yPct - padding) / usable) * spanLat;
+  return { lat, lng };
+}
+
+export function mapBounds(points: LatLng[]) {
+  if (points.length === 0) return null;
+  const lats = points.map((p) => p.lat);
+  const lngs = points.map((p) => p.lng);
+  return {
+    minLat: Math.min(...lats),
+    maxLat: Math.max(...lats),
+    minLng: Math.min(...lngs),
+    maxLng: Math.max(...lngs),
+  };
+}
+
 import { getApiBase } from "@/lib/api";
 import { env } from "@/lib/env";
 import { getDeviceCoords } from "@/lib/device-location";
@@ -237,4 +271,34 @@ export async function locationFromCoords(
     pincode: place.pincode,
     source: "gps" as const,
   };
+}
+
+type ForwardGeocodeResponse = {
+  latitude: number;
+  longitude: number;
+  source: string;
+  label: string;
+};
+
+/** Place a map pin from a 6-digit pincode (store match or geocode API). */
+export async function coordsFromPincode(
+  pincode: string,
+  stores: Array<{ pincode: string; latitude: number; longitude: number }> = [],
+): Promise<LatLng | null> {
+  const digits = pincode.replace(/\D/g, "");
+  if (digits.length !== 6) return null;
+
+  const store = stores.find((s) => s.pincode === digits);
+  if (store) return { lat: store.latitude, lng: store.longitude };
+
+  try {
+    const res = await fetch(
+      `${getApiBase()}/geocode/forward/?pincode=${encodeURIComponent(digits)}`,
+    );
+    if (!res.ok) return null;
+    const data = (await res.json()) as ForwardGeocodeResponse;
+    return { lat: data.latitude, lng: data.longitude };
+  } catch {
+    return null;
+  }
 }
