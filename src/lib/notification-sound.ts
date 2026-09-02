@@ -6,11 +6,59 @@ let alarmTimer: ReturnType<typeof setInterval> | null = null;
 let alarmStopAt = 0;
 let pendingAlarmDurationMs: number | null = null;
 let pendingChime = false;
+let useHtmlAudioFallback = false;
+let fallbackAudio: HTMLAudioElement | null = null;
 const unlockSubscribers = new Set<() => void>();
 
 type AudioContextConstructor = typeof AudioContext;
 
 const UNLOCK_EVENTS = ["pointerdown", "click", "touchstart", "touchend", "keydown"] as const;
+const SILENT_WAV =
+  "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAA==";
+
+function createBeepDataUri(freq = 880, durationSec = 0.2): string {
+  const sampleRate = 22050;
+  const numSamples = Math.floor(sampleRate * durationSec);
+  const dataSize = numSamples * 2;
+  const buffer = new ArrayBuffer(44 + dataSize);
+  const view = new DataView(buffer);
+  const writeStr = (offset: number, str: string) => {
+    for (let i = 0; i < str.length; i++) view.setUint8(offset + i, str.charCodeAt(i));
+  };
+
+  writeStr(0, "RIFF");
+  view.setUint32(4, 36 + dataSize, true);
+  writeStr(8, "WAVE");
+  writeStr(12, "fmt ");
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true);
+  view.setUint16(22, 1, true);
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, sampleRate * 2, true);
+  view.setUint16(32, 2, true);
+  view.setUint16(34, 16, true);
+  writeStr(36, "data");
+  view.setUint32(40, dataSize, true);
+
+  for (let i = 0; i < numSamples; i++) {
+    const sample = Math.sin((2 * Math.PI * freq * i) / sampleRate) * 0.35;
+    view.setInt16(44 + i * 2, sample * 0x7fff, true);
+  }
+
+  const bytes = new Uint8Array(buffer);
+  let binary = "";
+  for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+  return `data:audio/wav;base64,${btoa(binary)}`;
+}
+
+function getFallbackAudio(): HTMLAudioElement | null {
+  if (typeof window === "undefined") return null;
+  if (!fallbackAudio) {
+    fallbackAudio = new Audio();
+    fallbackAudio.preload = "auto";
+  }
+  return fallbackAudio;
+}
 
 function createAudioContext(): AudioContext | null {
   if (typeof window === "undefined") return null;
@@ -23,10 +71,27 @@ function createAudioContext(): AudioContext | null {
 }
 
 function getRunningAudioContext(): AudioContext | null {
-  if (!audioUnlocked) return null;
+  if (!audioUnlocked || useHtmlAudioFallback) return null;
   const ctx = createAudioContext();
   if (!ctx || ctx.state !== "running") return null;
   return ctx;
+}
+
+function playHtmlBeepBurst() {
+  const audio = getFallbackAudio();
+  if (!audio) return;
+
+  const tones = [880, 1320, 880, 1320];
+  tones.forEach((freq, index) => {
+    window.setTimeout(() => {
+      const clip = getFallbackAudio();
+      if (!clip) return;
+      clip.src = createBeepDataUri(freq, index === tones.length - 1 ? 0.28 : 0.22);
+      clip.volume = 0.65;
+      clip.currentTime = 0;
+      void clip.play().catch(() => {});
+    }, index * 240);
+  });
 }
 
 function flushPendingPlayback() {
@@ -41,19 +106,45 @@ function flushPendingPlayback() {
   }
 }
 
+async function tryUnlockHtmlAudio(): Promise<boolean> {
+  const audio = getFallbackAudio();
+  if (!audio) return false;
+
+  try {
+    audio.src = SILENT_WAV;
+    audio.volume = 0.01;
+    await audio.play();
+    audio.pause();
+    audio.currentTime = 0;
+    useHtmlAudioFallback = true;
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 async function tryUnlockAudio(): Promise<boolean> {
   if (audioUnlocked) return true;
 
   const ctx = createAudioContext();
-  if (!ctx) return false;
-
-  try {
-    await ctx.resume();
-  } catch {
-    return false;
+  if (ctx) {
+    try {
+      await ctx.resume();
+      if (ctx.state === "running") {
+        audioUnlocked = true;
+        useHtmlAudioFallback = false;
+        detachUnlockListeners();
+        unlockSubscribers.forEach((listener) => listener());
+        flushPendingPlayback();
+        return true;
+      }
+    } catch {
+      // Fall back to HTMLAudio below.
+    }
   }
 
-  if (ctx.state !== "running") return false;
+  const htmlUnlocked = await tryUnlockHtmlAudio();
+  if (!htmlUnlocked) return false;
 
   audioUnlocked = true;
   detachUnlockListeners();
@@ -93,7 +184,6 @@ if (typeof window !== "undefined") {
 }
 
 function beepBurst(ctx: AudioContext, startAt: number) {
-  // Urgent alternating alarm tones
   const tones = [
     { freq: 880, start: 0, duration: 0.22 },
     { freq: 1320, start: 0.24, duration: 0.22 },
@@ -119,11 +209,17 @@ function beepBurst(ctx: AudioContext, startAt: number) {
 
 function playAdminNotificationSoundInternal() {
   const ctx = getRunningAudioContext();
-  if (!ctx) {
-    pendingChime = true;
+  if (ctx) {
+    beepBurst(ctx, ctx.currentTime);
     return;
   }
-  beepBurst(ctx, ctx.currentTime);
+
+  if (audioUnlocked && useHtmlAudioFallback) {
+    playHtmlBeepBurst();
+    return;
+  }
+
+  pendingChime = true;
 }
 
 /** Short one-shot chime (legacy helper). */
@@ -148,7 +244,8 @@ export function stopAdminOrderAlarm() {
 
 function startAlarmLoop(durationMs: number) {
   const ctx = getRunningAudioContext();
-  if (!ctx) {
+  const canUseHtml = audioUnlocked && useHtmlAudioFallback;
+  if (!ctx && !canUseHtml) {
     pendingAlarmDurationMs = durationMs;
     return;
   }
@@ -167,8 +264,12 @@ function startAlarmLoop(durationMs: number) {
     }
 
     const active = getRunningAudioContext();
-    if (!active) return;
-    beepBurst(active, active.currentTime);
+    if (active) {
+      beepBurst(active, active.currentTime);
+      return;
+    }
+
+    if (canUseHtml) playHtmlBeepBurst();
   };
 
   tick();

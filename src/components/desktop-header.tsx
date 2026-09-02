@@ -34,8 +34,8 @@ export function DesktopHeader() {
         !isNativePlatform() && "lg:block",
       )}
     >
-      <div className="mx-auto flex max-w-7xl items-center gap-5 px-6 py-3">
-        <Link to="/" className="flex shrink-0 items-center gap-2.5">
+      <div className="mx-auto flex max-w-7xl items-center space-x-5 px-6 py-3">
+        <Link to="/" className="flex shrink-0 items-center space-x-2.5">
           <span className="grid h-10 w-10 place-items-center rounded-xl bg-primary text-sm font-bold text-primary-foreground">
             SM
           </span>
@@ -51,13 +51,13 @@ export function DesktopHeader() {
 
         <Link
           to="/search"
-          className="flex min-w-0 flex-1 items-center gap-2 rounded-2xl border border-border bg-secondary/50 px-4 py-2.5 text-sm text-muted-foreground transition-colors hover:border-primary/40"
+          className="flex min-w-0 flex-1 items-center space-x-2 rounded-2xl border border-border bg-secondary/50 px-4 py-2.5 text-sm text-muted-foreground transition-colors hover:border-primary/40"
         >
           <Search className="h-4 w-4 shrink-0" />
           <span className="truncate">Search for rice, ghee, agarbatti…</span>
         </Link>
 
-        <div className="flex shrink-0 items-center gap-2">
+        <div className="flex shrink-0 items-center space-x-2">
           <Link
             to="/stores"
             aria-label="Store locator"
@@ -76,7 +76,7 @@ export function DesktopHeader() {
           <ThemeToggle />
           <Link
             to="/cart"
-            className="relative flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground"
+            className="relative flex items-center space-x-2 rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground"
           >
             <ShoppingCart className="h-4 w-4" />
             Cart
@@ -92,7 +92,7 @@ export function DesktopHeader() {
         </div>
       </div>
 
-      <nav className="mx-auto flex max-w-7xl items-center gap-1 px-6 pb-2">
+      <nav className="mx-auto flex max-w-7xl flex-wrap items-center space-x-1 px-6 pb-2">
         {navLinks.map(({ to, label, ...rest }) => {
           const exact = "exact" in rest && rest.exact;
           const active = exact ? pathname === to : pathname.startsWith(to);

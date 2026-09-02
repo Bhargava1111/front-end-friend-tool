@@ -31,12 +31,12 @@ const LINKS = [
 export function QuickLinks({ className }: { className?: string }) {
   return (
     <div className={cn("px-4", className)}>
-      <div className="no-scrollbar flex gap-3 overflow-x-auto pb-1">
+      <div className="no-scrollbar flex space-x-3 overflow-x-auto pb-1">
         {LINKS.map(({ to, label, icon: Icon, tone }) => (
           <Link
             key={to}
             to={to}
-            className="flex w-[72px] shrink-0 flex-col items-center gap-2 transition-transform active:scale-95"
+            className="flex w-[72px] shrink-0 flex-col items-center space-y-2 transition-transform active:scale-95"
           >
             <span className={cn("grid h-14 w-14 place-items-center rounded-2xl", tone)}>
               <Icon className="h-5 w-5" />
