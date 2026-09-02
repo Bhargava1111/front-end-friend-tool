@@ -14,7 +14,7 @@ const brandDirectoryQuery = queryOptions({
   staleTime: 5 * 60 * 1000,
 });
 
-export const Route = createFileRoute("/brands")({
+export const Route = createFileRoute("/brands/")({
   validateSearch: (search: Record<string, unknown>) => ({
     brand: typeof search.brand === "string" && search.brand.trim() ? search.brand.trim() : undefined,
   }),

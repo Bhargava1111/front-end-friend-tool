@@ -14,7 +14,6 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as AdminRouteRouteImport } from './routes/admin/route'
 import { Route as AuthRouteImport } from './routes/auth'
-import { Route as BrandsRouteImport } from './routes/brands'
 import { Route as BulkOrderRouteImport } from './routes/bulk-order'
 import { Route as CategoriesRouteImport } from './routes/categories'
 import { Route as CompareRouteImport } from './routes/compare'
@@ -84,6 +83,7 @@ import { Route as AdminTicketsRouteImport } from './routes/admin/tickets'
 import { Route as AdminUserActivityRouteImport } from './routes/admin/user-activity'
 import { Route as BlogsIndexRouteImport } from './routes/blogs.index'
 import { Route as BlogsSlugRouteImport } from './routes/blogs.$slug'
+import { Route as BrandsIndexRouteImport } from './routes/brands.index'
 import { Route as BrandsSlugRouteImport } from './routes/brands.$slug'
 import { Route as CategorySlugRouteImport } from './routes/category.$slug'
 import { Route as DevLoginTestRouteImport } from './routes/dev/login-test'
@@ -151,11 +151,6 @@ const AdminRouteRoute = AdminRouteRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const BrandsRoute = BrandsRouteImport.update({
-  id: '/brands',
-  path: '/brands',
   getParentRoute: () => rootRouteImport,
 } as any)
 const BulkOrderRoute = BulkOrderRouteImport.update({
@@ -509,10 +504,15 @@ const BlogsSlugRoute = BlogsSlugRouteImport.update({
   path: '/blogs/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BrandsIndexRoute = BrandsIndexRouteImport.update({
+  id: '/brands/',
+  path: '/brands/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const BrandsSlugRoute = BrandsSlugRouteImport.update({
-  id: '/$slug',
-  path: '/$slug',
-  getParentRoute: () => BrandsRoute,
+  id: '/brands/$slug',
+  path: '/brands/$slug',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const CategorySlugRoute = CategorySlugRouteImport.update({
   id: '/category/$slug',
@@ -739,7 +739,6 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRouteRouteWithChildren
   '/about': typeof AboutRoute
   '/auth': typeof AuthRoute
-  '/brands': typeof BrandsRouteWithChildren
   '/bulk-order': typeof BulkOrderRoute
   '/categories': typeof CategoriesRoute
   '/compare': typeof CompareRoute
@@ -813,6 +812,7 @@ export interface FileRoutesByFullPath {
   '/product/$slug': typeof ProductSlugRoute
   '/admin/': typeof AdminIndexRoute
   '/blogs/': typeof BlogsIndexRoute
+  '/brands/': typeof BrandsIndexRoute
   '/orders/$id': typeof AuthenticatedOrdersIdRoute
   '/profile/details': typeof AuthenticatedProfileDetailsRoute
   '/profile/photo': typeof AuthenticatedProfilePhotoRoute
@@ -858,7 +858,6 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/auth': typeof AuthRoute
-  '/brands': typeof BrandsRouteWithChildren
   '/bulk-order': typeof BulkOrderRoute
   '/categories': typeof CategoriesRoute
   '/compare': typeof CompareRoute
@@ -932,6 +931,7 @@ export interface FileRoutesByTo {
   '/product/$slug': typeof ProductSlugRoute
   '/admin': typeof AdminIndexRoute
   '/blogs': typeof BlogsIndexRoute
+  '/brands': typeof BrandsIndexRoute
   '/orders/$id': typeof AuthenticatedOrdersIdRoute
   '/profile/details': typeof AuthenticatedProfileDetailsRoute
   '/profile/photo': typeof AuthenticatedProfilePhotoRoute
@@ -980,7 +980,6 @@ export interface FileRoutesById {
   '/admin': typeof AdminRouteRouteWithChildren
   '/about': typeof AboutRoute
   '/auth': typeof AuthRoute
-  '/brands': typeof BrandsRouteWithChildren
   '/bulk-order': typeof BulkOrderRoute
   '/categories': typeof CategoriesRoute
   '/compare': typeof CompareRoute
@@ -1054,6 +1053,7 @@ export interface FileRoutesById {
   '/product/$slug': typeof ProductSlugRoute
   '/admin/': typeof AdminIndexRoute
   '/blogs/': typeof BlogsIndexRoute
+  '/brands/': typeof BrandsIndexRoute
   '/_authenticated/orders/$id': typeof AuthenticatedOrdersIdRoute
   '/_authenticated/profile/details': typeof AuthenticatedProfileDetailsRoute
   '/_authenticated/profile/photo': typeof AuthenticatedProfilePhotoRoute
@@ -1102,7 +1102,6 @@ export interface FileRouteTypes {
     | '/admin'
     | '/about'
     | '/auth'
-    | '/brands'
     | '/bulk-order'
     | '/categories'
     | '/compare'
@@ -1176,6 +1175,7 @@ export interface FileRouteTypes {
     | '/product/$slug'
     | '/admin/'
     | '/blogs/'
+    | '/brands/'
     | '/orders/$id'
     | '/profile/details'
     | '/profile/photo'
@@ -1221,7 +1221,6 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/auth'
-    | '/brands'
     | '/bulk-order'
     | '/categories'
     | '/compare'
@@ -1295,6 +1294,7 @@ export interface FileRouteTypes {
     | '/product/$slug'
     | '/admin'
     | '/blogs'
+    | '/brands'
     | '/orders/$id'
     | '/profile/details'
     | '/profile/photo'
@@ -1342,7 +1342,6 @@ export interface FileRouteTypes {
     | '/admin'
     | '/about'
     | '/auth'
-    | '/brands'
     | '/bulk-order'
     | '/categories'
     | '/compare'
@@ -1416,6 +1415,7 @@ export interface FileRouteTypes {
     | '/product/$slug'
     | '/admin/'
     | '/blogs/'
+    | '/brands/'
     | '/_authenticated/orders/$id'
     | '/_authenticated/profile/details'
     | '/_authenticated/profile/photo'
@@ -1464,7 +1464,6 @@ export interface RootRouteChildren {
   AdminRouteRoute: typeof AdminRouteRouteWithChildren
   AboutRoute: typeof AboutRoute
   AuthRoute: typeof AuthRoute
-  BrandsRoute: typeof BrandsRouteWithChildren
   BulkOrderRoute: typeof BulkOrderRoute
   CategoriesRoute: typeof CategoriesRoute
   CompareRoute: typeof CompareRoute
@@ -1495,10 +1494,12 @@ export interface RootRouteChildren {
   TestimonialsRoute: typeof TestimonialsRoute
   TrackOrderRoute: typeof TrackOrderRoute
   BlogsSlugRoute: typeof BlogsSlugRoute
+  BrandsSlugRoute: typeof BrandsSlugRoute
   CategorySlugRoute: typeof CategorySlugRoute
   DevLoginTestRoute: typeof DevLoginTestRoute
   ProductSlugRoute: typeof ProductSlugRoute
   BlogsIndexRoute: typeof BlogsIndexRoute
+  BrandsIndexRoute: typeof BrandsIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -1536,13 +1537,6 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/brands': {
-      id: '/brands'
-      path: '/brands'
-      fullPath: '/brands'
-      preLoaderRoute: typeof BrandsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/bulk-order': {
@@ -2028,12 +2022,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BlogsSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/brands/': {
+      id: '/brands/'
+      path: '/brands'
+      fullPath: '/brands/'
+      preLoaderRoute: typeof BrandsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/brands/$slug': {
       id: '/brands/$slug'
-      path: '/$slug'
+      path: '/brands/$slug'
       fullPath: '/brands/$slug'
       preLoaderRoute: typeof BrandsSlugRouteImport
-      parentRoute: typeof BrandsRoute
+      parentRoute: typeof rootRouteImport
     }
     '/category/$slug': {
       id: '/category/$slug'
@@ -2515,24 +2516,12 @@ const AdminRouteRouteWithChildren = AdminRouteRoute._addFileChildren(
   AdminRouteRouteChildren,
 )
 
-interface BrandsRouteChildren {
-  BrandsSlugRoute: typeof BrandsSlugRoute
-}
-
-const BrandsRouteChildren: BrandsRouteChildren = {
-  BrandsSlugRoute: BrandsSlugRoute,
-}
-
-const BrandsRouteWithChildren =
-  BrandsRoute._addFileChildren(BrandsRouteChildren)
-
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AdminRouteRoute: AdminRouteRouteWithChildren,
   AboutRoute: AboutRoute,
   AuthRoute: AuthRoute,
-  BrandsRoute: BrandsRouteWithChildren,
   BulkOrderRoute: BulkOrderRoute,
   CategoriesRoute: CategoriesRoute,
   CompareRoute: CompareRoute,
@@ -2563,10 +2552,12 @@ const rootRouteChildren: RootRouteChildren = {
   TestimonialsRoute: TestimonialsRoute,
   TrackOrderRoute: TrackOrderRoute,
   BlogsSlugRoute: BlogsSlugRoute,
+  BrandsSlugRoute: BrandsSlugRoute,
   CategorySlugRoute: CategorySlugRoute,
   DevLoginTestRoute: DevLoginTestRoute,
   ProductSlugRoute: ProductSlugRoute,
   BlogsIndexRoute: BlogsIndexRoute,
+  BrandsIndexRoute: BrandsIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
