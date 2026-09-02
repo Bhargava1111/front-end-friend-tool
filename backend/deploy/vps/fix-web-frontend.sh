@@ -72,12 +72,7 @@ sleep 2
 
 echo ""
 echo "=== Updating Nginx (web on /, API on /api/) ==="
-sed "s|SERVER_NAME_PLACEHOLDER|${VPS_IP}|" \
-  "${APP_DIR}/backend/deploy/vps/nginx/mnxstore.conf" \
-  > /etc/nginx/sites-available/mnxstore
-ln -sf /etc/nginx/sites-available/mnxstore /etc/nginx/sites-enabled/mnxstore
-rm -f /etc/nginx/sites-enabled/default
-nginx -t && systemctl reload nginx
+VPS_IP="${VPS_IP:-200.234.39.88}" bash "${APP_DIR}/backend/deploy/vps/nginx/render-mnxstore-nginx.sh"
 
 echo ""
 echo "=== Status ==="

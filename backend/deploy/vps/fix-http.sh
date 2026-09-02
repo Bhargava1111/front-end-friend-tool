@@ -60,11 +60,7 @@ elif [[ -f /var/www/mnxstore/deploy/vps/nginx/mnxstore.conf ]]; then
 fi
 VPS_IP="${VPS_IP:-200.234.39.88}"
 if [[ -n "${DEPLOY_DIR}" ]]; then
-  sed "s|SERVER_NAME_PLACEHOLDER|${VPS_IP}|" \
-    "${DEPLOY_DIR}/nginx/mnxstore.conf" \
-    > /etc/nginx/sites-available/mnxstore
-  ln -sf /etc/nginx/sites-available/mnxstore /etc/nginx/sites-enabled/mnxstore
-  rm -f /etc/nginx/sites-enabled/default
+  bash "${DEPLOY_DIR}/nginx/render-mnxstore-nginx.sh"
 fi
 
 echo ""
@@ -83,6 +79,7 @@ ss -tlnp | grep -E ':80|:443|:22|:3000|:8000' || ss -tlnp | head -20
 
 echo ""
 echo "[6/6] Local health checks:"
+curl -sS -m 8 -o /dev/null -w "  localhost/ping -> HTTP %{http_code}\n" http://127.0.0.1/ping || echo "  /ping failed"
 curl -sS -m 8 -o /tmp/mnx-health.json -w "  localhost/api/v1/health/ -> HTTP %{http_code}\n" http://127.0.0.1/api/v1/health/ || echo "  API health failed"
 python3 -m json.tool /tmp/mnx-health.json 2>/dev/null | sed 's/^/    /' || true
 curl -sS -m 8 -o /dev/null -w "  localhost:3000 (web) -> HTTP %{http_code}\n" http://127.0.0.1:3000/ || echo "  Web :3000 failed"
@@ -96,7 +93,12 @@ done
 
 echo ""
 echo "If the phone still cannot load:"
-echo "  1. Hostinger hPanel → VPS → Firewall → allow inbound TCP 80 and 443"
-echo "  2. systemctl status nginx mnxstore-api --no-pager"
-echo "  3. journalctl -u nginx -u mnxstore-api -n 80 --no-pager"
+echo "  1. Use http:// (not https://) until SSL/domain is configured"
+echo "  2. Hostinger hPanel → VPS → Firewall → allow inbound TCP 80 and 443"
+echo "  3. Test from phone browser: http://${VPS_IP}/ping (should show ok)"
+echo "  4. If only some networks fail, rerun with IPv6 disabled:"
+echo "       DISABLE_IPV6=1 bash ${DEPLOY_DIR:-/var/www/mnxstore/backend/deploy/vps}/nginx/render-mnxstore-nginx.sh"
+echo "  5. Best long-term fix: point a domain to ${VPS_IP} and run certbot for HTTPS"
+echo "  6. systemctl status nginx mnxstore-api mnxstore-web --no-pager"
+echo "  7. journalctl -u nginx -u mnxstore-web -n 80 --no-pager"
 echo ""

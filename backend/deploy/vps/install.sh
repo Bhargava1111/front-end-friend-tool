@@ -237,18 +237,7 @@ fi
 
 # ── 14. Nginx ────────────────────────────────────────────────────────
 echo "[14/16] Nginx..."
-SERVER_NAMES="${VPS_IP}"
-if [[ -n "${DOMAIN}" ]]; then
-  SERVER_NAMES="${DOMAIN} ${VPS_IP}"
-fi
-sed "s|SERVER_NAME_PLACEHOLDER|${SERVER_NAMES}|" \
-  "${DEPLOY_DIR}/nginx/mnxstore.conf" \
-  > /etc/nginx/sites-available/mnxstore
-ln -sf /etc/nginx/sites-available/mnxstore /etc/nginx/sites-enabled/mnxstore
-rm -f /etc/nginx/sites-enabled/default
-nginx -t
-systemctl enable nginx
-systemctl reload nginx
+VPS_IP="${VPS_IP:-200.234.39.88}" DOMAIN="${DOMAIN:-}" bash "${DEPLOY_DIR}/nginx/render-mnxstore-nginx.sh"
 
 # ── 15. Firewall ─────────────────────────────────────────────────────
 echo "[15/16] UFW firewall..."
