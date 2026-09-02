@@ -27,8 +27,11 @@ export function resolveBannerLink(
   return null;
 }
 
-export function brandSectionId(brandId: string) {
-  return `brand-section-${brandId}`;
+export function brandLinkTarget(brand: { slug: string }) {
+  return {
+    to: "/brands/$slug" as const,
+    params: { slug: brand.slug },
+  };
 }
 
 export function resolveBrandFromParam(brands: BrandLike[], param?: string | null) {
@@ -44,8 +47,4 @@ export function resolveBrandFromParam(brands: BrandLike[], param?: string | null
     brands.find((brand) => brand.name.toLowerCase().replace(/\s+/g, "-") === normalized) ??
     null
   );
-}
-
-export function brandLinkSearch(brand: BrandLike) {
-  return { brand: brand.id };
 }

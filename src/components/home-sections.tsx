@@ -20,7 +20,7 @@ import type { HomeSectionBlock } from "@/lib/offer-sections";
 import { homeSectionDisplaySize, sortHomeSections } from "@/lib/offer-sections";
 import { resolveHomeSectionBlockProducts, type HomeCatalogData } from "@/lib/offer-section-products";
 import { brandGradient, brandInitials, brandRailVisual } from "@/lib/brand-ui";
-import { brandLinkSearch, brandSectionId, resolveBannerLink } from "@/lib/banner-routing";
+import { brandLinkTarget, resolveBannerLink } from "@/lib/banner-routing";
 import { ProductRail } from "./product-rail";
 
 function useCountdown(target: number) {
@@ -351,8 +351,7 @@ export function BrandRail({ title = "Featured brands" }: { title?: string }) {
         {list.map((b) => (
           <Link
             key={b.key}
-            to="/brands"
-            search={brandLinkSearch(b)}
+            {...brandLinkTarget(b)}
             className="group flex w-[132px] shrink-0 flex-col overflow-hidden rounded-2xl border border-border/70 bg-card shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md active:scale-[0.98] sm:w-[148px]"
           >
             <div

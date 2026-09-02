@@ -84,6 +84,7 @@ import { Route as AdminTicketsRouteImport } from './routes/admin/tickets'
 import { Route as AdminUserActivityRouteImport } from './routes/admin/user-activity'
 import { Route as BlogsIndexRouteImport } from './routes/blogs.index'
 import { Route as BlogsSlugRouteImport } from './routes/blogs.$slug'
+import { Route as BrandsSlugRouteImport } from './routes/brands.$slug'
 import { Route as CategorySlugRouteImport } from './routes/category.$slug'
 import { Route as DevLoginTestRouteImport } from './routes/dev/login-test'
 import { Route as ProductSlugRouteImport } from './routes/product.$slug'
@@ -508,6 +509,11 @@ const BlogsSlugRoute = BlogsSlugRouteImport.update({
   path: '/blogs/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BrandsSlugRoute = BrandsSlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => BrandsRoute,
+} as any)
 const CategorySlugRoute = CategorySlugRouteImport.update({
   id: '/category/$slug',
   path: '/category/$slug',
@@ -733,7 +739,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRouteRouteWithChildren
   '/about': typeof AboutRoute
   '/auth': typeof AuthRoute
-  '/brands': typeof BrandsRoute
+  '/brands': typeof BrandsRouteWithChildren
   '/bulk-order': typeof BulkOrderRoute
   '/categories': typeof CategoriesRoute
   '/compare': typeof CompareRoute
@@ -801,6 +807,7 @@ export interface FileRoutesByFullPath {
   '/admin/tickets': typeof AdminTicketsRoute
   '/admin/user-activity': typeof AdminUserActivityRoute
   '/blogs/$slug': typeof BlogsSlugRoute
+  '/brands/$slug': typeof BrandsSlugRoute
   '/category/$slug': typeof CategorySlugRoute
   '/dev/login-test': typeof DevLoginTestRoute
   '/product/$slug': typeof ProductSlugRoute
@@ -851,7 +858,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/auth': typeof AuthRoute
-  '/brands': typeof BrandsRoute
+  '/brands': typeof BrandsRouteWithChildren
   '/bulk-order': typeof BulkOrderRoute
   '/categories': typeof CategoriesRoute
   '/compare': typeof CompareRoute
@@ -919,6 +926,7 @@ export interface FileRoutesByTo {
   '/admin/tickets': typeof AdminTicketsRoute
   '/admin/user-activity': typeof AdminUserActivityRoute
   '/blogs/$slug': typeof BlogsSlugRoute
+  '/brands/$slug': typeof BrandsSlugRoute
   '/category/$slug': typeof CategorySlugRoute
   '/dev/login-test': typeof DevLoginTestRoute
   '/product/$slug': typeof ProductSlugRoute
@@ -972,7 +980,7 @@ export interface FileRoutesById {
   '/admin': typeof AdminRouteRouteWithChildren
   '/about': typeof AboutRoute
   '/auth': typeof AuthRoute
-  '/brands': typeof BrandsRoute
+  '/brands': typeof BrandsRouteWithChildren
   '/bulk-order': typeof BulkOrderRoute
   '/categories': typeof CategoriesRoute
   '/compare': typeof CompareRoute
@@ -1040,6 +1048,7 @@ export interface FileRoutesById {
   '/admin/tickets': typeof AdminTicketsRoute
   '/admin/user-activity': typeof AdminUserActivityRoute
   '/blogs/$slug': typeof BlogsSlugRoute
+  '/brands/$slug': typeof BrandsSlugRoute
   '/category/$slug': typeof CategorySlugRoute
   '/dev/login-test': typeof DevLoginTestRoute
   '/product/$slug': typeof ProductSlugRoute
@@ -1161,6 +1170,7 @@ export interface FileRouteTypes {
     | '/admin/tickets'
     | '/admin/user-activity'
     | '/blogs/$slug'
+    | '/brands/$slug'
     | '/category/$slug'
     | '/dev/login-test'
     | '/product/$slug'
@@ -1279,6 +1289,7 @@ export interface FileRouteTypes {
     | '/admin/tickets'
     | '/admin/user-activity'
     | '/blogs/$slug'
+    | '/brands/$slug'
     | '/category/$slug'
     | '/dev/login-test'
     | '/product/$slug'
@@ -1399,6 +1410,7 @@ export interface FileRouteTypes {
     | '/admin/tickets'
     | '/admin/user-activity'
     | '/blogs/$slug'
+    | '/brands/$slug'
     | '/category/$slug'
     | '/dev/login-test'
     | '/product/$slug'
@@ -1452,7 +1464,7 @@ export interface RootRouteChildren {
   AdminRouteRoute: typeof AdminRouteRouteWithChildren
   AboutRoute: typeof AboutRoute
   AuthRoute: typeof AuthRoute
-  BrandsRoute: typeof BrandsRoute
+  BrandsRoute: typeof BrandsRouteWithChildren
   BulkOrderRoute: typeof BulkOrderRoute
   CategoriesRoute: typeof CategoriesRoute
   CompareRoute: typeof CompareRoute
@@ -2016,6 +2028,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BlogsSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/brands/$slug': {
+      id: '/brands/$slug'
+      path: '/$slug'
+      fullPath: '/brands/$slug'
+      preLoaderRoute: typeof BrandsSlugRouteImport
+      parentRoute: typeof BrandsRoute
+    }
     '/category/$slug': {
       id: '/category/$slug'
       path: '/category/$slug'
@@ -2496,13 +2515,24 @@ const AdminRouteRouteWithChildren = AdminRouteRoute._addFileChildren(
   AdminRouteRouteChildren,
 )
 
+interface BrandsRouteChildren {
+  BrandsSlugRoute: typeof BrandsSlugRoute
+}
+
+const BrandsRouteChildren: BrandsRouteChildren = {
+  BrandsSlugRoute: BrandsSlugRoute,
+}
+
+const BrandsRouteWithChildren =
+  BrandsRoute._addFileChildren(BrandsRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AdminRouteRoute: AdminRouteRouteWithChildren,
   AboutRoute: AboutRoute,
   AuthRoute: AuthRoute,
-  BrandsRoute: BrandsRoute,
+  BrandsRoute: BrandsRouteWithChildren,
   BulkOrderRoute: BulkOrderRoute,
   CategoriesRoute: CategoriesRoute,
   CompareRoute: CompareRoute,

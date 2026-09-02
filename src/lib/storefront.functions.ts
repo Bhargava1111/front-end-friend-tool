@@ -1,5 +1,31 @@
 import { apiFetch } from "@/lib/api";
 import { DEFAULT_SETTINGS, type StoreSettings } from "./commerce";
+import type { Banner, Product } from "./types";
+
+export type BrandDirectoryItem = {
+  id: string;
+  name: string;
+  slug: string;
+  tagline: string | null;
+  logo_url: string | null;
+  banner_url: string | null;
+  sort_order?: number;
+  products: Product[];
+};
+
+export type BrandDirectoryResponse = {
+  banners?: Banner[];
+  brands: BrandDirectoryItem[];
+};
+
+export function findBrandBySlug(brands: BrandDirectoryItem[], slug: string) {
+  const normalized = slug.trim().toLowerCase();
+  return (
+    brands.find((brand) => brand.slug === slug) ??
+    brands.find((brand) => brand.slug.toLowerCase() === normalized) ??
+    null
+  );
+}
 
 export async function getStorefrontMeta() {
   const [brands, coupons] = await Promise.all([
@@ -35,5 +61,5 @@ export async function getProductReviews({ data }: { data: { productId: string } 
 }
 
 export async function getBrandDirectory() {
-  return apiFetch("/catalog/brands/directory/");
+  return apiFetch<BrandDirectoryResponse>("/catalog/brands/directory/");
 }

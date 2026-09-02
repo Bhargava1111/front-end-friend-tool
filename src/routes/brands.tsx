@@ -1,21 +1,34 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { Tag } from "lucide-react";
+import { createFileRoute, Link, redirect } from "@tanstack/react-router";
+import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
+import { ChevronRight, Tag } from "lucide-react";
 import { getBrandDirectory } from "@/lib/storefront.functions";
-import { brandSectionId, resolveBrandFromParam } from "@/lib/banner-routing";
+import { resolveBrandFromParam } from "@/lib/banner-routing";
 import { PageShell, TopBar, EmptyState } from "@/components/page-shell";
-import { ProductCard } from "@/components/product-card";
-import { ProductRail } from "@/components/product-rail";
 import { Reveal } from "@/components/motion";
 import { brandGradient, brandInitials, brandRailVisual } from "@/lib/brand-ui";
 import { cn } from "@/lib/utils";
-import type { Product } from "@/lib/types";
+
+const brandDirectoryQuery = queryOptions({
+  queryKey: ["brand-directory"],
+  queryFn: () => getBrandDirectory(),
+  staleTime: 5 * 60 * 1000,
+});
 
 export const Route = createFileRoute("/brands")({
   validateSearch: (search: Record<string, unknown>) => ({
     brand: typeof search.brand === "string" && search.brand.trim() ? search.brand.trim() : undefined,
   }),
+  beforeLoad: async ({ context, search }) => {
+    if (!search.brand) return;
+    const data = await context.queryClient.ensureQueryData(brandDirectoryQuery);
+    const match = resolveBrandFromParam(data.brands, search.brand);
+    if (match?.slug) {
+      throw redirect({ to: "/brands/$slug", params: { slug: match.slug } });
+    }
+  },
+  loader: ({ context }) => {
+    context.queryClient.ensureQueryData(brandDirectoryQuery);
+  },
   head: () => ({
     meta: [
       { title: "Featured Brands — Sri Mahalakshmi Stores" },
@@ -32,140 +45,62 @@ export const Route = createFileRoute("/brands")({
   component: BrandsPage,
 });
 
-function BrandProducts({ name, products }: { name: string; products: Product[] }) {
-  if (products.length === 0) {
-    return (
-      <p className="px-4 py-6 text-center text-sm text-muted-foreground">
-        Products from this brand are coming soon.
-      </p>
-    );
-  }
-
-  if (products.length <= 4) {
-    return (
-      <div
-        className={cn(
-          "mx-auto grid max-w-4xl gap-4 p-4",
-          products.length === 1
-            ? "max-w-[220px] grid-cols-1"
-            : products.length === 2
-              ? "max-w-2xl grid-cols-2"
-              : "grid-cols-2 sm:grid-cols-3",
-        )}
-      >
-        {products.map((p) => (
-          <ProductCard key={p.id} product={p} className="w-full" />
-        ))}
-      </div>
-    );
-  }
-
-  return <ProductRail title={`From ${name}`} products={products} size="default" />;
-}
-
-function scrollToBrandSection(targetId: string) {
-  let attempts = 0;
-  let timer: ReturnType<typeof setTimeout> | null = null;
-
-  const tryScroll = () => {
-    const element = document.getElementById(targetId);
-    if (element) {
-      element.scrollIntoView({ behavior: "smooth", block: "start" });
-      return;
-    }
-
-    attempts += 1;
-    if (attempts < 30) {
-      timer = setTimeout(tryScroll, 100);
-    }
-  };
-
-  requestAnimationFrame(tryScroll);
-
-  return () => {
-    if (timer) clearTimeout(timer);
-  };
-}
-
 function BrandsPage() {
-  const { brand: brandParam } = Route.useSearch();
-  const { data, isLoading } = useQuery({
-    queryKey: ["brand-directory"],
-    queryFn: () => getBrandDirectory(),
-  });
-
-  const selectedBrand = useMemo(
-    () => resolveBrandFromParam(data?.brands ?? [], brandParam),
-    [brandParam, data?.brands],
-  );
-
-  useEffect(() => {
-    if (isLoading || !selectedBrand) return;
-    return scrollToBrandSection(brandSectionId(selectedBrand.id));
-  }, [isLoading, selectedBrand]);
+  const { data } = useSuspenseQuery(brandDirectoryQuery);
 
   return (
     <PageShell>
       <TopBar title="Featured brands" subtitle="Trusted names, curated ranges" backTo="/" />
 
-      {isLoading ? (
-        <div className="space-y-3 p-4">
-          {[0, 1, 2].map((i) => (
-            <div key={i} className="h-48 animate-pulse rounded-3xl bg-card" />
-          ))}
-        </div>
-      ) : !data || data.brands.length === 0 ? (
+      {data.brands.length === 0 ? (
         <EmptyState
           icon={<Tag className="h-6 w-6" />}
           title="No brands yet"
           description="Brands will appear here once the store adds them."
         />
       ) : (
-        <div className="space-y-4 pb-28">
-          {data.brands.map((b, i) => {
-            const visual = brandRailVisual(b.logo_url);
-            const isSelected = selectedBrand?.id === b.id;
+        <div className="grid gap-3 px-4 pb-28 sm:grid-cols-2 lg:grid-cols-3">
+          {data.brands.map((brand, index) => {
+            const visual = brandRailVisual(brand.logo_url);
             return (
-              <Reveal key={b.id} delay={i * 0.03}>
-                <article
-                  id={brandSectionId(b.id)}
-                  className={cn(
-                    "mx-4 overflow-hidden rounded-3xl border bg-card shadow-sm scroll-mt-24",
-                    isSelected ? "border-primary ring-2 ring-primary/30" : "border-border",
-                  )}
+              <Reveal key={brand.id} delay={index * 0.03}>
+                <Link
+                  to="/brands/$slug"
+                  params={{ slug: brand.slug }}
+                  className="group flex overflow-hidden rounded-3xl border border-border bg-card shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md active:scale-[0.99]"
                 >
                   <div
                     className={cn(
-                      "flex items-center gap-4 px-4 py-4 text-white sm:px-5",
-                      visual.type === "logo" ? "bg-gradient-to-r from-primary to-primary/85" : `bg-gradient-to-r ${brandGradient(b.name)}`,
+                      "flex w-28 shrink-0 items-center justify-center p-3",
+                      visual.type === "logo" ? "bg-white" : `bg-gradient-to-br ${brandGradient(brand.name)}`,
                     )}
                   >
                     {visual.type === "logo" ? (
-                      <div className="grid h-16 w-16 shrink-0 place-items-center rounded-2xl bg-white/95 p-1.5 shadow-sm">
-                        <img
-                          src={visual.src}
-                          alt={b.name}
-                          loading="lazy"
-                          className="h-full w-full object-contain"
-                        />
-                      </div>
+                      <img
+                        src={visual.src}
+                        alt={brand.name}
+                        loading="lazy"
+                        className="h-full w-full object-contain"
+                      />
                     ) : (
-                      <span className="grid h-16 w-16 shrink-0 place-items-center rounded-2xl bg-white/20 text-lg font-bold backdrop-blur-sm">
-                        {brandInitials(b.name)}
+                      <span className="grid h-14 w-14 place-items-center rounded-2xl bg-white/25 text-lg font-bold text-white">
+                        {brandInitials(brand.name)}
                       </span>
                     )}
-                    <div className="min-w-0">
-                      <h2 className="text-lg font-bold leading-tight">{b.name}</h2>
-                      <p className="mt-0.5 text-sm text-white/85">{b.tagline ?? "Trusted brand"}</p>
-                      {b.products.length > 0 && (
-                        <p className="mt-1 text-xs text-white/70">
-                          {b.products.length} product{b.products.length !== 1 ? "s" : ""}
-                        </p>
-                      )}
-                    </div>
                   </div>
-                  <BrandProducts name={b.name} products={b.products} />
-                </article>
+                  <div className="flex min-w-0 flex-1 items-center justify-between gap-3 px-4 py-4">
+                    <div className="min-w-0">
+                      <h2 className="truncate text-base font-bold text-foreground">{brand.name}</h2>
+                      <p className="mt-0.5 line-clamp-2 text-sm text-muted-foreground">
+                        {brand.tagline ?? "Trusted brand"}
+                      </p>
+                      <p className="mt-1 text-xs font-medium text-primary">
+                        {brand.products.length} product{brand.products.length !== 1 ? "s" : ""}
+                      </p>
+                    </div>
+                    <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
+                  </div>
+                </Link>
               </Reveal>
             );
           })}
