@@ -5,7 +5,12 @@ import { toast } from "sonner";
 import { useNotifications } from "@/components/notification-bell";
 import { useSession } from "@/hooks/use-shop";
 import { resolveNotificationNavigation } from "@/lib/notification-routing";
-import { playAdminOrderAlarm, stopAdminOrderAlarm } from "@/lib/notification-sound";
+import {
+  isNotificationSoundBlocked,
+  playAdminOrderAlarm,
+  stopAdminOrderAlarm,
+  subscribeNotificationSoundUnlock,
+} from "@/lib/notification-sound";
 import { Button } from "@/components/ui/button";
 
 /** Plays a repeating alarm when admins receive new order notifications. */
@@ -20,8 +25,13 @@ export function AdminNotificationAlerts() {
     body: string;
     orderId?: string | null;
   } | null>(null);
+  const [soundBlocked, setSoundBlocked] = useState(isNotificationSoundBlocked);
 
   const isAdmin = user?.role === "admin";
+
+  useEffect(() => {
+    return subscribeNotificationSoundUnlock(() => setSoundBlocked(false));
+  }, []);
 
   useEffect(() => {
     if (!isAdmin) {
@@ -103,6 +113,11 @@ export function AdminNotificationAlerts() {
         <div className="min-w-0 flex-1">
           <p className="text-sm font-semibold">{alarmBanner.title}</p>
           <p className="mt-0.5 text-xs text-white/90">{alarmBanner.body}</p>
+          {soundBlocked ? (
+            <p className="mt-1 text-[11px] font-medium text-white/80">
+              Tap anywhere on the page to enable the alarm sound.
+            </p>
+          ) : null}
           <div className="mt-2.5 flex flex-wrap gap-2">
             <Button
               size="sm"

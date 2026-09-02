@@ -1,24 +1,95 @@
 let audioCtx: AudioContext | null = null;
 let audioUnlocked = false;
+let unlockListenersAttached = false;
+let onGestureUnlock: (() => void) | null = null;
 let alarmTimer: ReturnType<typeof setInterval> | null = null;
 let alarmStopAt = 0;
+let pendingAlarmDurationMs: number | null = null;
+let pendingChime = false;
+const unlockSubscribers = new Set<() => void>();
 
-function getAudioContext() {
+type AudioContextConstructor = typeof AudioContext;
+
+const UNLOCK_EVENTS = ["pointerdown", "click", "touchstart", "touchend", "keydown"] as const;
+
+function createAudioContext(): AudioContext | null {
   if (typeof window === "undefined") return null;
-  if (!audioCtx) audioCtx = new AudioContext();
+  const Ctor = (window.AudioContext ??
+    (window as typeof window & { webkitAudioContext?: AudioContextConstructor })
+      .webkitAudioContext) as AudioContextConstructor | undefined;
+  if (!Ctor) return null;
+  if (!audioCtx) audioCtx = new Ctor();
   return audioCtx;
 }
 
-function unlockAudio() {
-  if (audioUnlocked) return;
-  const ctx = getAudioContext();
-  if (ctx?.state === "suspended") void ctx.resume();
+function getRunningAudioContext(): AudioContext | null {
+  if (!audioUnlocked) return null;
+  const ctx = createAudioContext();
+  if (!ctx || ctx.state !== "running") return null;
+  return ctx;
+}
+
+function flushPendingPlayback() {
+  if (pendingChime) {
+    pendingChime = false;
+    playAdminNotificationSoundInternal();
+  }
+  if (pendingAlarmDurationMs != null) {
+    const duration = pendingAlarmDurationMs;
+    pendingAlarmDurationMs = null;
+    startAlarmLoop(duration);
+  }
+}
+
+async function tryUnlockAudio(): Promise<boolean> {
+  if (audioUnlocked) return true;
+
+  const ctx = createAudioContext();
+  if (!ctx) return false;
+
+  try {
+    await ctx.resume();
+  } catch {
+    return false;
+  }
+
+  if (ctx.state !== "running") return false;
+
   audioUnlocked = true;
+  detachUnlockListeners();
+  unlockSubscribers.forEach((listener) => listener());
+  flushPendingPlayback();
+  return true;
+}
+
+function attachUnlockListeners() {
+  if (unlockListenersAttached || typeof window === "undefined") return;
+
+  unlockListenersAttached = true;
+  onGestureUnlock = () => {
+    void tryUnlockAudio();
+  };
+
+  const options: AddEventListenerOptions = { capture: true, passive: true };
+  for (const event of UNLOCK_EVENTS) {
+    window.addEventListener(event, onGestureUnlock, options);
+  }
+}
+
+function detachUnlockListeners() {
+  if (!unlockListenersAttached || !onGestureUnlock || typeof window === "undefined") return;
+
+  const options: AddEventListenerOptions = { capture: true };
+  for (const event of UNLOCK_EVENTS) {
+    window.removeEventListener(event, onGestureUnlock, options);
+  }
+
+  unlockListenersAttached = false;
+  onGestureUnlock = null;
 }
 
 if (typeof window !== "undefined") {
-  window.addEventListener("pointerdown", unlockAudio, { once: true });
-  window.addEventListener("keydown", unlockAudio, { once: true });
+  attachUnlockListeners();
 }
 
 function beepBurst(ctx: AudioContext, startAt: number) {
@@ -46,13 +117,22 @@ function beepBurst(ctx: AudioContext, startAt: number) {
   }
 }
 
+function playAdminNotificationSoundInternal() {
+  const ctx = getRunningAudioContext();
+  if (!ctx) {
+    pendingChime = true;
+    return;
+  }
+  beepBurst(ctx, ctx.currentTime);
+}
+
 /** Short one-shot chime (legacy helper). */
 export function playAdminNotificationSound() {
-  unlockAudio();
-  const ctx = getAudioContext();
-  if (!ctx) return;
-  if (ctx.state === "suspended") void ctx.resume();
-  beepBurst(ctx, ctx.currentTime);
+  if (!audioUnlocked) {
+    pendingChime = true;
+    return;
+  }
+  playAdminNotificationSoundInternal();
 }
 
 /** Stop any looping order alarm. */
@@ -62,19 +142,22 @@ export function stopAdminOrderAlarm() {
     alarmTimer = null;
   }
   alarmStopAt = 0;
+  pendingAlarmDurationMs = null;
+  pendingChime = false;
 }
 
-/**
- * Loud repeating alarm for new admin orders.
- * Loops for `durationMs` (default 45s) or until stopAdminOrderAlarm().
- */
-export function playAdminOrderAlarm(durationMs = 45_000) {
-  unlockAudio();
-  const ctx = getAudioContext();
-  if (!ctx) return;
-  if (ctx.state === "suspended") void ctx.resume();
+function startAlarmLoop(durationMs: number) {
+  const ctx = getRunningAudioContext();
+  if (!ctx) {
+    pendingAlarmDurationMs = durationMs;
+    return;
+  }
 
-  stopAdminOrderAlarm();
+  if (alarmTimer) {
+    clearInterval(alarmTimer);
+    alarmTimer = null;
+  }
+
   alarmStopAt = Date.now() + durationMs;
 
   const tick = () => {
@@ -82,12 +165,37 @@ export function playAdminOrderAlarm(durationMs = 45_000) {
       stopAdminOrderAlarm();
       return;
     }
-    const active = getAudioContext();
+
+    const active = getRunningAudioContext();
     if (!active) return;
-    if (active.state === "suspended") void active.resume();
     beepBurst(active, active.currentTime);
   };
 
   tick();
   alarmTimer = setInterval(tick, 1400);
+}
+
+/**
+ * Loud repeating alarm for new admin orders.
+ * Loops for `durationMs` (default 45s) or until stopAdminOrderAlarm().
+ * If the browser blocks autoplay, playback starts on the next user gesture.
+ */
+export function playAdminOrderAlarm(durationMs = 45_000) {
+  if (!audioUnlocked) {
+    pendingAlarmDurationMs = durationMs;
+    return;
+  }
+  startAlarmLoop(durationMs);
+}
+
+/** Whether sound is blocked until the user interacts with the page. */
+export function isNotificationSoundBlocked() {
+  return !audioUnlocked;
+}
+
+export function subscribeNotificationSoundUnlock(listener: () => void) {
+  unlockSubscribers.add(listener);
+  return () => {
+    unlockSubscribers.delete(listener);
+  };
 }
