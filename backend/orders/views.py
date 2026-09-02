@@ -118,8 +118,11 @@ class WishlistView(APIView):
     def post(self, request):
         product_id = request.data.get("product_id") or request.data.get("productId")
         product = Product.objects.get(id=product_id)
-        item, created = WishlistItem.objects.get_or_create(user=request.user, product=product)
-        return Response({"wishlisted": created}, status=201 if created else 200)
+        deleted, _ = WishlistItem.objects.filter(user=request.user, product=product).delete()
+        if deleted:
+            return Response({"wishlisted": False})
+        WishlistItem.objects.create(user=request.user, product=product)
+        return Response({"wishlisted": True}, status=201)
 
 
 class WishlistDetailView(APIView):
