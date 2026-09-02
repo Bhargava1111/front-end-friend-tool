@@ -20,7 +20,7 @@ import type { HomeSectionBlock } from "@/lib/offer-sections";
 import { homeSectionDisplaySize, sortHomeSections } from "@/lib/offer-sections";
 import { resolveHomeSectionBlockProducts, type HomeCatalogData } from "@/lib/offer-section-products";
 import { brandGradient, brandInitials, brandRailVisual } from "@/lib/brand-ui";
-import { brandSectionHash, resolveBannerLink } from "@/lib/banner-routing";
+import { brandLinkSearch, brandSectionId, resolveBannerLink } from "@/lib/banner-routing";
 import { ProductRail } from "./product-rail";
 
 function useCountdown(target: number) {
@@ -324,6 +324,7 @@ export function BrandRail({ title = "Featured brands" }: { title?: string }) {
   const list = brands.length
     ? brands.map((b) => ({
         key: b.id,
+        id: b.id,
         name: b.name,
         slug: b.slug,
         tagline: b.tagline ?? "Trusted brand",
@@ -331,6 +332,7 @@ export function BrandRail({ title = "Featured brands" }: { title?: string }) {
       }))
     : BRANDS.map((b) => ({
         key: b.name,
+        id: b.name,
         name: b.name,
         slug: b.name.toLowerCase().replace(/\s+/g, "-"),
         tagline: b.tagline,
@@ -350,7 +352,7 @@ export function BrandRail({ title = "Featured brands" }: { title?: string }) {
           <Link
             key={b.key}
             to="/brands"
-            search={{ brand: b.slug }}
+            search={brandLinkSearch(b)}
             className="group flex w-[132px] shrink-0 flex-col overflow-hidden rounded-2xl border border-border/70 bg-card shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md active:scale-[0.98] sm:w-[148px]"
           >
             <div

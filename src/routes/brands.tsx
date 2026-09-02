@@ -1,9 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Tag } from "lucide-react";
 import { getBrandDirectory } from "@/lib/storefront.functions";
-import { brandSectionHash } from "@/lib/banner-routing";
+import { brandSectionId, resolveBrandFromParam } from "@/lib/banner-routing";
 import { PageShell, TopBar, EmptyState } from "@/components/page-shell";
 import { ProductCard } from "@/components/product-card";
 import { ProductRail } from "@/components/product-rail";
@@ -63,21 +63,46 @@ function BrandProducts({ name, products }: { name: string; products: Product[] }
   return <ProductRail title={`From ${name}`} products={products} size="default" />;
 }
 
+function scrollToBrandSection(targetId: string) {
+  let attempts = 0;
+  let timer: ReturnType<typeof setTimeout> | null = null;
+
+  const tryScroll = () => {
+    const element = document.getElementById(targetId);
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth", block: "start" });
+      return;
+    }
+
+    attempts += 1;
+    if (attempts < 30) {
+      timer = setTimeout(tryScroll, 100);
+    }
+  };
+
+  requestAnimationFrame(tryScroll);
+
+  return () => {
+    if (timer) clearTimeout(timer);
+  };
+}
+
 function BrandsPage() {
-  const { brand: brandSlug } = Route.useSearch();
+  const { brand: brandParam } = Route.useSearch();
   const { data, isLoading } = useQuery({
     queryKey: ["brand-directory"],
     queryFn: () => getBrandDirectory(),
   });
 
-  useEffect(() => {
-    if (isLoading || !data?.brands.length || !brandSlug) return;
+  const selectedBrand = useMemo(
+    () => resolveBrandFromParam(data?.brands ?? [], brandParam),
+    [brandParam, data?.brands],
+  );
 
-    const targetId = brandSectionHash(brandSlug);
-    requestAnimationFrame(() => {
-      document.getElementById(targetId)?.scrollIntoView({ behavior: "smooth", block: "start" });
-    });
-  }, [isLoading, data?.brands.length, brandSlug]);
+  useEffect(() => {
+    if (isLoading || !selectedBrand) return;
+    return scrollToBrandSection(brandSectionId(selectedBrand.id));
+  }, [isLoading, selectedBrand]);
 
   return (
     <PageShell>
@@ -99,11 +124,15 @@ function BrandsPage() {
         <div className="space-y-4 pb-28">
           {data.brands.map((b, i) => {
             const visual = brandRailVisual(b.logo_url);
+            const isSelected = selectedBrand?.id === b.id;
             return (
               <Reveal key={b.id} delay={i * 0.03}>
                 <article
-                  id={brandSectionHash(b.slug)}
-                  className="mx-4 overflow-hidden rounded-3xl border border-border bg-card shadow-sm scroll-mt-24"
+                  id={brandSectionId(b.id)}
+                  className={cn(
+                    "mx-4 overflow-hidden rounded-3xl border bg-card shadow-sm scroll-mt-24",
+                    isSelected ? "border-primary ring-2 ring-primary/30" : "border-border",
+                  )}
                 >
                   <div
                     className={cn(
