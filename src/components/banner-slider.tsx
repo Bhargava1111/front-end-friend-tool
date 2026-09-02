@@ -2,11 +2,11 @@ import { Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { resolveBannerLink } from "@/lib/banner-routing";
 import type { Banner } from "@/lib/types";
 
-type SlideBanner = Pick<Banner, "id" | "title" | "image_url"> & {
+type SlideBanner = Pick<Banner, "id" | "title" | "image_url" | "link_slug" | "product"> & {
   subtitle?: string | null;
-  link_slug?: string | null;
 };
 
 export function BannerSlider({
@@ -92,11 +92,12 @@ export function BannerSlider({
                 </div>
               </div>
             );
-            return banner.link_slug ? (
+            const target = resolveBannerLink(banner);
+            return target ? (
               <Link
                 key={banner.id}
-                to="/category/$slug"
-                params={{ slug: banner.link_slug }}
+                to={target.to}
+                params={target.params}
                 className="w-full shrink-0"
               >
                 {content}

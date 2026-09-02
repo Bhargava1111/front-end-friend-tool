@@ -1,7 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Tag } from "lucide-react";
 import { getBrandDirectory } from "@/lib/storefront.functions";
+import { brandSectionHash } from "@/lib/banner-routing";
 import { PageShell, TopBar, EmptyState } from "@/components/page-shell";
 import { ProductCard } from "@/components/product-card";
 import { ProductRail } from "@/components/product-rail";
@@ -11,6 +13,9 @@ import { cn } from "@/lib/utils";
 import type { Product } from "@/lib/types";
 
 export const Route = createFileRoute("/brands")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    brand: typeof search.brand === "string" && search.brand.trim() ? search.brand.trim() : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Featured Brands — Sri Mahalakshmi Stores" },
@@ -59,10 +64,20 @@ function BrandProducts({ name, products }: { name: string; products: Product[] }
 }
 
 function BrandsPage() {
+  const { brand: brandSlug } = Route.useSearch();
   const { data, isLoading } = useQuery({
     queryKey: ["brand-directory"],
     queryFn: () => getBrandDirectory(),
   });
+
+  useEffect(() => {
+    if (isLoading || !data?.brands.length || !brandSlug) return;
+
+    const targetId = brandSectionHash(brandSlug);
+    requestAnimationFrame(() => {
+      document.getElementById(targetId)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  }, [isLoading, data?.brands.length, brandSlug]);
 
   return (
     <PageShell>
@@ -87,8 +102,8 @@ function BrandsPage() {
             return (
               <Reveal key={b.id} delay={i * 0.03}>
                 <article
-                  id={`brand-${b.slug}`}
-                  className="mx-4 overflow-hidden rounded-3xl border border-border bg-card shadow-sm"
+                  id={brandSectionHash(b.slug)}
+                  className="mx-4 overflow-hidden rounded-3xl border border-border bg-card shadow-sm scroll-mt-24"
                 >
                   <div
                     className={cn(
