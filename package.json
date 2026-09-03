@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite dev",
-    "build": "vite build",
+    "build": "vite build && node scripts/transpile-css-legacy.mjs",
     "build:dev": "vite build --mode development",
     "preview": "vite preview",
     "lint": "eslint .",
@@ -36,6 +36,12 @@
     "mobile:rebuild": "node scripts/mobile-rebuild.mjs",
     "mobile:ios:prepare": "node scripts/mobile-config.mjs && npx cap sync ios"
   },
+  "browserslist": [
+    "chrome >= 109",
+    "firefox >= 128",
+    "safari >= 15.4",
+    "ios >= 15.4"
+  ],
   "dependencies": {
     "@capacitor/android": "^8.5.0",
     "@capacitor/app": "^8.1.1",

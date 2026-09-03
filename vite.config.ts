@@ -6,7 +6,13 @@
 // You can pass additional config via defineConfig({ vite: { ... }, etc... }) if needed.
 import basicSsl from "@vitejs/plugin-basic-ssl";
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
+import { browserslistToTargets } from "lightningcss";
+import browserslist from "browserslist";
 import { loadEnv } from "vite";
+
+const legacyCssTargets = browserslistToTargets(
+  browserslist(["chrome >= 109", "firefox >= 128", "safari >= 15.4", "ios >= 15.4"]),
+);
 
 // Vite does not put .env* into process.env for config evaluation — load them explicitly.
 const mode = process.env.NODE_ENV === "production" ? "production" : "development";
@@ -25,6 +31,11 @@ export default defineConfig({
   },
   vite: {
     plugins: mobileHttps ? [basicSsl()] : [],
+    css: {
+      lightningcss: {
+        targets: legacyCssTargets,
+      },
+    },
     server: {
       ...(mobileHttps ? { https: true } : {}),
       // Proxy Django API in dev so browser + server functions can use /api/v1 on any host.
